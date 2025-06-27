@@ -82,25 +82,6 @@ export const ACTIVITY_TYPES = {
   EMPLOYEE_ADDED: "employee_added",
 } as const;
 
-// Navigation Routes
-export const ROUTES = {
-  HOME: "/",
-  LOGIN: "/login",
-  REGISTER: "/register",
-  DASHBOARD: "/dashboard",
-  LEADS: "/leads",
-  LEADS_CREATE: "/leads/create",
-  LEADS_EDIT: "/leads/edit/:id",
-  LEADS_DETAIL: "/leads/:id",
-  SCHEDULE: "/schedule",
-  EMPLOYEES: "/employees",
-  EMPLOYEES_CREATE: "/employees/create",
-  EMPLOYEES_EDIT: "/employees/edit/:id",
-  PROFILE: "/profile",
-  SETTINGS: "/settings",
-  ATTENDANCE: "/attendance",
-} as const;
-
 // Storage Keys
 export const STORAGE_KEYS = {
   ACCESS_TOKEN: "access_token",
@@ -198,44 +179,28 @@ export const CHART_COLORS = [
 ];
 
 // Lead Sources
-export const LEAD_SOURCES = [
-  "Website",
-  "Social Media",
-  "Email Campaign",
-  "Referral",
-  "Cold Call",
-  "Trade Show",
-  "Partner",
-  "Advertisement",
-  "Other",
-] as const;
+export const LEAD_SOURCES = {
+  WEBSITE: "website",
+  REFERRAL: "referral",
+  SOCIAL_MEDIA: "social_media",
+  EMAIL_CAMPAIGN: "email_campaign",
+  COLD_CALL: "cold_call",
+  TRADE_SHOW: "trade_show",
+  OTHER: "other",
+} as const;
 
-// Languages
-export const LANGUAGES = [
-  { code: "en", name: "English" },
-  { code: "es", name: "Spanish" },
-  { code: "fr", name: "French" },
-  { code: "de", name: "German" },
-  { code: "it", name: "Italian" },
-  { code: "pt", name: "Portuguese" },
-  { code: "zh", name: "Chinese" },
-  { code: "ja", name: "Japanese" },
-  { code: "ko", name: "Korean" },
-  { code: "ar", name: "Arabic" },
-] as const;
-
-// Timezones (common ones)
-export const TIMEZONES = [
-  "UTC",
+// Time Zones (commonly used in CRM systems)
+export const TIME_ZONES = [
   "America/New_York",
   "America/Chicago",
   "America/Denver",
   "America/Los_Angeles",
   "Europe/London",
   "Europe/Paris",
-  "Europe/Berlin",
   "Asia/Tokyo",
   "Asia/Shanghai",
   "Asia/Kolkata",
   "Australia/Sydney",
 ] as const;
+
+export * from "./routes";

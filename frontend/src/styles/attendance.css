@@ -1,0 +1,374 @@
+/* Attendance Page Styles */
+.attendance-content {
+  padding: 24px;
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 80px);
+}
+
+.attendance-header {
+  margin-bottom: 24px;
+  padding: 0 4px;
+}
+
+.attendance-layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 24px;
+  max-width: 1200px;
+}
+
+/* User Profile Card */
+.user-profile-card {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 12px;
+  padding: 24px;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.profile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-circle-large {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.profile-info h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: white;
+}
+
+.profile-role {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.current-time {
+  text-align: center;
+  margin-bottom: 32px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.time-display {
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 8px;
+  font-family: "Courier New", monospace;
+}
+
+.date-display {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Timing Section */
+.timing-section,
+.break-section {
+  margin-bottom: 24px;
+}
+
+.timing-section h3,
+.break-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 12px 0;
+}
+
+.timing-buttons,
+.break-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.check-in-btn,
+.check-out-btn,
+.break-start-btn,
+.break-end-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
+}
+
+.check-in-btn:hover,
+.break-start-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.check-out-btn,
+.break-end-btn {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.check-out-btn:hover,
+.break-end-btn:hover {
+  background: rgba(239, 68, 68, 0.4);
+}
+
+.checked-in-info,
+.break-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.check-in-time,
+.break-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+}
+
+/* Attendance Records Card */
+.attendance-records-card,
+.recent-activity-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.attendance-records-card h3,
+.recent-activity-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 20px 0;
+}
+
+/* Records Table */
+.records-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.5fr 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1.5fr 1fr;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #f3f4f6;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #1f2937;
+  transition: background-color 0.2s;
+}
+
+.table-row:hover {
+  background-color: #f9fafb;
+}
+
+.date-cell {
+  font-weight: 500;
+}
+
+.time-cell,
+.total-cell {
+  font-weight: 500;
+  color: #3b82f6;
+}
+
+.break-cell {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Recent Activity */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.activity-item:hover {
+  background-color: #f9fafb;
+}
+
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.activity-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.activity-message {
+  font-size: 14px;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.activity-time {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .attendance-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .user-profile-card {
+    order: 1;
+  }
+
+  .attendance-records-card {
+    order: 2;
+  }
+
+  .recent-activity-card {
+    order: 3;
+  }
+}
+
+@media (max-width: 768px) {
+  .attendance-content {
+    padding: 16px;
+  }
+
+  .user-profile-card,
+  .attendance-records-card,
+  .recent-activity-card {
+    padding: 20px;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+
+  .time-display {
+    font-size: 28px;
+  }
+
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .table-header span,
+  .table-row span {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .table-header span::before,
+  .table-row span::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 12px;
+  }
+
+  /* Mobile table labels */
+  .date-cell::before {
+    content: "Date: ";
+  }
+  .time-cell:nth-child(2)::before {
+    content: "Check In: ";
+  }
+  .time-cell:nth-child(3)::before {
+    content: "Check Out: ";
+  }
+  .break-cell::before {
+    content: "Break: ";
+  }
+  .total-cell::before {
+    content: "Total: ";
+  }
+}
+
+@media (max-width: 480px) {
+  .current-time {
+    padding: 16px;
+  }
+
+  .time-display {
+    font-size: 24px;
+  }
+
+  .profile-name {
+    font-size: 20px;
+  }
+
+  .avatar-circle-large {
+    width: 50px;
+    height: 50px;
+    font-size: 16px;
+  }
+}
