@@ -74,7 +74,7 @@
     margin-left: 0;
   }
 
-  .desktop-sidebar.mobile-open {
+  .desktop-sidebar.user-open {
     transform: translateX(0);
   }
 }

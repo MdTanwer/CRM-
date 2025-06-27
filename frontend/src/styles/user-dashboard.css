@@ -1,0 +1,464 @@
+/* User Dashboard Page Styles */
+.user-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  padding-bottom: 100px;
+}
+
+/* Header */
+.dashboard-header {
+  background: #2051e5;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 10px 30px 20px 30px;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.brand-logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  text-align: left;
+  font-family: "Inter", sans-serif;
+  margin-bottom: 20px;
+}
+
+.greeting {
+  font-family: "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica,
+    Arial, sans-serif;
+  font-weight: 400;
+  font-size: 13.31px;
+  line-height: normal;
+  letter-spacing: 0;
+  text-align: left;
+  color: #ffffff;
+}
+
+.user-name {
+  font-family: "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica,
+    Arial, sans-serif;
+  font-weight: 500;
+  font-size: 22.82px;
+  line-height: normal;
+  letter-spacing: 0;
+  text-align: left;
+  color: #ffffff;
+  margin-top: 10px;
+}
+
+/* Time Section */
+.time-section {
+  background: white;
+  margin: 16px 20px;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.current-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.time-display {
+  font-size: 32px;
+  font-weight: 700;
+  color: #2051e5;
+  margin-bottom: 8px;
+  font-family: "Courier New", monospace;
+}
+
+.date-display {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Timings Section */
+.timings-section {
+  margin: 20px 20px 24px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.timings-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+/* Current Status Cards */
+.timing-status-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.status-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.status-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.status-time {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.status-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #ef4444;
+  color: white;
+}
+
+.status-btn:hover {
+  background: #dc2626;
+}
+
+.status-date {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+/* Break Status Card */
+.break-status-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 20px;
+}
+
+.break-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.break-info {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.break-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.break-time {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.break-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.toggle-switch {
+  width: 40px;
+  height: 20px;
+  background: #10b981;
+  border-radius: 10px;
+  position: relative;
+  transition: background-color 0.3s;
+}
+
+.toggle-switch::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  top: 2px;
+  right: 2px;
+  transition: transform 0.3s;
+}
+
+.toggle-switch.active::after {
+  transform: translateX(-20px);
+}
+
+.break-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Timing History Table */
+.timing-table {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  background: #f8f9fa;
+  padding: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  padding: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 13px;
+  align-items: center;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-row:nth-child(even) {
+  background: #fafafa;
+}
+
+.type-cell {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.time-cell {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.date-cell {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* Activity Section */
+.activity-section {
+  margin: 0 20px 24px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.activity-section h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f8f9fa;
+  transition: background-color 0.2s;
+}
+
+.activity-item:hover {
+  background-color: #f1f3f4;
+}
+
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.activity-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.activity-message {
+  font-size: 14px;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.activity-time {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  border-top: 1px solid #f3f4f6;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-around;
+  z-index: 1000;
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: color 0.2s;
+  color: #6b7280;
+}
+
+.nav-item.active {
+  color: #3b82f6;
+}
+
+.nav-item:hover {
+  color: #3b82f6;
+}
+
+.nav-item span {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.nav-item svg {
+  transition: transform 0.2s;
+}
+
+/* Responsive adjustments */
+@media (max-width: 390px) {
+  .user-dashboard-container {
+    max-width: 100%;
+  }
+
+  .bottom-nav {
+    padding: 8px 16px;
+  }
+
+  .timings-section,
+  .activity-section {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+
+  .dashboard-header {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .timing-status-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .table-header,
+  .table-row {
+    font-size: 11px;
+    padding: 8px;
+  }
+}
+
+/* Desktop responsive behavior */
+@media (min-width: 768px) {
+  .user-dashboard-container {
+    max-width: 600px;
+  }
+}
+
+/* Smooth scrolling for content */
+.user-dashboard-container {
+  scroll-behavior: smooth;
+}
+
+/* Remove unused styles from previous version */
+.time-section,
+.timing-grid,
+.timing-card,
+.timing-header,
+.timing-type,
+.timing-status,
+.timing-action,
+.timing-btn,
+.timing-date,
+.break-section,
+.break-header,
+.break-info,
+.break-duration,
+.break-date,
+.break-actions,
+.break-btn,
+.stats-section,
+.stats-grid,
+.stat-card,
+.stat-icon,
+.stat-content,
+.stat-value,
+.stat-title,
+.current-time,
+.time-display,
+.date-display {
+  display: none;
+}

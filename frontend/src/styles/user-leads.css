@@ -1,34 +1,57 @@
-/* Mobile Leads Page Styles */
-.mobile-leads-container {
+/* User Leads Page Styles */
+.user-leads-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background-color: #f8f9fa;
-  max-width: 390px;
+  max-width: 480px;
   margin: 0 auto;
   position: relative;
 }
 
 /* Header */
-.mobile-header {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+.lead-user-header {
+  background: #2051e5;
   color: white;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 10px 10px 10px 30px;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
 }
 
-.header-top {
-  padding: 12px 20px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.lead-greeting {
+  font-family: "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica,
+    Arial, sans-serif; /* fallback stack */
+  font-weight: 400; /* "Regular" in Figma */
+  font-size: 13.31px; /* exact value shown */
+  line-height: normal; /* "Auto" in Figma = default line height */
+  letter-spacing: 0; /* 0 % tracking */
+  text-align: left; /* left alignment */
+  color: #ffffff;
 }
 
 .brand-logo {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: white;
   text-align: left;
+  font-family: "Inter", sans-serif;
+  margin-bottom: 20px;
+}
+
+.lead-name1 {
+  font-family: "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica,
+    Arial, sans-serif;
+  font-weight: 500; /* "Medium" in Figma = 500 */
+  font-size: 22.82px; /* exact font size from Figma */
+  line-height: normal; /* "Auto" in Figma */
+  letter-spacing: 0; /* 0% letter spacing */
+  text-align: left; /* centered alignment from icon */
+  color: #ffffff;
+  margin-top: 10px;
+  padding-bottom: 20px;
 }
 
 .header-nav {
@@ -161,39 +184,37 @@
 }
 
 .status-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
+  padding: 4px 8px;
+  border-radius: 12px;
   font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
-  min-width: 70px;
-  text-align: center;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .status-ongoing {
-  background-color: #ff9500;
-  color: white;
+  background-color: #dbeafe;
+  color: #1d4ed8;
 }
 
 .status-closed {
-  background-color: #e5e7eb;
-  color: #6b7280;
+  background-color: #dcfce7;
+  color: #166534;
 }
 
-/* Lead Details */
 .lead-details {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .lead-date {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
+  gap: 4px;
   color: #6b7280;
+  font-size: 12px;
 }
 
 .lead-date svg {
@@ -205,25 +226,25 @@
   border-radius: 12px;
   font-size: 12px;
   font-weight: 500;
-  text-transform: capitalize;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .priority-hot {
-  background-color: #ff9500;
-  color: white;
+  background-color: #fee2e2;
+  color: #dc2626;
 }
 
 .priority-warm {
-  background-color: #fbbf24;
-  color: white;
+  background-color: #fef3c7;
+  color: #d97706;
 }
 
 .priority-cold {
-  background-color: #f0f9ff;
-  color: #0284c7;
+  background-color: #e0e7ff;
+  color: #4338ca;
 }
 
-/* Lead Footer */
 .lead-footer {
   display: flex;
   justify-content: space-between;
@@ -231,69 +252,68 @@
 }
 
 .date-text {
-  font-size: 12px;
+  font-size: 14px;
   color: #6b7280;
 }
 
-/* Lead Actions */
 .lead-actions {
   display: flex;
   gap: 8px;
 }
 
 .action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
+  background: none;
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
 }
 
 .call-btn {
-  background-color: #dcfce7;
-  color: #16a34a;
+  color: #059669;
+  border-color: #059669;
 }
 
 .call-btn:hover {
-  background-color: #bbf7d0;
+  background-color: #ecfdf5;
 }
 
-.clock-btn {
-  background-color: #dbeafe;
-  color: #2563eb;
+.message-btn {
+  color: #3b82f6;
+  border-color: #3b82f6;
 }
 
-.clock-btn:hover {
-  background-color: #bfdbfe;
+.message-btn:hover {
+  background-color: #eff6ff;
 }
 
-.more-btn {
-  background-color: #f3f4f6;
-  color: #6b7280;
+.email-btn {
+  color: #7c3aed;
+  border-color: #7c3aed;
 }
 
-.more-btn:hover {
-  background-color: #e5e7eb;
+.email-btn:hover {
+  background-color: #f3e8ff;
 }
 
 /* Bottom Navigation */
-.bottom-navigation {
+.bottom-nav {
   position: fixed;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 390px;
+  max-width: 480px;
   background: white;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #f3f4f6;
+  padding: 12px 20px;
   display: flex;
   justify-content: space-around;
-  padding: 8px 0 16px;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
 .nav-item {
@@ -303,11 +323,10 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px 12px;
+  padding: 8px 16px;
   cursor: pointer;
-  color: #9ca3af;
   transition: color 0.2s;
-  border-radius: 8px;
+  color: #6b7280;
 }
 
 .nav-item.active {
@@ -319,22 +338,22 @@
 }
 
 .nav-item span {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .nav-item svg {
-  stroke-width: 2;
+  transition: transform 0.2s;
 }
 
 /* Responsive adjustments */
 @media (max-width: 390px) {
-  .mobile-leads-container {
+  .user-leads-container {
     max-width: 100%;
   }
 
-  .bottom-navigation {
-    max-width: 100%;
+  .bottom-nav {
+    padding: 8px 16px;
   }
 
   .search-container,
@@ -350,11 +369,9 @@
   }
 }
 
+/* Desktop responsive behavior */
 @media (min-width: 768px) {
-  .mobile-leads-container {
-    max-width: 420px;
-    border-left: 1px solid #e5e7eb;
-    border-right: 1px solid #e5e7eb;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  .user-leads-container {
+    max-width: 600px;
   }
 }

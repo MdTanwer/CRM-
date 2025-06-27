@@ -335,7 +335,7 @@
     font-size: 12px;
   }
 
-  /* Mobile table labels */
+  /* User table labels */
   .date-cell::before {
     content: "Date: ";
   }

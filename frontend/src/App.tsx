@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { MobileRoutes } from "./routes/MobileRoutes";
+import { UserRoutes } from "./routes/UserRoutes";
 import { DesktopRoutes } from "./routes/DesktopRoutes";
 import "./App.css";
 
@@ -8,8 +8,8 @@ function App() {
     <Router>
       <div className="app">
         <Routes>
-          {/* Mobile Routes - All routes starting with /mobile/ */}
-          <Route path="/mobile/*" element={<MobileRoutes />} />
+          {/* User Routes - All routes starting with /user/ */}
+          <Route path="/user/*" element={<UserRoutes />} />
 
           {/* Desktop/Laptop Routes - All other routes */}
           <Route path="/*" element={<DesktopRoutes />} />

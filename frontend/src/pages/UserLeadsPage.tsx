@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import "../styles/mobile-leads.css";
+import "../styles/user-leads.css";
 
 interface Lead {
   id: string;
@@ -12,7 +12,7 @@ interface Lead {
   date: string;
 }
 
-export const MobileLeadsPage: React.FC = () => {
+export const UserLeadsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -82,22 +82,19 @@ export const MobileLeadsPage: React.FC = () => {
   };
 
   const handleNavigation = (route: string) => {
-    navigate(`/mobile${route}`);
+    navigate(`/user${route}`);
   };
 
   return (
-    <div className="mobile-leads-container">
+    <div className="user-leads-container">
       {/* Header with CanovasCRM branding */}
-      <div className="mobile-header">
-        <div className="header-top">
-          <div className="brand-logo">CanovaCRM</div>
+      <div className="lead-user-header">
+        <div className="brand-logo" style={{ fontSize: "18px" }}>
+          Canova<span style={{ fontSize: "18px", color: "#E8E000" }}>CRM</span>
         </div>
-        <div className="header-nav">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            ←
-          </button>
-          <h1 className="page-title">Leads</h1>
-        </div>
+
+        <div className="lead-greeting">good morning</div>
+        <div className="lead-name1">Ragesh Shrestha</div>
       </div>
 
       {/* Search Bar */}
@@ -206,10 +203,11 @@ export const MobileLeadsPage: React.FC = () => {
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                   </svg>
                 </button>
+
                 <button
-                  className="action-btn clock-btn"
+                  className="action-btn message-btn"
                   onClick={() => handleMessage(lead)}
-                  title="Schedule"
+                  title="Message"
                 >
                   <svg
                     width="16"
@@ -219,14 +217,14 @@ export const MobileLeadsPage: React.FC = () => {
                     stroke="currentColor"
                     strokeWidth="2"
                   >
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12,6 12,12 16,14"></polyline>
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                   </svg>
                 </button>
+
                 <button
-                  className="action-btn more-btn"
+                  className="action-btn email-btn"
                   onClick={() => handleEmail(lead)}
-                  title="More options"
+                  title="Email"
                 >
                   <svg
                     width="16"
@@ -236,9 +234,8 @@ export const MobileLeadsPage: React.FC = () => {
                     stroke="currentColor"
                     strokeWidth="2"
                   >
-                    <circle cx="12" cy="12" r="1"></circle>
-                    <circle cx="12" cy="5" r="1"></circle>
-                    <circle cx="12" cy="19" r="1"></circle>
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
                   </svg>
                 </button>
               </div>
@@ -248,10 +245,10 @@ export const MobileLeadsPage: React.FC = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="bottom-navigation">
+      <div className="bottom-nav">
         <button
           className="nav-item active"
-          onClick={() => handleNavigation("/")}
+          onClick={() => handleNavigation("/leads")}
         >
           <svg
             width="20"
@@ -261,27 +258,12 @@ export const MobileLeadsPage: React.FC = () => {
             stroke="currentColor"
             strokeWidth="2"
           >
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9,22 9,12 15,12 15,22"></polyline>
-          </svg>
-          <span>Home</span>
-        </button>
-        <button className="nav-item" onClick={() => handleNavigation("/leads")}>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
           </svg>
           <span>Leads</span>
         </button>
+
         <button
           className="nav-item"
           onClick={() => handleNavigation("/schedule")}
@@ -301,6 +283,7 @@ export const MobileLeadsPage: React.FC = () => {
           </svg>
           <span>Schedule</span>
         </button>
+
         <button
           className="nav-item"
           onClick={() => handleNavigation("/profile")}

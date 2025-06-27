@@ -1,34 +1,36 @@
-/* Mobile Schedule Page Styles */
-.mobile-schedule-container {
+/* User Schedule Page Styles */
+.user-schedule-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background-color: #f8f9fa;
-  max-width: 390px;
+  max-width: 480px;
   margin: 0 auto;
   position: relative;
 }
 
 /* Header */
-.mobile-header {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+.user-header {
+  background: #2051e5;
   color: white;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .header-top {
-  padding: 12px 20px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .brand-logo {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   color: white;
-  text-align: left;
+  text-align: center;
+  font-family: "Inter", sans-serif;
 }
 
 .header-nav {
@@ -120,11 +122,10 @@
 .schedule-card {
   background: white;
   border-radius: 12px;
-  padding: 0;
+  padding: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #f3f4f6;
+  border-left: 4px solid transparent;
   transition: transform 0.2s, box-shadow 0.2s;
-  overflow: hidden;
 }
 
 .schedule-card:hover {
@@ -132,44 +133,53 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Card Header */
+.type-referral {
+  border-left-color: #3b82f6;
+}
+
+.type-cold-call {
+  border-left-color: #6b7280;
+}
+
 .card-header {
-  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.type-referral .card-header {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-}
-
-.type-cold-call .card-header {
-  background: #f9fafb;
-  color: #1f2937;
-  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 12px;
 }
 
 .card-header-left {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  gap: 12px;
+  align-items: center;
 }
 
 .item-type {
-  font-size: 14px;
-  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.type-referral .item-type {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.type-cold-call .item-type {
+  background-color: #f3f4f6;
+  color: #6b7280;
 }
 
 .item-date {
   font-size: 12px;
-  opacity: 0.8;
+  color: #6b7280;
+  font-weight: 500;
 }
 
-/* Card Content */
 .card-content {
-  padding: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -177,116 +187,111 @@
 
 .contact-info {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 
 .phone-number {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  margin-bottom: 8px;
   font-size: 14px;
-  color: #1f2937;
-  font-weight: 500;
+  color: #6b7280;
 }
 
 .phone-number svg {
-  color: #6b7280;
+  color: #9ca3af;
 }
 
 .contact-person {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .contact-avatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: white;
 }
 
 .avatar-blue {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background-color: #3b82f6;
 }
 
 .avatar-gray {
-  background: #6b7280;
+  background-color: #6b7280;
 }
 
 .contact-name {
   font-size: 14px;
-  color: #1f2937;
   font-weight: 500;
+  color: #1f2937;
 }
 
-/* Action Buttons */
 .card-actions {
   display: flex;
   gap: 8px;
-  flex-shrink: 0;
 }
 
 .action-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: none;
+  background: none;
+  border: 1px solid #d1d5db;
+  padding: 8px;
+  border-radius: 6px;
   cursor: pointer;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
 }
 
 .call-btn {
-  background-color: #dcfce7;
-  color: #16a34a;
+  color: #059669;
+  border-color: #059669;
 }
 
 .call-btn:hover {
-  background-color: #bbf7d0;
+  background-color: #ecfdf5;
 }
 
 .schedule-btn {
-  background-color: #dbeafe;
-  color: #2563eb;
+  color: #3b82f6;
+  border-color: #3b82f6;
 }
 
 .schedule-btn:hover {
-  background-color: #bfdbfe;
+  background-color: #eff6ff;
 }
 
 .more-btn {
-  background-color: #f3f4f6;
   color: #6b7280;
+  border-color: #d1d5db;
 }
 
 .more-btn:hover {
-  background-color: #e5e7eb;
+  background-color: #f9fafb;
 }
 
 /* Bottom Navigation */
-.bottom-navigation {
+.bottom-nav {
   position: fixed;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 390px;
+  max-width: 480px;
   background: white;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #f3f4f6;
+  padding: 12px 20px;
   display: flex;
   justify-content: space-around;
-  padding: 8px 0 16px;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
 .nav-item {
@@ -296,11 +301,10 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px 12px;
+  padding: 8px 16px;
   cursor: pointer;
-  color: #9ca3af;
   transition: color 0.2s;
-  border-radius: 8px;
+  color: #6b7280;
 }
 
 .nav-item.active {
@@ -312,22 +316,22 @@
 }
 
 .nav-item span {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .nav-item svg {
-  stroke-width: 2;
+  transition: transform 0.2s;
 }
 
 /* Responsive adjustments */
 @media (max-width: 390px) {
-  .mobile-schedule-container {
+  .user-schedule-container {
     max-width: 100%;
   }
 
-  .bottom-navigation {
-    max-width: 100%;
+  .bottom-nav {
+    padding: 8px 16px;
   }
 
   .search-container,
@@ -343,11 +347,9 @@
   }
 }
 
+/* Desktop responsive behavior */
 @media (min-width: 768px) {
-  .mobile-schedule-container {
-    max-width: 420px;
-    border-left: 1px solid #e5e7eb;
-    border-right: 1px solid #e5e7eb;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  .user-schedule-container {
+    max-width: 600px;
   }
 }

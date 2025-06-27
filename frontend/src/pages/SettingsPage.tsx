@@ -31,12 +31,6 @@ export const SettingsPage: React.FC = () => {
     alert("Profile updated successfully!");
   };
 
-  const handleLogout = () => {
-    // Handle logout functionality
-    console.log("Logging out...");
-    alert("Logged out successfully!");
-  };
-
   return (
     <div className="dashboard-container">
       <Sidebar currentPage={currentPage} />
