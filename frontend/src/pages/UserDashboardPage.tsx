@@ -51,43 +51,29 @@ export const UserDashboardPage: React.FC = () => {
   const timingEntries: TimingEntry[] = [
     {
       id: "1",
-      type: "Check",
-      startTime: "09:25",
-      endTime: "02:10 PM",
+      type: "Break",
+      startTime: "01:25 pm",
+      endTime: "02:15 PM",
       date: "10/04/25",
     },
     {
       id: "2",
       type: "Break",
-      startTime: "01:25 pm",
-      endTime: "01:25 PM",
-      date: "10/04/25",
+      startTime: "01:00 pm",
+      endTime: "02:05 PM",
+      date: "09/04/25",
     },
     {
       id: "3",
-      type: "Check",
-      startTime: "11:00 pm",
-      endTime: "03:05 PM",
-      date: "09/04/25",
+      type: "Break",
+      startTime: "01:05 pm",
+      endTime: "02:30 PM",
+      date: "08/04/25",
     },
     {
       id: "4",
       type: "Break",
-      startTime: "01:00 pm",
-      endTime: "01:30 PM",
-      date: "09/04/25",
-    },
-    {
-      id: "5",
-      type: "Check",
-      startTime: "01:00 pm",
-      endTime: "03:30 PM",
-      date: "08/04/25",
-    },
-    {
-      id: "6",
-      type: "Break",
-      startTime: "01:00 pm",
+      startTime: "01:10 pm",
       endTime: "02:00 PM",
       date: "07/04/25",
     },
@@ -224,7 +210,7 @@ export const UserDashboardPage: React.FC = () => {
           <div className="timing-status-cards" style={{ margin: "0px" }}>
             <div>
               <div className="status-label">Break</div>
-              <div className="status-time">9:15 AM</div>
+              <div className="status-time">01:25 pm</div>
             </div>
 
             <div className="toggle-switch-container">
@@ -233,13 +219,25 @@ export const UserDashboardPage: React.FC = () => {
               </div>
             </div>
           </div>
-          {timingEntries.map((entry) => (
-            <div key={entry.id} className="table-row">
-              <div className="time-cell">{entry.startTime}</div>
-              <div className="time-cell">{entry.endTime}</div>
-              <div className="date-cell">{entry.date}</div>
-            </div>
-          ))}
+
+          <div className="timing-table">
+            {timingEntries.map((entry) => (
+              <div key={entry.id} className="table-row">
+                <div className="cell-group">
+                  <div className="row-header">Break</div>
+                  <div className="time-cell">{entry.startTime}</div>
+                </div>
+                <div className="cell-group">
+                  <div className="row-header">Ended</div>
+                  <div className="time-cell">{entry.endTime}</div>
+                </div>
+                <div className="cell-group">
+                  <div className="row-header">Date</div>
+                  <div className="date-cell">{entry.date}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

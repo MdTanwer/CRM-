@@ -242,56 +242,65 @@
   color: #6b7280;
 }
 
-/* Timing History Table */
+/* Timing Table Styles */
 .timing-table {
-  background: white;
-  border-radius: 8px;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  background-color: white;
+  border-radius: 10px;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
-}
-
-.table-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  background: #f8f9fa;
-  padding: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .table-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  padding: 12px;
-  border-bottom: 1px solid #f3f4f6;
-  font-size: 13px;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 15px;
   align-items: center;
+}
+
+.table-row:nth-child(odd) {
+  background-color: #f8f9fa;
+}
+
+.table-row:nth-child(even) {
+  background-color: white;
 }
 
 .table-row:last-child {
   border-bottom: none;
 }
 
-.table-row:nth-child(even) {
-  background: #fafafa;
+.cell-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.type-cell {
-  font-weight: 500;
-  color: #1f2937;
+.row-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
 }
 
 .time-cell {
-  color: #6b7280;
-  font-weight: 400;
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 500;
 }
 
 .date-cell {
-  color: #6b7280;
-  font-weight: 400;
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+/* Remove unused header styles */
+.table-header,
+.header-cell {
+  display: none;
 }
 
 /* Activity Section */
