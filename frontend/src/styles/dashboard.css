@@ -111,6 +111,37 @@
   gap: 12px;
 }
 
+.lead-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px;
+  width: 100%;
+}
+.emp-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px;
+  width: 100%;
+}
+
+.lead-search-container {
+  /* border: 1px solid blue; */
+  display: flex;
+  align-items: center;
+  width: 400px;
+  height: 40px;
+}
+
+.emp-search-container {
+  /* border: 1px solid blue; */
+  display: flex;
+  align-items: center;
+  width: 400px;
+  height: 40px;
+}
+
 .search-container {
   position: relative;
   width: 400px;

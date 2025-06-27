@@ -118,10 +118,11 @@
 }
 
 .modal-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 45px;
+  font-weight: 700;
+  color: #000000;
   margin: 0;
+  border: 1px solid red;
 }
 
 .close-btn {

@@ -20,29 +20,20 @@ export const LeadsPage: React.FC = () => {
       <div className="main-content">
         {/* Custom Leads Header */}
         <div className="header">
-          <div className="breadcrumb">
-            <span>Home</span>
-            <span>&gt;</span>
-            <span style={{ color: "#1f2937", fontWeight: "500" }}>
-              Lead Management
-            </span>
-          </div>
-
-          <div className="header-actions">
-            <div className="search-container">
+          <div className="lead-header-actions">
+            <div className="lead-search-container">
               <input
                 type="text"
                 placeholder="Search leads by name, email..."
                 className="search-input"
               />
-              <div className="search-icon">🔍</div>
             </div>
-            <button className="filter-btn">📋 Filter</button>
+
             <button
               className="add-leads-btn"
               onClick={() => setIsUploadModalOpen(true)}
             >
-              📤 Add Leads
+              Add Leads
             </button>
           </div>
         </div>

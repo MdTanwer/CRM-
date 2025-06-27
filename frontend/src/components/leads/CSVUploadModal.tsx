@@ -81,16 +81,6 @@ export const CSVUploadModal: React.FC<CSVUploadModalProps> = ({ onClose }) => {
               </div>
             )}
           </div>
-
-          <div className="file-info">
-            <div className="file-info-item">
-              <span className="file-info-label">Selected File:</span>
-              <span className="file-info-value">
-                {selectedFile ? selectedFile.name : "None"}
-              </span>
-            </div>
-            <div className="file-size-icon">📊</div>
-          </div>
         </div>
 
         <div className="modal-footer">

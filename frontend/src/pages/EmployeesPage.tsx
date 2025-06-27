@@ -36,26 +36,17 @@ export const EmployeesPage: React.FC = () => {
       <div className="main-content">
         {/* Custom Employees Header */}
         <div className="header">
-          <div className="breadcrumb">
-            <span>Home</span>
-            <span>&gt;</span>
-            <span style={{ color: "#1f2937", fontWeight: "500" }}>
-              Employee Management
-            </span>
-          </div>
-
-          <div className="header-actions">
-            <div className="search-container">
+          <div className="emp-header-actions">
+            <div className="emp-search-container">
               <input
                 type="text"
                 placeholder="Search employees by name, ID..."
                 className="search-input"
               />
-              <div className="search-icon">🔍</div>
             </div>
-            <button className="department-btn">🏢 Departments</button>
+
             <button className="add-employees-btn" onClick={handleAddEmployee}>
-              👤 Add Employee
+              Add Employee
             </button>
           </div>
         </div>
