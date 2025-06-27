@@ -44,19 +44,7 @@ export const SettingsPage: React.FC = () => {
       <div className="main-content">
         {/* Custom Settings Header */}
         <div className="header">
-          <div className="breadcrumb">
-            <span>Home</span>
-            <span>&gt;</span>
-            <span style={{ color: "#1f2937", fontWeight: "500" }}>
-              Profile Settings
-            </span>
-          </div>
-
-          <div className="header-actions">
-            <button className="security-btn">🔒 Security</button>
-            <button className="notifications-btn">🔔 Notifications</button>
-            <button className="backup-btn">💾 Backup Data</button>
-          </div>
+          <div className="header-actions"></div>
         </div>
 
         <div className="settings-content">
@@ -141,13 +129,6 @@ export const SettingsPage: React.FC = () => {
                   </button>
                 </div>
               </div>
-            </div>
-
-            <div className="logout-section">
-              <button className="logout-btn" onClick={handleLogout}>
-                🚪 Logout
-              </button>
-              <span className="logout-label">Profile</span>
             </div>
           </div>
         </div>
