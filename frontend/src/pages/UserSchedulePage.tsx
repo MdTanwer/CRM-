@@ -91,7 +91,7 @@ export const UserSchedulePage: React.FC = () => {
   return (
     <div className="user-schedule-container">
       {/* Header with CanovasCRM branding */}
-      <div className="user-header">
+      {/* <div className="user-header">
         <div className="header-top">
           <div className="brand-logo">CanovaCRM</div>
         </div>
@@ -101,6 +101,14 @@ export const UserSchedulePage: React.FC = () => {
           </button>
           <h1 className="page-title">Schedule</h1>
         </div>
+      </div> */}
+
+      <div className="dashboard-header ">
+        <div className="brand-logo">
+          Canova<span style={{ color: "#E8E000" }}>CRM</span>
+        </div>
+        <div className="greeting">Good Morning</div>
+        <div className="user-name">Rajesh Mehta</div>
       </div>
 
       {/* Search Bar */}
