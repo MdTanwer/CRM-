@@ -169,7 +169,7 @@ export const UserDashboardPage: React.FC = () => {
   return (
     <div className="user-dashboard-container">
       {/* Header with CanovasCRM branding */}
-      <div className="dashboard-header">
+      <div className="dashboard-header ">
         <div className="brand-logo">
           Canova<span style={{ color: "#E8E000" }}>CRM</span>
         </div>
@@ -185,52 +185,56 @@ export const UserDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Timings Section */}
+      <div>
+        {" "}
+        <h3
+          style={{
+            fontSize: "17px",
+            fontWeight: "600",
+            marginBottom: "10px",
+            marginTop: "20px",
+            marginLeft: "25px",
+            color: "#0D1829",
+          }}
+        >
+          Timings
+        </h3>
+      </div>
+
+      <div className="timing-status-cards">
+        <div className="">
+          <div className="status-label">Check-in</div>
+          <div className="status-time">9:15 AM</div>
+        </div>
+        <div className="s">
+          <div className="status-label">Check Out</div>
+          <div className="status-time">4:30 PM</div>
+        </div>
+
+        <div className="toggle-switch-container">
+          <div className="toggle-switch-pill active">
+            <div className="toggle-switch-button"></div>
+          </div>
+        </div>
+      </div>
+
       <div className="timings-section">
-        <h3>Timings</h3>
-
-        {/* Current Status Cards */}
-        <div className="timing-status-cards">
-          <div className="status-card">
-            <div className="status-label">Check-in</div>
-            <div className="status-time">9:15 AM</div>
-            <button className="status-btn check-out">Check Out</button>
-          </div>
-          <div className="status-card">
-            <div className="status-label">Check Out</div>
-            <div className="status-time">4:30 PM</div>
-            <div className="status-date">10/04/25</div>
-          </div>
-        </div>
-
-        {/* Break Status */}
-        <div className="break-status-card">
-          <div className="break-row">
-            <div className="break-info">
-              <span className="break-label">Break</span>
-              <span className="break-time">01:25 pm</span>
-            </div>
-            <button className="break-toggle-btn">
-              <div className="toggle-switch active"></div>
-            </button>
-          </div>
-          <div className="break-details">
-            <span>Ended 01:25 PM</span>
-            <span>10/04/25</span>
-          </div>
-        </div>
-
         {/* Timing History Table */}
-        <div className="timing-table">
-          <div className="table-header">
-            <div>Type</div>
-            <div>Started</div>
-            <div>Ended</div>
-            <div>Date</div>
+        <div className="">
+          <div className="timing-status-cards" style={{ margin: "0px" }}>
+            <div>
+              <div className="status-label">Break</div>
+              <div className="status-time">9:15 AM</div>
+            </div>
+
+            <div className="toggle-switch-container">
+              <div className="toggle-switch-pill active">
+                <div className="toggle-switch-button"></div>
+              </div>
+            </div>
           </div>
           {timingEntries.map((entry) => (
             <div key={entry.id} className="table-row">
-              <div className="type-cell">{entry.type}</div>
               <div className="time-cell">{entry.startTime}</div>
               <div className="time-cell">{entry.endTime}</div>
               <div className="date-cell">{entry.date}</div>
