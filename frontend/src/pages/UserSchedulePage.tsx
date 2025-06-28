@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/user-schedule.css";
 import { FaAngleLeft } from "react-icons/fa";
+import { MdLocationOn } from "react-icons/md";
 
 interface ScheduleItem {
   id: string;
@@ -64,15 +65,17 @@ export const UserSchedulePage: React.FC = () => {
   const toggleFilterTooltip = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Filter button clicked");
     setShowFilterTooltip(!showFilterTooltip);
   };
 
-  const handleFilterChange = (value: string) => {
-    setFilterValue(value);
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.stopPropagation();
+    setFilterValue(e.target.value);
   };
 
-  const handleSaveFilter = () => {
+  const handleSaveFilter = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     // Apply filter logic here
     setShowFilterTooltip(false);
   };
@@ -172,7 +175,7 @@ export const UserSchedulePage: React.FC = () => {
               <div className="schedule-filter-select-wrapper">
                 <select
                   value={filterValue}
-                  onChange={(e) => handleFilterChange(e.target.value)}
+                  onChange={handleFilterChange}
                   className="schedule-filter-select"
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -195,34 +198,23 @@ export const UserSchedulePage: React.FC = () => {
       {/* Schedule List */}
       <div className="schedule-list">
         {filteredItems.map((item) => (
-          <div
-            key={item.id}
-            className={`schedule-card ${
-              item.type === "Referral" ? "referral-card" : "cold-call-card"
-            }`}
-          >
-            <div className="card-header">
-              <div className="card-type">{item.type}</div>
-              <div className="card-date">Date</div>
+          <div key={item.id} className="schedule-card">
+            <div className="schedule-card-header">
+              <div className="schedule-card-type">{item.type}</div>
+              <div className="schedule-card-date">Date</div>
             </div>
-            <div className="card-phone">{item.phone}</div>
-            <div className="card-date-value">{item.date}</div>
+            <div className="schedule-card-header">
+              <div className="schedule-card-phone">{item.phone}</div>
+              <div className="schedule-card-date-value">{item.date}</div>
+            </div>
 
-            <div className="card-details">
-              <div className="call-icon">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                </svg>
+            <div className="schedule-card-details">
+              <div className="schedule-call-icon">
+                <MdLocationOn size={20} />
                 <span>Call</span>
               </div>
-
+            </div>
+            <div className="schedule-card-contact-info">
               <div className="contact-avatar">
                 {item.avatar.substring(0, 1)}
               </div>
