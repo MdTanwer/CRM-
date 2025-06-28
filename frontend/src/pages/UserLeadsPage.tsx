@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/user-leads.css";
+import { MdLocationOn } from "react-icons/md";
 
 interface Lead {
   id: string;
@@ -15,6 +16,10 @@ interface Lead {
 export const UserLeadsPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFilterTooltip, setShowFilterTooltip] = useState(false);
+  const [filterValue, setFilterValue] = useState("All");
+  const filterTooltipRef = useRef<HTMLDivElement>(null);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
 
   const leads: Lead[] = [
     {
@@ -85,28 +90,71 @@ export const UserLeadsPage: React.FC = () => {
     navigate(`/user${route}`);
   };
 
+  const toggleFilterTooltip = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowFilterTooltip(!showFilterTooltip);
+  };
+
+  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    e.stopPropagation();
+    setFilterValue(e.target.value);
+  };
+
+  const handleSaveFilter = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Apply filter logic here
+    setShowFilterTooltip(false);
+  };
+
+  // Add a click handler to close the tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Don't close if clicking on the filter button, tooltip, or select element
+      if (
+        filterTooltipRef.current &&
+        filterButtonRef.current &&
+        !filterTooltipRef.current.contains(target) &&
+        !filterButtonRef.current.contains(target) &&
+        !target.closest(".leads-filter-select") &&
+        !target.closest("option")
+      ) {
+        setShowFilterTooltip(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="user-leads-container">
       {/* Header with CanovasCRM branding */}
-      <div className="lead-user-header">
-        <div className="brand-logo" style={{ fontSize: "18px" }}>
-          Canova<span style={{ fontSize: "18px", color: "#E8E000" }}>CRM</span>
+      <div className="leads-header">
+        <div className="leads-brand-logo">
+          Canova<span style={{ color: "#E8E000" }}>CRM</span>
         </div>
 
-        <div className="lead-greeting">good morning</div>
-        <div className="lead-name1">Ragesh Shrestha</div>
+        <div className="leads-greeting">good morning</div>
+        <div className="leads-name">Ragesh Shrestha</div>
       </div>
 
       {/* Search Bar */}
-      <div className="search-container">
-        <div className="search-input-wrapper">
+      <div className="leads-search-container">
+        <div className="leads-search-input-wrapper">
           <svg
-            className="search-icon"
+            className="leads-search-icon"
             width="16"
             height="16"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
+            strokeWidth="2"
           >
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
@@ -116,28 +164,61 @@ export const UserLeadsPage: React.FC = () => {
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
+            className="leads-search-input"
           />
-          <button className="filter-btn">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-            >
-              <line x1="4" y1="21" x2="4" y2="14"></line>
-              <line x1="4" y1="10" x2="4" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12" y2="3"></line>
-              <line x1="20" y1="21" x2="20" y2="16"></line>
-              <line x1="20" y1="12" x2="20" y2="3"></line>
-              <line x1="1" y1="14" x2="7" y2="14"></line>
-              <line x1="9" y1="8" x2="15" y2="8"></line>
-              <line x1="17" y1="16" x2="23" y2="16"></line>
-            </svg>
-          </button>
         </div>
+        <button
+          className="leads-filter-btn"
+          onClick={toggleFilterTooltip}
+          type="button"
+          ref={filterButtonRef}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+        </button>
+
+        {showFilterTooltip && (
+          <div className="leads-filter-tooltip" ref={filterTooltipRef}>
+            <div className="leads-filter-tooltip-header">Filter</div>
+            <div className="leads-filter-dropdown">
+              <div className="leads-filter-select-wrapper">
+                <select
+                  value={filterValue}
+                  onChange={handleFilterChange}
+                  className="leads-filter-select"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <option value="All">All</option>
+                  <option value="Hot">Hot</option>
+                  <option value="Warm">Warm</option>
+                  <option value="Cold">Cold</option>
+                </select>
+              </div>
+            </div>
+            <button
+              className="leads-filter-save-btn"
+              onClick={handleSaveFilter}
+            >
+              Save
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Leads List */}
@@ -246,6 +327,21 @@ export const UserLeadsPage: React.FC = () => {
 
       {/* Bottom Navigation */}
       <div className="bottom-nav">
+        <button className="nav-item" onClick={() => handleNavigation("/")}>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9,22 9,12 15,12 15,22" />
+          </svg>
+          <span>Home</span>
+        </button>
+
         <button
           className="nav-item active"
           onClick={() => handleNavigation("/leads")}
@@ -265,7 +361,7 @@ export const UserLeadsPage: React.FC = () => {
         </button>
 
         <button
-          className="nav-item"
+          className="nav-item "
           onClick={() => handleNavigation("/schedule")}
         >
           <svg
