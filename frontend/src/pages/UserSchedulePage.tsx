@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/user-schedule.css";
+import { FaAngleLeft } from "react-icons/fa";
 
 interface ScheduleItem {
   id: string;
@@ -15,42 +16,37 @@ interface ScheduleItem {
 export const UserSchedulePage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showFilterTooltip, setShowFilterTooltip] = useState(false);
+  const [filterValue, setFilterValue] = useState("Today");
+  const filterTooltipRef = useRef<HTMLDivElement>(null);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
 
   const scheduleItems: ScheduleItem[] = [
     {
       id: "1",
       type: "Referral",
-      phone: "569-505-8855",
-      contact: "Jocelyn Westman",
-      avatar: "JW",
-      date: "30/04/25",
+      phone: "949-265-8533",
+      contact: "Brooklyn Williamson",
+      avatar: "BW",
+      date: "10/04/25",
       status: "upcoming",
     },
     {
       id: "2",
       type: "Referral",
-      phone: "569-505-8854",
-      contact: "Call",
-      avatar: "C",
-      date: "30/04/25",
+      phone: "265-505-8854",
+      contact: "Julia Watson",
+      avatar: "JW",
+      date: "10/04/25",
       status: "upcoming",
     },
     {
       id: "3",
-      type: "Referral",
-      phone: "",
-      contact: "Julia Wellman",
-      avatar: "JW",
-      date: "",
-      status: "upcoming",
-    },
-    {
-      id: "4",
       type: "Cold call",
-      phone: "554-000-8898",
+      phone: "554-092-8895",
       contact: "Jenny Alexander",
       avatar: "JA",
-      date: "30/04/25",
+      date: "10/04/25",
       status: "upcoming",
     },
   ];
@@ -61,66 +57,76 @@ export const UserSchedulePage: React.FC = () => {
       item.phone.includes(searchQuery)
   );
 
-  const handleCall = (item: ScheduleItem) => {
-    console.log("Calling", item.contact);
-    // Implement call functionality
-  };
-
-  const handleSchedule = (item: ScheduleItem) => {
-    console.log("Scheduling", item.contact);
-    // Implement schedule functionality
-  };
-
-  const handleMore = (item: ScheduleItem) => {
-    console.log("More options for", item.contact);
-    // Implement more options functionality
-  };
-
-  const getItemTypeClass = (type: string) => {
-    return type === "Referral" ? "type-referral" : "type-cold-call";
-  };
-
-  const getAvatarColor = (type: string) => {
-    return type === "Referral" ? "avatar-blue" : "avatar-gray";
-  };
-
   const handleNavigation = (route: string) => {
     navigate(`/user${route}`);
   };
 
-  return (
-    <div className="user-schedule-container">
-      {/* Header with CanovasCRM branding */}
-      {/* <div className="user-header">
-        <div className="header-top">
-          <div className="brand-logo">CanovaCRM</div>
-        </div>
-        <div className="header-nav">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            ←
-          </button>
-          <h1 className="page-title">Schedule</h1>
-        </div>
-      </div> */}
+  const toggleFilterTooltip = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Filter button clicked");
+    setShowFilterTooltip(!showFilterTooltip);
+  };
 
-      <div className="dashboard-header ">
-        <div className="brand-logo">
+  const handleFilterChange = (value: string) => {
+    setFilterValue(value);
+  };
+
+  const handleSaveFilter = () => {
+    // Apply filter logic here
+    setShowFilterTooltip(false);
+  };
+
+  // Add a click handler to close the tooltip when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Don't close if clicking on the filter button, tooltip, or select element
+      if (
+        filterTooltipRef.current &&
+        filterButtonRef.current &&
+        !filterTooltipRef.current.contains(target) &&
+        !filterButtonRef.current.contains(target) &&
+        !target.closest(".schedule-filter-select") &&
+        !target.closest("option")
+      ) {
+        setShowFilterTooltip(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div className="schedule-container">
+      {/* Header */}
+      <div className="schedule-header">
+        <div className="schedule-brand-logo">
           Canova<span style={{ color: "#E8E000" }}>CRM</span>
         </div>
-        <div className="greeting">Good Morning</div>
-        <div className="user-name">Rajesh Mehta</div>
+        <div className="schedule-header-nav">
+          <button className="schedule-back-btn " onClick={() => navigate(-1)}>
+            <FaAngleLeft />
+            Schedule
+          </button>
+        </div>
       </div>
 
       {/* Search Bar */}
-      <div className="search-container">
-        <div className="search-input-wrapper">
+      <div className="schedule-search-container">
+        <div className="schedule-search-input-wrapper">
           <svg
-            className="search-icon"
+            className="schedule-search-icon"
             width="16"
             height="16"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
+            strokeWidth="2"
           >
             <circle cx="11" cy="11" r="8"></circle>
             <path d="m21 21-4.35-4.35"></path>
@@ -130,28 +136,60 @@ export const UserSchedulePage: React.FC = () => {
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input"
+            className="schedule-search-input"
           />
-          <button className="filter-btn">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-            >
-              <line x1="4" y1="21" x2="4" y2="14"></line>
-              <line x1="4" y1="10" x2="4" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12" y2="3"></line>
-              <line x1="20" y1="21" x2="20" y2="16"></line>
-              <line x1="20" y1="12" x2="20" y2="3"></line>
-              <line x1="1" y1="14" x2="7" y2="14"></line>
-              <line x1="9" y1="8" x2="15" y2="8"></line>
-              <line x1="17" y1="16" x2="23" y2="16"></line>
-            </svg>
-          </button>
         </div>
+        <button
+          className="schedule-filter-btn"
+          onClick={toggleFilterTooltip}
+          type="button"
+          ref={filterButtonRef}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+        </button>
+
+        {showFilterTooltip && (
+          <div className="schedule-filter-tooltip" ref={filterTooltipRef}>
+            <div className="schedule-filter-tooltip-header">Filter</div>
+            <div className="schedule-filter-dropdown">
+              <div className="schedule-filter-select-wrapper">
+                <select
+                  value={filterValue}
+                  onChange={(e) => handleFilterChange(e.target.value)}
+                  className="schedule-filter-select"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <option value="Today">Today</option>
+                  <option value="All">All</option>
+                </select>
+              </div>
+            </div>
+            <br /> <br />
+            <button
+              className="schedule-filter-save-btn"
+              onClick={handleSaveFilter}
+            >
+              Save
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Schedule List */}
@@ -159,110 +197,36 @@ export const UserSchedulePage: React.FC = () => {
         {filteredItems.map((item) => (
           <div
             key={item.id}
-            className={`schedule-card ${getItemTypeClass(item.type)}`}
+            className={`schedule-card ${
+              item.type === "Referral" ? "referral-card" : "cold-call-card"
+            }`}
           >
-            {/* Card Header */}
             <div className="card-header">
-              <div className="card-header-left">
-                <span className="item-type">{item.type}</span>
-                <span className="item-date">{item.date}</span>
-              </div>
+              <div className="card-type">{item.type}</div>
+              <div className="card-date">Date</div>
             </div>
+            <div className="card-phone">{item.phone}</div>
+            <div className="card-date-value">{item.date}</div>
 
-            {/* Card Content */}
-            <div className="card-content">
-              <div className="contact-info">
-                {item.phone && (
-                  <div className="phone-number">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
-                    <span>{item.phone}</span>
-                  </div>
-                )}
-
-                <div className="contact-person">
-                  <div
-                    className={`contact-avatar ${getAvatarColor(item.type)}`}
-                  >
-                    {item.avatar}
-                  </div>
-                  <span className="contact-name">{item.contact}</span>
-                </div>
+            <div className="card-details">
+              <div className="call-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                <span>Call</span>
               </div>
 
-              {/* Action Buttons */}
-              <div className="card-actions">
-                <button
-                  className="action-btn call-btn"
-                  onClick={() => handleCall(item)}
-                  title="Call"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                  </svg>
-                </button>
-
-                <button
-                  className="action-btn schedule-btn"
-                  onClick={() => handleSchedule(item)}
-                  title="Reschedule"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <rect
-                      x="3"
-                      y="4"
-                      width="18"
-                      height="18"
-                      rx="2"
-                      ry="2"
-                    ></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg>
-                </button>
-
-                <button
-                  className="action-btn more-btn"
-                  onClick={() => handleMore(item)}
-                  title="More options"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <circle cx="12" cy="12" r="1"></circle>
-                    <circle cx="12" cy="5" r="1"></circle>
-                    <circle cx="12" cy="19" r="1"></circle>
-                  </svg>
-                </button>
+              <div className="contact-avatar">
+                {item.avatar.substring(0, 1)}
               </div>
+              <div className="contact-name">{item.contact}</div>
             </div>
           </div>
         ))}
@@ -270,6 +234,21 @@ export const UserSchedulePage: React.FC = () => {
 
       {/* Bottom Navigation */}
       <div className="bottom-nav">
+        <button className="nav-item" onClick={() => handleNavigation("/")}>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9,22 9,12 15,12 15,22" />
+          </svg>
+          <span>Home</span>
+        </button>
+
         <button className="nav-item" onClick={() => handleNavigation("/leads")}>
           <svg
             width="20"
