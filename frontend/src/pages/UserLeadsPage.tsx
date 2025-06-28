@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/user-leads.css";
 import { MdLocationOn } from "react-icons/md";
+import { HiPencilAlt } from "react-icons/hi";
+import { IoTime } from "react-icons/io5";
 
 interface Lead {
   id: string;
@@ -20,6 +22,31 @@ export const UserLeadsPage: React.FC = () => {
   const [filterValue, setFilterValue] = useState("All");
   const filterTooltipRef = useRef<HTMLDivElement>(null);
   const filterButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Type tooltip state
+  const [showTypeTooltip, setShowTypeTooltip] = useState(false);
+  const [activeLead, setActiveLead] = useState<string | null>(null);
+  const typeTooltipRef = useRef<HTMLDivElement>(null);
+  const typeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  // DateTime tooltip state
+  const [showDateTimeTooltip, setShowDateTimeTooltip] = useState(false);
+  const [activeDateTimeLead, setActiveDateTimeLead] = useState<string | null>(
+    null
+  );
+  const [dateValue, setDateValue] = useState("");
+  const [timeValue, setTimeValue] = useState("");
+  const dateTimeTooltipRef = useRef<HTMLDivElement>(null);
+  const dateTimeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  // Status tooltip state
+  const [showStatusTooltip, setShowStatusTooltip] = useState(false);
+  const [activeStatusLead, setActiveStatusLead] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<"Ongoing" | "Closed">(
+    "Ongoing"
+  );
+  const statusTooltipRef = useRef<HTMLDivElement>(null);
+  const statusButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const leads: Lead[] = [
     {
@@ -108,12 +135,12 @@ export const UserLeadsPage: React.FC = () => {
     setShowFilterTooltip(false);
   };
 
-  // Add a click handler to close the tooltip when clicking outside
+  // Add a click handler to close the tooltips when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
 
-      // Don't close if clicking on the filter button, tooltip, or select element
+      // Handle filter tooltip
       if (
         filterTooltipRef.current &&
         filterButtonRef.current &&
@@ -124,6 +151,39 @@ export const UserLeadsPage: React.FC = () => {
       ) {
         setShowFilterTooltip(false);
       }
+
+      // Handle type tooltip
+      if (
+        typeTooltipRef.current &&
+        typeButtonRef.current &&
+        !typeTooltipRef.current.contains(target) &&
+        !typeButtonRef.current.contains(target)
+      ) {
+        setShowTypeTooltip(false);
+        setActiveLead(null);
+      }
+
+      // Handle date/time tooltip
+      if (
+        dateTimeTooltipRef.current &&
+        dateTimeButtonRef.current &&
+        !dateTimeTooltipRef.current.contains(target) &&
+        !dateTimeButtonRef.current.contains(target)
+      ) {
+        setShowDateTimeTooltip(false);
+        setActiveDateTimeLead(null);
+      }
+
+      // Handle status tooltip
+      if (
+        statusTooltipRef.current &&
+        statusButtonRef.current &&
+        !statusTooltipRef.current.contains(target) &&
+        !statusButtonRef.current.contains(target)
+      ) {
+        setShowStatusTooltip(false);
+        setActiveStatusLead(null);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -131,6 +191,88 @@ export const UserLeadsPage: React.FC = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const toggleTypeTooltip = (e: React.MouseEvent, leadId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (activeLead === leadId && showTypeTooltip) {
+      setShowTypeTooltip(false);
+      setActiveLead(null);
+    } else {
+      setShowTypeTooltip(true);
+      setActiveLead(leadId);
+      // Store the current button as reference
+      typeButtonRef.current = e.currentTarget as HTMLButtonElement;
+    }
+  };
+
+  const handleTypeChange = (
+    leadId: string,
+    priority: "Hot" | "Warm" | "Cold"
+  ) => {
+    // Update lead priority logic here
+    console.log(`Changing lead ${leadId} priority to ${priority}`);
+
+    // Close tooltip after selection
+    setShowTypeTooltip(false);
+    setActiveLead(null);
+  };
+
+  const toggleDateTimeTooltip = (e: React.MouseEvent, leadId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (activeDateTimeLead === leadId && showDateTimeTooltip) {
+      setShowDateTimeTooltip(false);
+      setActiveDateTimeLead(null);
+    } else {
+      setShowDateTimeTooltip(true);
+      setActiveDateTimeLead(leadId);
+      // Store the current button as reference
+      dateTimeButtonRef.current = e.currentTarget as HTMLButtonElement;
+    }
+  };
+
+  const handleSaveDateTime = (leadId: string) => {
+    // Update lead date/time logic here
+    console.log(
+      `Updating lead ${leadId} date to ${dateValue} and time to ${timeValue}`
+    );
+
+    // Close tooltip after saving
+    setShowDateTimeTooltip(false);
+    setActiveDateTimeLead(null);
+  };
+
+  const toggleStatusTooltip = (
+    e: React.MouseEvent,
+    leadId: string,
+    currentStatus: "Ongoing" | "Closed"
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (activeStatusLead === leadId && showStatusTooltip) {
+      setShowStatusTooltip(false);
+      setActiveStatusLead(null);
+    } else {
+      setShowStatusTooltip(true);
+      setActiveStatusLead(leadId);
+      setSelectedStatus(currentStatus);
+      // Store the current button as reference
+      statusButtonRef.current = e.currentTarget as HTMLButtonElement;
+    }
+  };
+
+  const handleSaveStatus = (leadId: string) => {
+    // Update lead status logic here
+    console.log(`Updating lead ${leadId} status to ${selectedStatus}`);
+
+    // Close tooltip after saving
+    setShowStatusTooltip(false);
+    setActiveStatusLead(null);
+  };
 
   return (
     <div className="user-leads-container">
@@ -230,7 +372,7 @@ export const UserLeadsPage: React.FC = () => {
                 <h3 className="lead-name">{lead.name}</h3>
                 <p className="lead-email">{lead.email}</p>
               </div>
-              <div className="lead-badges">
+              <div className="lead-status-circle">
                 <span
                   className={`status-badge ${getStatusBadgeClass(lead.status)}`}
                 >
@@ -239,11 +381,12 @@ export const UserLeadsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="lead-details">
-              <div className="lead-date">
+            <div className="lead-date-section">
+              <span className="lead-date-label">date</span>
+              <div className="lead-date-value">
                 <svg
-                  width="14"
-                  height="14"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -254,72 +397,118 @@ export const UserLeadsPage: React.FC = () => {
                   <line x1="8" y1="2" x2="8" y2="6"></line>
                   <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
-                <span>date</span>
+                <span>{lead.date}</span>
               </div>
-              <span
-                className={`priority-badge ${getPriorityBadgeClass(
-                  lead.priority
-                )}`}
-              >
-                {lead.priority}
-              </span>
             </div>
 
-            <div className="lead-footer">
-              <span className="date-text">{lead.date}</span>
-              <div className="lead-actions">
-                <button
-                  className="action-btn call-btn"
-                  onClick={() => handleCall(lead)}
-                  title="Call"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                  </svg>
-                </button>
+            <div className="lead-actions-row">
+              <button
+                className="action-btn type-btn"
+                onClick={(e) => toggleTypeTooltip(e, lead.id)}
+                title="Change Type"
+                ref={activeLead === lead.id ? typeButtonRef : null}
+              >
+                <HiPencilAlt />
+              </button>
 
-                <button
-                  className="action-btn message-btn"
-                  onClick={() => handleMessage(lead)}
-                  title="Message"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                  </svg>
-                </button>
+              {showTypeTooltip && activeLead === lead.id && (
+                <div className="type-tooltip" ref={typeTooltipRef}>
+                  <div className="type-tooltip-header">Type</div>
+                  <div className="type-options">
+                    <button
+                      className="type-option hot-option"
+                      onClick={() => handleTypeChange(lead.id, "Hot")}
+                    >
+                      Hot
+                    </button>
+                    <button
+                      className="type-option warm-option"
+                      onClick={() => handleTypeChange(lead.id, "Warm")}
+                    >
+                      Warm
+                    </button>
+                    <button
+                      className="type-option cold-option"
+                      onClick={() => handleTypeChange(lead.id, "Cold")}
+                    >
+                      Cold
+                    </button>
+                  </div>
+                </div>
+              )}
 
-                <button
-                  className="action-btn email-btn"
-                  onClick={() => handleEmail(lead)}
-                  title="Email"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+              <button
+                className="action-btn datetime-btn"
+                onClick={(e) => toggleDateTimeTooltip(e, lead.id)}
+                title="Set Date & Time"
+                ref={activeDateTimeLead === lead.id ? dateTimeButtonRef : null}
+              >
+                <IoTime />
+              </button>
+
+              {showDateTimeTooltip && activeDateTimeLead === lead.id && (
+                <div className="datetime-tooltip" ref={dateTimeTooltipRef}>
+                  <div className="datetime-tooltip-header">Date</div>
+                  <input
+                    type="text"
+                    className="datetime-input"
+                    placeholder="dd/mm/yy"
+                    value={dateValue}
+                    onChange={(e) => setDateValue(e.target.value)}
+                  />
+                  <div className="datetime-tooltip-header">Time</div>
+                  <input
+                    type="text"
+                    className="datetime-input"
+                    placeholder="02:30PM"
+                    value={timeValue}
+                    onChange={(e) => setTimeValue(e.target.value)}
+                  />
+                  <button
+                    className="datetime-save-btn"
+                    onClick={() => handleSaveDateTime(lead.id)}
                   >
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                </button>
-              </div>
+                    Save
+                  </button>
+                </div>
+              )}
+
+              <button
+                className="action-btn status-btn"
+                onClick={(e) => toggleStatusTooltip(e, lead.id, lead.status)}
+                title="Change Status"
+                ref={activeStatusLead === lead.id ? statusButtonRef : null}
+              >
+                <MdLocationOn />
+              </button>
+
+              {showStatusTooltip && activeStatusLead === lead.id && (
+                <div className="status-tooltip" ref={statusTooltipRef}>
+                  <div className="status-tooltip-header">
+                    Lead Status <span className="status-info-icon">i</span>
+                  </div>
+                  <div className="status-dropdown">
+                    <select
+                      value={selectedStatus}
+                      onChange={(e) =>
+                        setSelectedStatus(
+                          e.target.value as "Ongoing" | "Closed"
+                        )
+                      }
+                      className="status-select"
+                    >
+                      <option value="Ongoing">Ongoing</option>
+                      <option value="Closed">Closed</option>
+                    </select>
+                  </div>
+                  <button
+                    className="status-save-btn"
+                    onClick={() => handleSaveStatus(lead.id)}
+                  >
+                    Save
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}

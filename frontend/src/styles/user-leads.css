@@ -209,8 +209,8 @@
 
 .lead-card {
   border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: relative;
   margin-bottom: 16px;
   background-color: #f6f6f5;
@@ -220,7 +220,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 
 .lead-info {
@@ -229,7 +229,7 @@
 
 .lead-name {
   font-family: "Poppins", sans-serif;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   letter-spacing: 0;
   line-height: normal;
@@ -239,7 +239,7 @@
 
 .lead-email {
   font-family: "Poppins", sans-serif;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0;
   line-height: normal;
@@ -252,91 +252,76 @@
   gap: 8px;
 }
 
+.lead-status-circle {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
 .status-badge {
-  padding: 6px 10px;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
   font-family: "Poppins", sans-serif;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   letter-spacing: 0;
+  border: 2px solid;
+  background-color: white;
 }
 
 .status-ongoing {
-  background-color: #e8f4ff;
-  color: #2051e5;
+  color: #ff6b00;
+  border-color: #ff6b00;
 }
 
 .status-closed {
-  background-color: #e8ffe8;
   color: #00a811;
+  border-color: #00a811;
+  background-color: transparent;
 }
 
-.lead-details {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+.lead-date-section {
+  margin-bottom: 16px;
 }
 
-.lead-date {
+.lead-date-label {
+  display: block;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #212525;
+  margin-bottom: 4px;
+}
+
+.lead-date-value {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: #212525;
   font-family: "Poppins", sans-serif;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 500;
 }
 
-.lead-date svg {
+.lead-date-value svg {
   color: #666;
   width: 16px;
   height: 16px;
 }
 
-.priority-badge {
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-family: "Poppins", sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0;
-}
-
-.priority-hot {
-  background-color: #ffe8e8;
-  color: #e51e20;
-}
-
-.priority-warm {
-  background-color: #fff8e8;
-  color: #e59c20;
-}
-
-.priority-cold {
-  background-color: #e8f0ff;
-  color: #2051e5;
-}
-
-.lead-footer {
+.lead-actions-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 12px;
-  margin-top: 12px;
-}
-
-.date-text {
-  font-family: "Poppins", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #212525;
-}
-
-.lead-actions {
-  display: flex;
-  gap: 10px;
+  gap: 16px;
+  margin-top: 16px;
+  position: relative;
+  flex-wrap: wrap;
 }
 
 .action-btn {
@@ -349,35 +334,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
+  color: #2051e5;
 }
 
 .action-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 .call-btn {
-  color: #666;
-}
-
-.call-btn:hover {
   color: #2051e5;
 }
 
 .message-btn {
-  color: #666;
-}
-
-.message-btn:hover {
   color: #2051e5;
 }
 
 .email-btn {
-  color: #666;
-}
-
-.email-btn:hover {
   color: #2051e5;
 }
 
@@ -458,4 +431,214 @@
   .nav-item {
     padding: 4px 8px;
   }
+}
+
+/* Type Button and Tooltip */
+.type-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f2f2f2;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.type-label {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.type-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 120px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+  z-index: 1100;
+  margin-top: 8px;
+}
+
+.type-tooltip-header {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.type-option {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  color: white;
+}
+
+.hot-option {
+  background-color: #ff6b00;
+}
+
+.warm-option {
+  background-color: #ffd600;
+}
+
+.cold-option {
+  background-color: #00d1e0;
+}
+
+/* DateTime Button and Tooltip */
+.datetime-btn {
+  color: #2051e5;
+}
+
+.datetime-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  z-index: 1100;
+  margin-top: 8px;
+}
+
+.datetime-tooltip-header {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2051e5;
+  margin-bottom: 8px;
+}
+
+.datetime-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  margin-bottom: 12px;
+  outline: none;
+}
+
+.datetime-save-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #333333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* Status Button and Tooltip */
+.status-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f2f2f2;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.status-btn-label {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.status-tooltip {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 180px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  z-index: 1100;
+  margin-top: 8px;
+}
+
+.status-tooltip-header {
+  font-family: "Poppins", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  color: #666;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.status-dropdown {
+  margin-bottom: 16px;
+}
+
+.status-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: #fff;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  color: #333;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+
+.status-save-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #333333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
 }
