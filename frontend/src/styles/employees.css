@@ -18,11 +18,11 @@
 }
 
 /* Sticky Header */
-.header {
+.emp-header {
   position: sticky;
   top: 0;
   background-color: #ffffff;
-  padding: 10px 20px;
+  padding: 6px 20px;
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
@@ -109,8 +109,13 @@
   }
 }
 
+.emp-content-container {
+  display: flex;
+  justify-content: space-between;
+}
+
 /* Add Employee Button */
-.add-employees-btn {
+.emp-add-btn {
   background-color: #3b82f6;
   color: white;
   border: none;
@@ -129,8 +134,8 @@
 
 /* Employees Page Styles */
 .employees-content {
-  padding: 24px;
-  background-color: #f8f9fa;
+  padding: 20px;
+  background-color: #ffffff;
   min-height: calc(100vh - 80px);
 }
 

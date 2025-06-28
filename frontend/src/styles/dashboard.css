@@ -154,8 +154,7 @@
   border-color: #9ca3af;
 }
 
-.add-leads-btn,
-.add-employees-btn {
+.add-leads-btn {
   background-color: #3b82f6;
   color: white;
   border: none;
@@ -168,8 +167,7 @@
   white-space: nowrap;
 }
 
-.add-leads-btn:hover,
-.add-employees-btn:hover {
+.add-leads-btn:hover {
   background-color: #2563eb;
 }
 

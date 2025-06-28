@@ -34,7 +34,7 @@ export const EmployeesPage: React.FC = () => {
 
       <div className="main-content">
         {/* Custom Employees Header */}
-        <div className="header">
+        <div className="emp-header">
           <div className="emp-header-actions">
             <div className="emp-search-container">
               <input
@@ -44,13 +44,17 @@ export const EmployeesPage: React.FC = () => {
               />
             </div>
 
-            <button className="add-employees-btn" onClick={handleAddEmployee}>
+            <button className="emp-add-btn" onClick={handleAddEmployee}>
               Add Employee
             </button>
           </div>
         </div>
 
         <div className="employees-content">
+          <div className="emp-content-container">
+            <div>yo</div>
+            <div>hi</div>
+          </div>
           <EmployeesTable data={employeesData} />
         </div>
       </div>

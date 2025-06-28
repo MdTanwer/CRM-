@@ -10,7 +10,7 @@ interface SidebarProps {
 const navigation = [
   {
     name: "Dashboard",
-    href: ROUTES.DASHBOARD,
+    href: ROUTES.ADMIN_DASHBOARD,
     id: "dashboard",
   },
   {
@@ -48,7 +48,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage }) => {
           {navigation.map((item) => {
             const isActive =
               location.pathname === item.href ||
-              (item.href === ROUTES.DASHBOARD && location.pathname === "/") ||
+              (item.href === ROUTES.ADMIN_DASHBOARD &&
+                location.pathname === "/") ||
               currentPage === item.id;
 
             return (

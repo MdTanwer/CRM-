@@ -1,6 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { Dashboard } from "../pages/Dashboard";
+import { AdminDashboard } from "../pages/AdminDashboard";
 import { LeadsPage } from "../pages/LeadsPage";
 import { EmployeesPage } from "../pages/EmployeesPage";
 import { SettingsPage } from "../pages/SettingsPage";
@@ -10,7 +10,7 @@ import { NotFoundPage } from "../pages/NotFoundPage";
 export const AdminRoutes: React.FC = () => {
   return (
     <Routes>
-      <Route path={ROUTES.DASHBOARD} element={<Dashboard />} />
+      <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
       <Route path={ROUTES.LEADS} element={<LeadsPage />} />
       <Route path={ROUTES.EMPLOYEES} element={<EmployeesPage />} />
       <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />

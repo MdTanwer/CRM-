@@ -8,7 +8,7 @@ import { LeadsTable } from "../components/dashboard/LeadsTable";
 import { dashboardStats, recentActivity, leadsData } from "../data/dummyData";
 import "../styles/dashboard.css";
 
-export const Dashboard: React.FC = () => {
+export const AdminDashboard: React.FC = () => {
   const location = useLocation();
   const currentPage =
     location.pathname === "/" ? "dashboard" : location.pathname.slice(1);
