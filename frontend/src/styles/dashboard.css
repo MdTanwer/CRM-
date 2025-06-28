@@ -7,68 +7,6 @@
     Ubuntu, Cantarell, sans-serif;
 }
 
-/* Sticky Sidebar */
-.sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 240px;
-  height: 100vh;
-  background-color: #ffffff;
-  border-right: 1px solid #e5e7eb;
-  padding: 0;
-  flex-shrink: 0;
-  overflow-y: auto;
-  z-index: 1000;
-  background-color: #d9d9d9;
-}
-
-.sidebar-header {
-  padding: 20px;
-}
-
-.sidebar-logo {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-}
-
-.sidebar-nav {
-  padding: 20px 0;
-}
-
-.sidebar-nav ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.sidebar-nav li {
-  margin-bottom: 4px;
-}
-
-.sidebar-nav a {
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  color: #000000;
-  text-decoration: none;
-  font-size: 18px;
-  transition: all 0.2s;
-  font-weight: 600;
-}
-
-.sidebar-nav a:hover,
-.sidebar-nav a.active {
-  background-color: #f3f4f6;
-  color: #1f2937;
-}
-
-.sidebar-nav a.active {
-  background-color: #a7a7a7;
-}
-
 /* Main Content with margin for fixed sidebar */
 .main-content {
   flex: 1;
@@ -624,7 +562,7 @@
   }
 }
 
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
   .sidebar {
     width: 200px;
   }
@@ -640,4 +578,4 @@
   .search-container {
     margin: 0 16px;
   }
-}
+} */

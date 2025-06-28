@@ -4,7 +4,6 @@ import { Sidebar } from "../components/layout/Sidebar";
 import { EmployeesTable } from "../components/employees/EmployeesTable";
 import { AddEmployeeModal } from "../components/employees/AddEmployeeModal";
 import { employeesData } from "../data/dummyData";
-import "../styles/dashboard.css";
 import "../styles/employees.css";
 
 export const EmployeesPage: React.FC = () => {
