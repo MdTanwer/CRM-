@@ -5,7 +5,7 @@ import { LeadsPage } from "../pages/LeadsPage";
 import { EmployeesPage } from "../pages/EmployeesPage";
 import { SettingsPage } from "../pages/SettingsPage";
 import { ROUTES } from "../constants";
-
+import { NotFoundPage } from "../pages/NotFoundPage";
 export const DesktopRoutes: React.FC = () => {
   return (
     <Routes>
@@ -15,8 +15,8 @@ export const DesktopRoutes: React.FC = () => {
       <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
       {/* Future desktop routes can be added here */}
 
-      {/* Default redirect to dashboard for unknown desktop routes */}
-      <Route path="*" element={<Dashboard />} />
+      {/* 404 page for unknown routes */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

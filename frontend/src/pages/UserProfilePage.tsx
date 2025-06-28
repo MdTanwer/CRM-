@@ -1,34 +1,30 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/user-profile.css";
+import { FaAngleLeft } from "react-icons/fa";
 
 export const UserProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: "Ragesh Shrestha",
-    email: "ragesh.shrestha@company.com",
-    phone: "+1 (555) 123-4567",
-    location: "New York, NY",
-    language: "English",
+    firstName: "Rajesh",
+    lastName: "Mehta",
+    email: "rajesh.mehta55@gmail.com",
+    password: "",
+    confirmPassword: "",
   });
 
-  const handleEdit = () => {
-    setIsEditing(true);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setProfileData({
+      ...profileData,
+      [name]: value,
+    });
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
     // Save logic here
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    // Reset to original data
-  };
-
-  const handleScheduleNavigation = () => {
-    navigate("/user/schedule"); // Navigate to user schedule page
+    console.log("Saving profile data:", profileData);
   };
 
   const handleNavigation = (route: string) => {
@@ -38,169 +34,106 @@ export const UserProfilePage: React.FC = () => {
   return (
     <div className="user-profile-container">
       {/* Header */}
-      <div className="user-profile-header">
-        <div className="header-top">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            ←
-          </button>
-          <h1 className="page-title">Profile</h1>
-          <button
-            className="edit-btn"
-            onClick={isEditing ? handleSave : handleEdit}
-          >
-            {isEditing ? "Save" : "Edit"}
+      <div className="profile-header">
+        <div className="profile-brand-logo">
+          Canova<span style={{ color: "#E8E000" }}>CRM</span>
+        </div>
+        <div className="profile-header-nav">
+          <button className=" profile-back-btn" onClick={() => navigate(-1)}>
+            <FaAngleLeft />
+            Profile
           </button>
         </div>
       </div>
 
-      {/* Profile Content */}
+      {/* Profile Form */}
       <div className="profile-content">
-        {/* Profile Picture */}
-        <div className="profile-picture-section">
-          <div className="profile-avatar-large">
-            <div className="avatar-circle">RS</div>
-          </div>
-          {isEditing && (
-            <button className="change-photo-btn">Change Photo</button>
-          )}
-        </div>
-
-        {/* Profile Information */}
-        <div className="profile-info-section">
-          <div className="form-group">
-            <label>Full Name</label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={profileData.name}
-                onChange={(e) =>
-                  setProfileData({ ...profileData, name: e.target.value })
-                }
-                className="form-input"
-              />
-            ) : (
-              <div className="form-value">{profileData.name}</div>
-            )}
+        <form onSubmit={handleSave}>
+          <div className="user-profile-form-group">
+            <label htmlFor="firstName">First name</label>
+            <input
+              type="text"
+              id="firstName"
+              name="firstName"
+              value={profileData.firstName}
+              onChange={handleChange}
+              className="user-profile-form-input"
+            />
           </div>
 
-          <div className="form-group">
-            <label>Email</label>
-            {isEditing ? (
-              <input
-                type="email"
-                value={profileData.email}
-                onChange={(e) =>
-                  setProfileData({ ...profileData, email: e.target.value })
-                }
-                className="form-input"
-              />
-            ) : (
-              <div className="form-value">{profileData.email}</div>
-            )}
+          <div className="user-profile-form-group">
+            <label htmlFor="lastName">Last name</label>
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              value={profileData.lastName}
+              onChange={handleChange}
+              className="user-profile-form-input"
+            />
           </div>
 
-          <div className="form-group">
-            <label>Phone</label>
-            {isEditing ? (
-              <input
-                type="tel"
-                value={profileData.phone}
-                onChange={(e) =>
-                  setProfileData({ ...profileData, phone: e.target.value })
-                }
-                className="form-input"
-              />
-            ) : (
-              <div className="form-value">{profileData.phone}</div>
-            )}
+          <div className="user-profile-form-group">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={profileData.email}
+              onChange={handleChange}
+              className="user-profile-form-input"
+            />
           </div>
 
-          <div className="form-group">
-            <label>Location</label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={profileData.location}
-                onChange={(e) =>
-                  setProfileData({ ...profileData, location: e.target.value })
-                }
-                className="form-input"
-              />
-            ) : (
-              <div className="form-value">{profileData.location}</div>
-            )}
+          <div className="user-profile-form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={profileData.password}
+              onChange={handleChange}
+              className="user-profile-form-input"
+              placeholder="••••••••••"
+            />
           </div>
 
-          <div className="form-group">
-            <label>Preferred Language</label>
-            {isEditing ? (
-              <select
-                value={profileData.language}
-                onChange={(e) =>
-                  setProfileData({ ...profileData, language: e.target.value })
-                }
-                className="form-input"
-              >
-                <option value="English">English</option>
-                <option value="Spanish">Spanish</option>
-                <option value="French">French</option>
-                <option value="German">German</option>
-              </select>
-            ) : (
-              <div className="form-value">{profileData.language}</div>
-            )}
+          <div className="user-profile-form-group">
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={profileData.confirmPassword}
+              onChange={handleChange}
+              className="user-profile-form-input"
+              placeholder="••••••••••"
+            />
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        {isEditing && (
-          <div className="action-buttons">
-            <button className="cancel-btn" onClick={handleCancel}>
-              Cancel
-            </button>
-            <button className="save-btn" onClick={handleSave}>
-              Save Changes
-            </button>
-          </div>
-        )}
-
-        {/* Additional Options */}
-        <div className="additional-options">
-          <button className="option-btn">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M12 1v6m0 0l4-4m-4 4L8 3m8 15v6m0 0l4-4m-4 4l-4-4" />
-              <path d="M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" />
-            </svg>
-            <span>Change Password</span>
+          <button type="submit" className="user-profile-save-button">
+            Save
           </button>
-
-          <button className="option-btn">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-              <polyline points="10,17 15,12 10,7" />
-              <line x1="15" y1="12" x2="3" y2="12" />
-            </svg>
-            <span>Logout</span>
-          </button>
-        </div>
+        </form>
       </div>
 
       {/* Bottom Navigation */}
       <div className="bottom-nav">
+        <button className="nav-item" onClick={() => handleNavigation("/")}>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9,22 9,12 15,12 15,22" />
+          </svg>
+          <span>Home</span>
+        </button>
+
         <button className="nav-item" onClick={() => handleNavigation("/leads")}>
           <svg
             width="20"

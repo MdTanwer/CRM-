@@ -4,6 +4,7 @@ import { UserDashboardPage } from "../pages/UserDashboardPage";
 import { UserLeadsPage } from "../pages/UserLeadsPage";
 import { UserSchedulePage } from "../pages/UserSchedulePage";
 import { UserProfilePage } from "../pages/UserProfilePage";
+import { NotFoundPage } from "../pages/NotFoundPage";
 
 export const UserRoutes: React.FC = () => {
   return (
@@ -12,8 +13,8 @@ export const UserRoutes: React.FC = () => {
       <Route path="/leads" element={<UserLeadsPage />} />
       <Route path="/schedule" element={<UserSchedulePage />} />
       <Route path="/profile" element={<UserProfilePage />} />
-      {/* Default redirect to dashboard for unknown user routes */}
-      <Route path="*" element={<UserDashboardPage />} />
+      {/* 404 page for unknown routes */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };
