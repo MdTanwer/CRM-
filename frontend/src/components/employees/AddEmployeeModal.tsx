@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "../../styles/employees.css";
+import { CiWarning } from "react-icons/ci";
 
 interface AddEmployeeModalProps {
   isOpen: boolean;
@@ -101,53 +102,65 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="location">Location</label>
-            <select
-              id="location"
-              name="location"
-              value={formData.location}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="">Kamlodan</option>
-              <option value="kamlodan">Kamlodan</option>
-              <option value="kolkata">Kolkata</option>
-              <option value="mumbai">Mumbai</option>
-              <option value="delhi">Delhi</option>
-              <option value="bangalore">Bangalore</option>
-            </select>
-            <small className="form-help-text">
-              Leave this assigned on branch to facilitate
-            </small>
+          <div className="form-field-container">
+            <div className="form-group">
+              <label htmlFor="location">Location</label>
+              <select
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Kamlodan</option>
+                <option value="kamlodan">Kamlodan</option>
+                <option value="kolkata">Kolkata</option>
+                <option value="mumbai">Mumbai</option>
+                <option value="delhi">Delhi</option>
+                <option value="bangalore">Bangalore</option>
+              </select>
+            </div>
+            <div className="form-help-tooltip">
+              <span className="tooltip-icon">
+                <CiWarning />
+              </span>
+              <span className="tooltip-text">
+                Lead will be assigned on biases on location
+              </span>
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="preferredLanguage">Preferred Language</label>
-            <select
-              id="preferredLanguage"
-              name="preferredLanguage"
-              value={formData.preferredLanguage}
-              onChange={handleInputChange}
-              required
-            >
-              <option value="">Hindi</option>
-              <option value="hindi">Hindi</option>
-              <option value="english">English</option>
-              <option value="bengali">Bengali</option>
-              <option value="tamil">Tamil</option>
-              <option value="telugu">Telugu</option>
-            </select>
-            <small className="form-help-text">
-              Lead will be assigned on branch to language
-            </small>
+          <div className="form-field-container">
+            <div className="form-group">
+              <label htmlFor="preferredLanguage">Preferred Language</label>
+              <select
+                id="preferredLanguage"
+                name="preferredLanguage"
+                value={formData.preferredLanguage}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="">Hindi</option>
+                <option value="hindi">Hindi</option>
+                <option value="english">English</option>
+                <option value="bengali">Bengali</option>
+                <option value="tamil">Tamil</option>
+                <option value="telugu">Telugu</option>
+              </select>
+            </div>
+            <div className="form-help-tooltip">
+              <span className="tooltip-icon">
+                {" "}
+                <CiWarning />
+              </span>
+              <span className="tooltip-text">
+                Lead will be assigned on biases on language
+              </span>
+            </div>
           </div>
 
-          <div className="modal-actions">
-            <button type="button" className="cancel-btn" onClick={onClose}>
-              Cancel
-            </button>
-            <button type="submit" className="save-btn">
+          <div className="emp-modal-actions">
+            <button type="submit" className="emp-save-btn">
               Save
             </button>
           </div>
