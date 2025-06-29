@@ -52,11 +52,11 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className="add-employee-modal">
-        <div className="modal-header">
+    <div className="emp-modal-overlay" onClick={handleOverlayClick}>
+      <div className="emp-add-employee-modal">
+        <div className="emp-modal-header">
           <h2>Add New Employee</h2>
-          <button className="modal-close-btn" onClick={onClose}>
+          <button className="emp-modal-close-btn" onClick={onClose}>
             ×
           </button>
         </div>
