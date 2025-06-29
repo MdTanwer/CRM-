@@ -5,6 +5,7 @@ import { AppProviders } from "./context/AppProviders";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
+import LoginPage from "./pages/LoginPage";
 
 function App() {
   return (
@@ -12,6 +13,9 @@ function App() {
       <Router>
         <div className="app">
           <Routes>
+            {/* Auth Routes */}
+            <Route path="/login" element={<LoginPage />} />
+
             {/* User Routes - All routes starting with /user/ */}
             <Route path="/user/*" element={<UserRoutes />} />
 

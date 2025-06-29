@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from "express";
 import connectDB from "./utils/database";
 import employeeRoutes from "./routes/employeeRoutes";
 import leadRoutes from "./routes/leadRoutes";
+import authRoutes from "./routes/authRoutes";
 import cors from "cors";
 import { globalErrorHandler } from "./utils/errorHandler";
 // import { config } from "./utils/config";
@@ -19,6 +20,9 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/api/v1", (req: Request, res: Response) => {
   res.json({ message: "CRM API v1 is running" });
 });
+
+// Auth routes
+app.use("/api/v1/auth", authRoutes);
 
 // Employee routes
 app.use("/api/v1/employees", employeeRoutes);
