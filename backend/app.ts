@@ -1,8 +1,9 @@
 import express, { Request, Response, NextFunction } from "express";
 import connectDB from "./utils/database";
 import employeeRoutes from "./routes/employeeRoutes";
+import leadRoutes from "./routes/leadRoutes";
 import cors from "cors";
-// import { globalErrorHandler } from "./utils/errorHandler";
+import { globalErrorHandler } from "./utils/errorHandler";
 // import { config } from "./utils/config";
 
 // Create Express app
@@ -22,8 +23,11 @@ app.get("/api/v1", (req: Request, res: Response) => {
 // Employee routes
 app.use("/api/v1/employees", employeeRoutes);
 
+// Lead routes
+app.use("/api/v1/leads", leadRoutes);
+
 // Global error handler
-// app.use(globalErrorHandler);
+app.use(globalErrorHandler);
 
 // Start server
 const PORT = 3000;
