@@ -1,75 +1,148 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
   useReactTable,
+  getCoreRowModel,
   getPaginationRowModel,
+  flexRender,
 } from "@tanstack/react-table";
-import type { Employee } from "../../data/dummyData";
-import "../../styles/dashboard.css";
+import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
+import { FaEllipsisV } from "react-icons/fa";
 import "../../styles/employees.css";
+
+interface Employee {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  employeeId: string;
+  assignedLeads: number;
+  closedLeads: number;
+  status: string;
+  avatarUrl?: string;
+}
 
 interface EmployeesTableProps {
   data: Employee[];
+  pageCount: number;
+  pageIndex: number;
+  onPageChange: (page: number) => void;
 }
 
-const columnHelper = createColumnHelper<Employee>();
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase();
+}
 
-export const EmployeesTable: React.FC<EmployeesTableProps> = ({ data }) => {
-  const columns = useMemo(
+const PAGE_SIZE = 7;
+
+export const EmployeesTable: React.FC<EmployeesTableProps> = ({
+  data,
+  pageCount,
+  pageIndex,
+  onPageChange,
+}) => {
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  const columns = useMemo<ColumnDef<Employee, any>[]>(
     () => [
-      columnHelper.display({
-        id: "avatar",
-        header: "",
-        cell: (info) => (
-          <div className="employee-avatar">
-            <div className="avatar-circle">
-              {info.row.original.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()}
-            </div>
-          </div>
+      {
+        id: "select",
+        header: ({ table }) => (
+          <input
+            type="checkbox"
+            checked={table.getIsAllPageRowsSelected()}
+            onChange={table.getToggleAllPageRowsSelectedHandler()}
+          />
         ),
-      }),
-      columnHelper.accessor("name", {
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            checked={row.getIsSelected()}
+            onChange={row.getToggleSelectedHandler()}
+          />
+        ),
+        size: 40,
+      },
+      {
+        accessorKey: "firstName",
         header: "Name",
-        cell: (info) => (
-          <div className="employee-info">
-            <div className="employee-name">{info.getValue()}</div>
-            <div className="employee-email">{info.row.original.email}</div>
-          </div>
-        ),
-      }),
-      columnHelper.accessor("employeeId", {
+        cell: ({ row }) => {
+          const emp = row.original;
+          return (
+            <div className="emp-cell-name">
+              {emp.avatarUrl ? (
+                <img
+                  src={emp.avatarUrl}
+                  alt={emp.firstName}
+                  className="emp-avatar"
+                />
+              ) : (
+                <div className="emp-avatar-placeholder">
+                  {getInitials(emp.firstName + " " + emp.lastName)}
+                </div>
+              )}
+              <div className="emp-name-email">
+                <div className="emp-name">
+                  {emp.firstName} {emp.lastName}
+                </div>
+                <div className="emp-email">{emp.email}</div>
+              </div>
+            </div>
+          );
+        },
+        size: 220,
+      },
+      {
+        accessorKey: "employeeId",
         header: "Employee ID",
-        cell: (info) => <span className="employee-id">{info.getValue()}</span>,
-      }),
-      columnHelper.accessor("assignedLeads", {
+        cell: ({ getValue }) => <span className="emp-id">{getValue()}</span>,
+        size: 120,
+      },
+      {
+        accessorKey: "assignedLeads",
         header: "Assigned Leads",
-        cell: (info) => (
-          <span className="assigned-leads">{info.getValue()}</span>
-        ),
-      }),
-      columnHelper.accessor("closedLeads", {
+        cell: ({ getValue }) => <span>{getValue()}</span>,
+        size: 80,
+      },
+      {
+        accessorKey: "closedLeads",
         header: "Closed Leads",
-        cell: (info) => <span className="closed-leads">{info.getValue()}</span>,
-      }),
-      columnHelper.accessor("status", {
+        cell: ({ getValue }) => <span>{getValue()}</span>,
+        size: 80,
+      },
+      {
+        accessorKey: "status",
         header: "Status",
-        cell: (info) => (
-          <span className={`status-badge ${info.getValue().toLowerCase()}`}>
-            {info.getValue()}
+        cell: ({ getValue }) => (
+          <span
+            className={`emp-status-badge ${
+              getValue() === "active" ? "active" : "inactive"
+            }`}
+          >
+            <span
+              className="emp-status-dot"
+              style={{
+                background: getValue() === "active" ? "#22C55E" : "#F87171",
+              }}
+            />
+            {getValue() === "active" ? "Active" : "Inactive"}
           </span>
         ),
-      }),
-      columnHelper.display({
+        size: 80,
+      },
+      {
         id: "actions",
         header: "",
-        cell: () => <button className="action-menu-btn">⋮</button>,
-      }),
+        cell: () => (
+          <button className="emp-action-btn">
+            <FaEllipsisV />
+          </button>
+        ),
+        size: 40,
+      },
     ],
     []
   );
@@ -77,29 +150,29 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({ data }) => {
   const table = useReactTable({
     data,
     columns,
+    state: {
+      rowSelection,
+      pagination: { pageIndex, pageSize: PAGE_SIZE },
+    },
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
+    manualPagination: true,
+    pageCount,
   });
 
   return (
-    <div className="employees-table-section">
-      <table className="employees-data-table">
+    <div className="emp-table-wrapper">
+      <table className="emp-table">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                <th key={header.id} style={{ width: header.getSize() }}>
+                  {flexRender(
+                    header.column.columnDef.header,
+                    header.getContext()
+                  )}
                 </th>
               ))}
             </tr>
@@ -107,7 +180,7 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({ data }) => {
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
+            <tr key={row.id} className={row.getIsSelected() ? "selected" : ""}>
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -117,56 +190,26 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({ data }) => {
           ))}
         </tbody>
       </table>
-
-      {/* Pagination */}
-      <div className="table-pagination">
-        <div className="pagination-info">
-          <span>
-            Showing{" "}
-            {table.getState().pagination.pageIndex *
-              table.getState().pagination.pageSize +
-              1}{" "}
-            to{" "}
-            {Math.min(
-              (table.getState().pagination.pageIndex + 1) *
-                table.getState().pagination.pageSize,
-              table.getFilteredRowModel().rows.length
-            )}{" "}
-            of {table.getFilteredRowModel().rows.length} entries
-          </span>
-        </div>
-
-        <div className="pagination-controls">
-          <button
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-            className="pagination-btn"
-          >
-            Previous
+      <div className="emp-table-pagination">
+        <button
+          className="emp-pagination-btn"
+          onClick={() => onPageChange(pageIndex - 1)}
+          disabled={pageIndex === 0}
+        >
+          &lt; Previous
+        </button>
+        <span className="emp-pagination-pages">
+          <button className="emp-pagination-page active">
+            {pageIndex + 1}
           </button>
-
-          <div className="page-numbers">
-            {Array.from({ length: table.getPageCount() }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => table.setPageIndex(i)}
-                className={`page-number ${
-                  table.getState().pagination.pageIndex === i ? "active" : ""
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-            className="pagination-btn"
-          >
-            Next
-          </button>
-        </div>
+        </span>
+        <button
+          className="emp-pagination-btn"
+          onClick={() => onPageChange(pageIndex + 1)}
+          disabled={pageIndex === pageCount - 1}
+        >
+          Next &gt;
+        </button>
       </div>
     </div>
   );
