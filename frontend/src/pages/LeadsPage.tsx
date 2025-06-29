@@ -54,12 +54,6 @@ export const LeadsPage: React.FC = () => {
               >
                 Add Lead
               </button>
-              <button
-                className="import-leads-btn"
-                onClick={() => navigate(ROUTES.LEADS_UPLOAD)}
-              >
-                <FaUpload className="upload-icon" /> Import CSV
-              </button>
             </div>
           </div>
           <LeadsList />
