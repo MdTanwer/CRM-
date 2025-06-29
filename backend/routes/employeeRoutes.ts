@@ -8,11 +8,6 @@ import {
   updateEmployeeStatus,
   getEmployeeStats,
 } from "../controller/employeeController";
-import {
-  validateEmployeeCreation,
-  validateEmployeeUpdate,
-  validateEmployeeId,
-} from "../middleware/employeeValidator";
 
 const router = express.Router();
 
@@ -20,18 +15,15 @@ const router = express.Router();
 router.get("/stats", getEmployeeStats);
 
 // CRUD routes
-router
-  .route("/")
-  .get(getAllEmployees)
-  .post(validateEmployeeCreation, createEmployee);
+router.route("/").get(getAllEmployees).post(createEmployee);
 
 router
   .route("/:id")
-  .get(validateEmployeeId, getEmployeeById)
-  .patch(validateEmployeeId, validateEmployeeUpdate, updateEmployee)
-  .delete(validateEmployeeId, deleteEmployee);
+  .get(getEmployeeById)
+  .patch(updateEmployee)
+  .delete(deleteEmployee);
 
 // Status update route
-router.patch("/:id/status", validateEmployeeId, updateEmployeeStatus);
+router.patch("/:id/status", updateEmployeeStatus);
 
 export default router;

@@ -80,14 +80,18 @@ export const getEmployeeById = catchAsync(
 export const createEmployee = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     // Check if email already exists
-    const existingEmployee = await Employee.findOne({ email: req.body.email });
+
+    const data = req.body;
+
+    const email = data.email;
+    const existingEmployee = await Employee.findOne({ email });
     if (existingEmployee) {
       return next(
         new AppError("An employee with this email already exists", 400)
       );
     }
 
-    const newEmployee = await Employee.create(req.body);
+    const newEmployee = await Employee.create(data);
 
     res.status(201).json({
       status: "success",

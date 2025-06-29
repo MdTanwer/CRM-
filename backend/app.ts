@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import connectDB from "./utils/database";
-// import employeeRoutes from "./routes/employeeRoutes";
+import employeeRoutes from "./routes/employeeRoutes";
 // import { globalErrorHandler } from "./utils/errorHandler";
 // import { config } from "./utils/config";
 
@@ -16,7 +16,7 @@ app.get("/api/v1", (req: Request, res: Response) => {
 });
 
 // Employee routes
-// app.use("/api/v1/employees", employeeRoutes);
+app.use("/api/v1/employees", employeeRoutes);
 
 // Global error handler
 // app.use(globalErrorHandler);
