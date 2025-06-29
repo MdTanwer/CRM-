@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Sidebar } from "../components/layout/Sidebar";
-import { EmployeesTable } from "../components/employees/EmployeesTable";
+import { EmployeesList } from "../components/employees/EmployeesList";
 import { AddEmployeeModal } from "../components/employees/AddEmployeeModal";
-import { employeesData } from "../data/dummyData";
+import axios from "axios";
+import { toast } from "react-toastify";
 import "../styles/employees.css";
 
 export const EmployeesPage: React.FC = () => {
@@ -12,6 +13,7 @@ export const EmployeesPage: React.FC = () => {
     location.pathname === "/" ? "dashboard" : location.pathname.slice(1);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0); // Used to force refresh the employee list
 
   const handleAddEmployee = () => {
     setIsModalOpen(true);
@@ -21,11 +23,25 @@ export const EmployeesPage: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const handleSaveEmployee = (employeeData: any) => {
-    // Here you would typically save to your backend/state management
-    console.log("New employee data:", employeeData);
-    // For now, just close the modal
-    setIsModalOpen(false);
+  const handleSaveEmployee = async (employeeData: any) => {
+    try {
+      // Save employee to the API
+      const response = await axios.post(
+        "http://localhost:3000/api/v1/employees",
+        employeeData
+      );
+
+      toast.success("Employee added successfully!");
+      // Close the modal and refresh the list
+      setIsModalOpen(false);
+      setRefreshKey((prevKey) => prevKey + 1); // Increment to force refresh
+    } catch (error: any) {
+      const msg =
+        error?.response?.data?.message ||
+        "Failed to create employee. Please try again.";
+      toast.error(msg);
+      console.error("Error creating employee:", error);
+    }
   };
 
   return (
@@ -67,7 +83,8 @@ export const EmployeesPage: React.FC = () => {
           </div>
           <br />
 
-          <EmployeesTable data={employeesData} />
+          {/* Key prop forces the component to remount when an employee is added */}
+          <EmployeesList key={refreshKey} />
         </div>
       </div>
 

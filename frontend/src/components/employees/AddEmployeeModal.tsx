@@ -19,7 +19,43 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     email: "",
     location: "",
     preferredLanguage: "",
+    status: "active", // Default status
   });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    } else if (formData.firstName.length < 2) {
+      newErrors.firstName = "First name must be at least 2 characters";
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    } else if (formData.lastName.length < 2) {
+      newErrors.lastName = "Last name must be at least 2 characters";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.location) {
+      newErrors.location = "Location is required";
+    }
+
+    if (!formData.preferredLanguage) {
+      newErrors.preferredLanguage = "Preferred language is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -29,19 +65,27 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       ...prev,
       [name]: value,
     }));
+
+    // Clear error for this field when user types
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    setFormData({
-      firstName: "",
-      lastName: "",
-      email: "",
-      location: "",
-      preferredLanguage: "",
-    });
-    onClose();
+
+    if (validateForm()) {
+      onSave(formData);
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        location: "",
+        preferredLanguage: "",
+        status: "active",
+      });
+    }
   };
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -74,6 +118,9 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               placeholder="Sutirtho"
               required
             />
+            {errors.firstName && (
+              <div className="error-message">{errors.firstName}</div>
+            )}
           </div>
 
           <div className="form-group">
@@ -87,6 +134,9 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               placeholder="Pal"
               required
             />
+            {errors.lastName && (
+              <div className="error-message">{errors.lastName}</div>
+            )}
           </div>
 
           <div className="form-group">
@@ -100,6 +150,9 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
               placeholder="Sutirthopal@gmail.com"
               required
             />
+            {errors.email && (
+              <div className="error-message">{errors.email}</div>
+            )}
           </div>
 
           <div className="form-field-container">
@@ -112,13 +165,16 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 onChange={handleInputChange}
                 required
               >
-                <option value="">Kamlodan</option>
+                <option value="">Select location</option>
                 <option value="kamlodan">Kamlodan</option>
                 <option value="kolkata">Kolkata</option>
                 <option value="mumbai">Mumbai</option>
                 <option value="delhi">Delhi</option>
                 <option value="bangalore">Bangalore</option>
               </select>
+              {errors.location && (
+                <div className="error-message">{errors.location}</div>
+              )}
             </div>
             <div className="form-help-tooltip">
               <span className="tooltip-icon">
@@ -140,22 +196,39 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 onChange={handleInputChange}
                 required
               >
-                <option value="">Hindi</option>
+                <option value="">Select language</option>
                 <option value="hindi">Hindi</option>
                 <option value="english">English</option>
                 <option value="bengali">Bengali</option>
                 <option value="tamil">Tamil</option>
                 <option value="telugu">Telugu</option>
               </select>
+              {errors.preferredLanguage && (
+                <div className="error-message">{errors.preferredLanguage}</div>
+              )}
             </div>
             <div className="form-help-tooltip">
               <span className="tooltip-icon">
-                {" "}
                 <CiWarning />
               </span>
               <span className="tooltip-text">
                 Lead will be assigned on biases on language
               </span>
+            </div>
+          </div>
+
+          <div className="form-field-container">
+            <div className="form-group">
+              <label htmlFor="status">Status</label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
             </div>
           </div>
 

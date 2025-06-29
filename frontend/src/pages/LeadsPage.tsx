@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Sidebar } from "../components/layout/Sidebar";
-import { LeadsTable } from "../components/leads/LeadsDataTable";
+import { LeadsList } from "../components/leads/LeadsList";
 import { CSVUploadModal } from "../components/leads/CSVUploadModal";
-import { leadsData } from "../data/dummyData";
 import "../styles/dashboard.css";
 import "../styles/leads.css";
 
@@ -39,7 +38,7 @@ export const LeadsPage: React.FC = () => {
         </div>
 
         <div className="leads-content">
-          <LeadsTable data={leadsData} />
+          <LeadsList />
         </div>
       </div>
 
