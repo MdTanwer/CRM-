@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { Sidebar } from "../components/layout/Sidebar";
 import { EmployeesTable } from "../components/employees/EmployeesTable";
 import { AddEmployeeModal } from "../components/employees/AddEmployeeModal";
@@ -43,18 +43,30 @@ export const EmployeesPage: React.FC = () => {
                 className="search-input"
               />
             </div>
-
-            <button className="emp-add-btn" onClick={handleAddEmployee}>
-              Add Employee
-            </button>
           </div>
         </div>
 
         <div className="employees-content">
           <div className="emp-content-container">
-            <div>yo</div>
-            <div>hi</div>
+            <div className="emp-breadcrumbs">
+              <span className="emp-breadcrumb-item">Home</span>
+              <span className="emp-breadcrumb-separator">&gt;</span>
+              <Link
+                to="/employees"
+                className="emp-breadcrumb-item"
+                style={{ textDecoration: "none" }}
+              >
+                Employees
+              </Link>
+            </div>
+            <div>
+              <button className="emp-add-btn" onClick={handleAddEmployee}>
+                Add Employees
+              </button>
+            </div>
           </div>
+          <br />
+
           <EmployeesTable data={employeesData} />
         </div>
       </div>

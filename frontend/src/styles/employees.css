@@ -116,11 +116,11 @@
 
 /* Add Employee Button */
 .emp-add-btn {
-  background-color: #3b82f6;
-  color: white;
+  background-color: #d9d9d9;
+  color: #636060;
   border: none;
   border-radius: 6px;
-  padding: 8px 16px;
+  padding: 12px 20px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -128,15 +128,17 @@
   white-space: nowrap;
 }
 
-.add-employees-btn:hover {
-  background-color: #2563eb;
+.emp-add-btn:hover {
+  background-color: #aaaaac;
 }
 
 /* Employees Page Styles */
 .employees-content {
-  padding: 20px;
+  padding: 10px;
   background-color: #ffffff;
   min-height: calc(100vh - 80px);
+  padding-left: 40px;
+  padding-right: 40px;
 }
 
 .employees-header {
@@ -554,4 +556,42 @@
   .save-btn {
     width: 100%;
   }
+}
+
+/* Breadcrumb Navigation */
+.emp-breadcrumb-container {
+  margin-bottom: 24px;
+}
+
+.emp-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.emp-breadcrumb-item {
+  color: #4d4e50;
+  font-size: 14px;
+}
+
+.emp-breadcrumb-link {
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.emp-breadcrumb-link:hover {
+  color: #374151;
+  text-decoration: underline;
+}
+
+.emp-breadcrumb-item.current {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.emp-breadcrumb-separator {
+  color: #9ca3af;
+  margin: 0 4px;
 }
