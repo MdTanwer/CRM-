@@ -1,6 +1,7 @@
 export const ROUTES = {
   ADMIN_DASHBOARD: "/",
   LEADS: "/leads",
+  LEADS_UPLOAD: "/leads/upload",
   EMPLOYEES: "/employees",
   SETTINGS: "/settings",
 } as const;

@@ -1,0 +1,261 @@
+.lead-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.lead-modal-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lead-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.lead-modal-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.lead-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.lead-modal-close:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.lead-modal-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.lead-modal-tab {
+  flex: 1;
+  padding: 16px;
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.lead-modal-tab:hover {
+  color: #4f46e5;
+}
+
+.lead-modal-tab.active {
+  color: #4f46e5;
+  border-bottom: 2px solid #4f46e5;
+}
+
+.lead-modal-content {
+  padding: 24px;
+}
+
+/* Form Styles */
+.lead-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+.form-group input.error,
+.form-group select.error {
+  border-color: #ef4444;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.cancel-button {
+  padding: 10px 16px;
+  background-color: white;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #f9fafb;
+}
+
+.submit-button {
+  padding: 10px 16px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-button:hover {
+  background-color: #4338ca;
+}
+
+.submit-button:disabled,
+.cancel-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* CSV Upload Section */
+.csv-upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.distribution-options {
+  background-color: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.distribution-options h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 12px 0;
+}
+
+.distribution-radios {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.distribution-radios label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.distribution-radios input[type="radio"] {
+  accent-color: #4f46e5;
+  cursor: pointer;
+}
+
+.distribution-radios span {
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+  .lead-modal-container {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .lead-modal-content {
+    padding: 16px;
+  }
+}

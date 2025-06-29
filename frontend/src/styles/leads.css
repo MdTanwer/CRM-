@@ -13,6 +13,12 @@
   padding: 0 4px;
 }
 
+.leads-action-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
 .add-leads-btn {
   background-color: #6b7280;
   color: white;
@@ -27,6 +33,29 @@
 
 .add-leads-btn:hover {
   background-color: #4b5563;
+}
+
+.import-leads-btn {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.import-leads-btn:hover {
+  background-color: #4338ca;
+}
+
+.import-leads-btn .upload-icon {
+  font-size: 14px;
 }
 
 /* Leads Table Styles */
@@ -165,7 +194,7 @@
   background-color: #eff6ff;
 }
 
-.upload-icon {
+.upload-area .upload-icon {
   font-size: 48px;
   margin-bottom: 16px;
   opacity: 0.7;

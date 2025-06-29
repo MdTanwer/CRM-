@@ -200,11 +200,9 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 required
               >
                 <option value="">Select location</option>
-                <option value="kamlodan">Kamlodan</option>
-                <option value="kolkata">Kolkata</option>
-                <option value="mumbai">Mumbai</option>
+                <option value="pune">Pune</option>
+                <option value="hyderabad">Hyderabad</option>
                 <option value="delhi">Delhi</option>
-                <option value="bangalore">Bangalore</option>
               </select>
               {errors.location && (
                 <div className="error-message">{errors.location}</div>
@@ -235,7 +233,6 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 <option value="english">English</option>
                 <option value="bengali">Bengali</option>
                 <option value="tamil">Tamil</option>
-                <option value="telugu">Telugu</option>
               </select>
               {errors.preferredLanguage && (
                 <div className="error-message">{errors.preferredLanguage}</div>

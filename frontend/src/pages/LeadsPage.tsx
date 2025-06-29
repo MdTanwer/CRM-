@@ -1,13 +1,17 @@
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar } from "../components/layout/Sidebar";
 import { LeadsList } from "../components/leads/LeadsList";
 import { CSVUploadModal } from "../components/leads/CSVUploadModal";
+import { ROUTES } from "../constants";
+import { FaUpload } from "react-icons/fa";
 import "../styles/dashboard.css";
 import "../styles/leads.css";
+import "../styles/leadsupload.css";
 
 export const LeadsPage: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPage =
     location.pathname === "/" ? "dashboard" : location.pathname.slice(1);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -27,17 +31,37 @@ export const LeadsPage: React.FC = () => {
                 className="search-input"
               />
             </div>
-
-            <button
-              className="add-leads-btn"
-              onClick={() => setIsUploadModalOpen(true)}
-            >
-              Add Leads
-            </button>
           </div>
         </div>
 
         <div className="leads-content">
+          <div className="emp-content-container">
+            <div className="emp-breadcrumbs">
+              <span className="emp-breadcrumb-item">Home</span>
+              <span className="emp-breadcrumb-separator">&gt;</span>
+              <Link
+                to="/leads"
+                className="emp-breadcrumb-item"
+                style={{ textDecoration: "none" }}
+              >
+                Leads
+              </Link>
+            </div>
+            <div className="leads-action-buttons">
+              <button
+                className="add-leads-btn"
+                onClick={() => setIsUploadModalOpen(true)}
+              >
+                Add Lead
+              </button>
+              <button
+                className="import-leads-btn"
+                onClick={() => navigate(ROUTES.LEADS_UPLOAD)}
+              >
+                <FaUpload className="upload-icon" /> Import CSV
+              </button>
+            </div>
+          </div>
           <LeadsList />
         </div>
       </div>
