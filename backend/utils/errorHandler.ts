@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import { config } from "./config";
 
 export class AppError extends Error {
   public readonly statusCode: number;
@@ -82,21 +81,16 @@ export const globalErrorHandler = (
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
 
-  if (config.server.nodeEnv === "development") {
-    sendErrorDev(err, res);
-  } else {
-    let error = { ...err };
-    error.message = err.message;
+  let error = { ...err };
+  error.message = err.message;
 
-    if (error.name === "CastError") error = handleCastErrorDB(error);
-    if (error.code === 11000) error = handleDuplicateFieldsDB(error);
-    if (error.name === "ValidationError")
-      error = handleValidationErrorDB(error);
-    if (error.name === "JsonWebTokenError") error = handleJWTError();
-    if (error.name === "TokenExpiredError") error = handleJWTExpiredError();
+  if (error.name === "CastError") error = handleCastErrorDB(error);
+  if (error.code === 11000) error = handleDuplicateFieldsDB(error);
+  if (error.name === "ValidationError") error = handleValidationErrorDB(error);
+  if (error.name === "JsonWebTokenError") error = handleJWTError();
+  if (error.name === "TokenExpiredError") error = handleJWTExpiredError();
 
-    sendErrorProd(error, res);
-  }
+  sendErrorProd(error, res);
 };
 
 export const catchAsync = (fn: Function) => {
@@ -107,14 +101,14 @@ export const catchAsync = (fn: Function) => {
 
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (err: Error) => {
-  console.log("UNHANDLED REJECTION! 💥 Shutting down...");
+  console.log("UNHANDLED REJECTION! Shutting down...");
   console.log(err.name, err.message);
   process.exit(1);
 });
 
 // Handle uncaught exceptions
 process.on("uncaughtException", (err: Error) => {
-  console.log("UNCAUGHT EXCEPTION! 💥 Shutting down...");
+  console.log("UNCAUGHT EXCEPTION! Shutting down...");
   console.log(err.name, err.message);
   process.exit(1);
 });
