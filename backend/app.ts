@@ -1,11 +1,15 @@
 import express, { Request, Response, NextFunction } from "express";
 import connectDB from "./utils/database";
 import employeeRoutes from "./routes/employeeRoutes";
+import cors from "cors";
 // import { globalErrorHandler } from "./utils/errorHandler";
 // import { config } from "./utils/config";
 
 // Create Express app
 const app = express();
+
+// Enable CORS for frontend requests
+app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
