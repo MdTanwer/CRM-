@@ -345,3 +345,306 @@
     padding: 12px 8px;
   }
 }
+
+/* Leads Table Styles */
+.leads-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.leads-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.leads-table thead {
+  background-color: #f9fafb;
+}
+
+.leads-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.leads-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+.leads-table tr:hover {
+  background-color: #f9fafb;
+}
+
+.leads-table tr.selected {
+  background-color: #f3f4f6;
+}
+
+/* Lead cell styles */
+.lead-cell-name {
+  display: flex;
+  align-items: center;
+}
+
+.lead-name-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.lead-name {
+  font-weight: 500;
+  color: #111827;
+}
+
+.lead-email {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+/* Status badges */
+.lead-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-open {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.status-closed {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.status-ongoing {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.status-pending {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+/* Type badges */
+.lead-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.type-hot {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.type-warm {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.type-cold {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+/* Action menu */
+.lead-action-menu {
+  position: relative;
+}
+
+.lead-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.lead-action-btn:hover {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.lead-action-tooltip {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  min-width: 120px;
+  overflow: hidden;
+}
+
+.lead-tooltip-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.lead-tooltip-btn:hover {
+  background-color: #f9fafb;
+}
+
+.lead-delete-btn {
+  color: #ef4444;
+}
+
+.lead-delete-btn:hover {
+  background-color: #fef2f2;
+}
+
+/* Pagination */
+.leads-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  padding: 12px 0;
+  gap: 8px;
+}
+
+.leads-pagination-btn {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #4b5563;
+}
+
+.leads-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.leads-pagination-btn:hover:not(:disabled) {
+  background-color: #f9fafb;
+}
+
+.leads-pagination-pages {
+  display: flex;
+  gap: 4px;
+}
+
+.leads-pagination-page {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leads-pagination-page.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.leads-pagination-page:hover:not(.active) {
+  background-color: #f9fafb;
+}
+
+/* Search button */
+.search-button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 8px;
+}
+
+.search-button:hover {
+  background-color: #2563eb;
+}
+
+/* Action buttons */
+.add-leads-btn,
+.add-lead-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.add-leads-btn:hover,
+.add-lead-btn:hover {
+  background-color: #2563eb;
+}
+
+/* Loading and error states */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+  color: #6b7280;
+}
+
+.error-message {
+  color: #dc2626;
+  padding: 20px;
+  text-align: center;
+  background-color: #fef2f2;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 40px 0;
+  color: #6b7280;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+/* Add this style for the pagination ellipsis */
+.leads-pagination-ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  color: #6b7280;
+  font-weight: bold;
+}
