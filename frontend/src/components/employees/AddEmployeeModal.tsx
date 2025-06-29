@@ -1,17 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../../styles/employees.css";
 import { CiWarning } from "react-icons/ci";
+
+interface Employee {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  employeeId?: string;
+  location?: string;
+  preferredLanguage?: string;
+  assignedLeads?: number;
+  closedLeads?: number;
+  status: string;
+  avatarUrl?: string;
+}
 
 interface AddEmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (employeeData: any) => void;
+  employee: Employee | null;
+  isEditing: boolean;
 }
 
 export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  employee,
+  isEditing,
 }) => {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -23,6 +41,30 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Update form data when employee prop changes (for editing)
+  useEffect(() => {
+    if (employee) {
+      setFormData({
+        firstName: employee.firstName || "",
+        lastName: employee.lastName || "",
+        email: employee.email || "",
+        location: employee.location || "",
+        preferredLanguage: employee.preferredLanguage || "",
+        status: employee.status || "active",
+      });
+    } else {
+      // Reset form when adding a new employee
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        location: "",
+        preferredLanguage: "",
+        status: "active",
+      });
+    }
+  }, [employee]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -77,14 +119,6 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
     if (validateForm()) {
       onSave(formData);
-      setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        location: "",
-        preferredLanguage: "",
-        status: "active",
-      });
     }
   };
 
@@ -100,7 +134,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
     <div className="emp-modal-overlay" onClick={handleOverlayClick}>
       <div className="emp-add-employee-modal">
         <div className="emp-modal-header">
-          <h2>Add New Employee</h2>
+          <h2>{isEditing ? "Edit Employee" : "Add New Employee"}</h2>
           <button className="emp-modal-close-btn" onClick={onClose}>
             ×
           </button>
@@ -234,7 +268,7 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
 
           <div className="emp-modal-actions">
             <button type="submit" className="emp-save-btn">
-              Save
+              {isEditing ? "Update" : "Save"}
             </button>
           </div>
         </form>

@@ -264,7 +264,11 @@
   display: inline-block;
 }
 
-/* Action Button */
+/* Action Button and Tooltip */
+.emp-action-menu {
+  position: relative;
+}
+
 .emp-action-btn {
   background: none;
   border: none;
@@ -279,6 +283,56 @@
 
 .emp-action-btn:hover {
   background-color: #f3f4f6;
+}
+
+.emp-action-tooltip {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 120px;
+  z-index: 10;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.emp-tooltip-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.emp-tooltip-btn:hover {
+  background-color: #f9fafb;
+}
+
+.emp-tooltip-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emp-tooltip-btn svg {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.emp-delete-btn {
+  color: #ef4444;
+}
+
+.emp-delete-btn svg {
+  color: #ef4444;
 }
 
 /* Checkbox styling */
@@ -348,6 +402,8 @@
   display: flex;
   justify-content: center;
   flex: 1;
+  gap: 4px;
+  align-items: center;
 }
 
 .emp-pagination-page {
@@ -359,15 +415,27 @@
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   background: white;
-  color: #4b5563;
+  color: #6b7280;
   font-size: 14px;
   font-weight: 500;
+  cursor: pointer;
+}
+
+.emp-pagination-page:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
 }
 
 .emp-pagination-page.active {
   background-color: #f0f7ff;
   border-color: #3b82f6;
   color: #3b82f6;
+}
+
+.emp-pagination-ellipsis {
+  margin: 0 4px;
+  color: #6b7280;
+  font-size: 14px;
 }
 
 /* Breadcrumb Navigation */
@@ -556,6 +624,12 @@
 
 .form-group input::placeholder {
   color: #9ca3af;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: 4px;
 }
 
 .form-help-text {

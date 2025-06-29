@@ -13,13 +13,15 @@ interface Employee {
   lastName: string;
   email: string;
   employeeId: string;
+  location: string;
+  preferredLanguage: string;
   assignedLeads: number;
   closedLeads: number;
   status: string;
   avatarUrl?: string;
 }
 
-const PAGE_SIZE = 7;
+const PAGE_SIZE = 2;
 
 export const EmployeesPage: React.FC = () => {
   const location = useLocation();
@@ -33,6 +35,8 @@ export const EmployeesPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageCount, setPageCount] = useState(1);
+  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   const fetchEmployees = useCallback(async (page: number) => {
     setIsLoading(true);
@@ -55,6 +59,8 @@ export const EmployeesPage: React.FC = () => {
           lastName: emp.lastName,
           email: emp.email,
           employeeId: emp.employeeId || "#23454GH6JY7T6", // Placeholder, replace with real if available
+          location: emp.location || "",
+          preferredLanguage: emp.preferredLanguage || "",
           assignedLeads: emp.assignedLeads || 0,
           closedLeads: emp.closedLeads || 0,
           status: emp.status || "active",
@@ -74,31 +80,68 @@ export const EmployeesPage: React.FC = () => {
   }, [fetchEmployees, pageIndex, refreshKey]);
 
   const handleAddEmployee = () => {
+    setCurrentEmployee(null);
+    setIsEditing(false);
     setIsModalOpen(true);
+  };
+
+  const handleEditEmployee = (employeeId: string) => {
+    const employee = employees.find((emp) => emp._id === employeeId);
+    if (employee) {
+      console.log("Employee to edit:", employee);
+      setCurrentEmployee(employee);
+      setIsEditing(true);
+      setIsModalOpen(true);
+    }
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setCurrentEmployee(null);
+    setIsEditing(false);
   };
 
   const handleSaveEmployee = async (employeeData: any) => {
     try {
-      // Save employee to the API
-      const response = await axios.post(
-        "http://localhost:3000/api/v1/employees",
-        employeeData
-      );
+      console.log("Employee data to save:", employeeData);
 
-      toast.success("Employee added successfully!");
+      if (isEditing && currentEmployee) {
+        // Update existing employee
+        console.log("Updating employee:", currentEmployee._id);
+        const response = await axios.patch(
+          `http://localhost:3000/api/v1/employees/${currentEmployee._id}`,
+          employeeData
+        );
+        console.log("Update response:", response.data);
+        toast.success("Employee updated successfully!");
+      } else {
+        // Create new employee
+        console.log("Creating new employee");
+        const response = await axios.post(
+          "http://localhost:3000/api/v1/employees",
+          employeeData
+        );
+        console.log("Create response:", response.data);
+        toast.success("Employee added successfully!");
+      }
+
       // Close the modal and refresh the list
       setIsModalOpen(false);
+      setCurrentEmployee(null);
+      setIsEditing(false);
       setRefreshKey((prevKey) => prevKey + 1); // Increment to force refresh
     } catch (error: any) {
+      console.error("Error data:", error.response?.data);
       const msg =
         error?.response?.data?.message ||
-        "Failed to create employee. Please try again.";
+        `Failed to ${
+          isEditing ? "update" : "create"
+        } employee. Please try again.`;
       toast.error(msg);
-      console.error("Error creating employee:", error);
+      console.error(
+        `Error ${isEditing ? "updating" : "creating"} employee:`,
+        error
+      );
     }
   };
 
@@ -153,6 +196,11 @@ export const EmployeesPage: React.FC = () => {
               pageCount={pageCount}
               pageIndex={pageIndex}
               onPageChange={setPageIndex}
+              onDataChange={() => {
+                // Refresh the employee list by incrementing refreshKey
+                setRefreshKey((prevKey) => prevKey + 1);
+              }}
+              onEditEmployee={handleEditEmployee}
             />
           )}
         </div>
@@ -162,6 +210,8 @@ export const EmployeesPage: React.FC = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSave={handleSaveEmployee}
+        employee={currentEmployee}
+        isEditing={isEditing}
       />
     </div>
   );

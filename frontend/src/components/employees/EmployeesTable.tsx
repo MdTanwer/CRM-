@@ -6,7 +6,9 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
-import { FaEllipsisV } from "react-icons/fa";
+import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
+import axios from "axios";
+import { toast } from "react-toastify";
 import "../../styles/employees.css";
 
 interface Employee {
@@ -26,6 +28,8 @@ interface EmployeesTableProps {
   pageCount: number;
   pageIndex: number;
   onPageChange: (page: number) => void;
+  onDataChange?: () => void;
+  onEditEmployee?: (employeeId: string) => void;
 }
 
 function getInitials(name: string) {
@@ -36,15 +40,58 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-const PAGE_SIZE = 7;
+const PAGE_SIZE = 2;
 
 export const EmployeesTable: React.FC<EmployeesTableProps> = ({
   data,
   pageCount,
   pageIndex,
   onPageChange,
+  onDataChange,
+  onEditEmployee,
 }) => {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleEditEmployee = (employeeId: string) => {
+    if (onEditEmployee) {
+      onEditEmployee(employeeId);
+    }
+    setActiveMenu(null);
+  };
+
+  const handleDeleteEmployee = async (employeeId: string) => {
+    try {
+      setIsDeleting(true);
+      // Call the delete API
+      await axios.delete(
+        `http://localhost:3000/api/v1/employees/${employeeId}`
+      );
+
+      // Show success message
+      toast.success("Employee deleted successfully");
+
+      // Refresh the data
+      if (onDataChange) {
+        onDataChange();
+      }
+    } catch (error: any) {
+      // Show error message
+      const errorMsg =
+        error?.response?.data?.message || "Failed to delete employee";
+      toast.error(errorMsg);
+      console.error("Error deleting employee:", error);
+    } finally {
+      setIsDeleting(false);
+      setActiveMenu(null);
+    }
+  };
+
+  const toggleMenu = (employeeId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent the click from bubbling up
+    setActiveMenu(activeMenu === employeeId ? null : employeeId);
+  };
 
   const columns = useMemo<ColumnDef<Employee, any>[]>(
     () => [
@@ -136,15 +183,41 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
       {
         id: "actions",
         header: "",
-        cell: () => (
-          <button className="emp-action-btn">
-            <FaEllipsisV />
-          </button>
+        cell: ({ row }) => (
+          <div className="emp-action-menu">
+            <button
+              className="emp-action-btn"
+              onClick={(e) => toggleMenu(row.original._id, e)}
+            >
+              <FaEllipsisV />
+            </button>
+            {activeMenu === row.original._id && (
+              <div
+                className="emp-action-tooltip"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  className="emp-tooltip-btn"
+                  onClick={() => handleEditEmployee(row.original._id)}
+                >
+                  <FaEdit /> <span>Edit</span>
+                </button>
+                <button
+                  className="emp-tooltip-btn emp-delete-btn"
+                  onClick={() => handleDeleteEmployee(row.original._id)}
+                  disabled={isDeleting}
+                >
+                  <FaTrash />{" "}
+                  <span>{isDeleting ? "Deleting..." : "Delete"}</span>
+                </button>
+              </div>
+            )}
+          </div>
         ),
         size: 40,
       },
     ],
-    []
+    [activeMenu, isDeleting]
   );
 
   const table = useReactTable({
@@ -160,6 +233,19 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
     manualPagination: true,
     pageCount,
   });
+
+  // Close menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = () => {
+      setActiveMenu(null);
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="emp-table-wrapper">
@@ -199,9 +285,23 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
           &lt; Previous
         </button>
         <span className="emp-pagination-pages">
-          <button className="emp-pagination-page active">
-            {pageIndex + 1}
-          </button>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((pageNumber) => {
+            // Only show page numbers up to the actual page count
+            if (pageNumber <= pageCount) {
+              return (
+                <button
+                  key={pageNumber}
+                  className={`emp-pagination-page${
+                    pageIndex === pageNumber - 1 ? " active" : ""
+                  }`}
+                  onClick={() => onPageChange(pageNumber - 1)}
+                >
+                  {pageNumber}
+                </button>
+              );
+            }
+            return null;
+          })}
         </span>
         <button
           className="emp-pagination-btn"
