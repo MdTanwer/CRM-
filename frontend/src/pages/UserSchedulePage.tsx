@@ -3,60 +3,142 @@ import { useNavigate } from "react-router-dom";
 import "../styles/user-schedule.css";
 import { FaAngleLeft } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
-
-interface ScheduleItem {
-  id: string;
-  type: "Referral" | "Cold call";
-  phone: string;
-  contact: string;
-  avatar: string;
-  date: string;
-  status: "upcoming" | "completed";
-}
+import { useAuth } from "../context/AuthContext";
+import {
+  getUserSchedule,
+  updateScheduleStatus,
+} from "../services/schedule.service";
+import type { ScheduleItem } from "../services/schedule.service";
+import { toast } from "react-toastify";
+import { format, parseISO, isToday, isTomorrow, isThisWeek } from "date-fns";
 
 export const UserSchedulePage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, token } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilterTooltip, setShowFilterTooltip] = useState(false);
-  const [filterValue, setFilterValue] = useState("Today");
+  const [filterValue, setFilterValue] = useState("All");
   const filterTooltipRef = useRef<HTMLDivElement>(null);
   const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const scheduleItems: ScheduleItem[] = [
-    {
-      id: "1",
-      type: "Referral",
-      phone: "949-265-8533",
-      contact: "Brooklyn Williamson",
-      avatar: "BW",
-      date: "10/04/25",
-      status: "upcoming",
-    },
-    {
-      id: "2",
-      type: "Referral",
-      phone: "265-505-8854",
-      contact: "Julia Watson",
-      avatar: "JW",
-      date: "10/04/25",
-      status: "upcoming",
-    },
-    {
-      id: "3",
-      type: "Cold call",
-      phone: "554-092-8895",
-      contact: "Jenny Alexander",
-      avatar: "JA",
-      date: "10/04/25",
-      status: "upcoming",
-    },
-  ];
+  // Get dynamic greeting based on time of day
+  const getGreeting = (): string => {
+    const hour = new Date().getHours();
 
-  const filteredItems = scheduleItems.filter(
-    (item) =>
-      item.contact.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.phone.includes(searchQuery)
-  );
+    if (hour >= 5 && hour < 12) {
+      return "good morning";
+    } else if (hour >= 12 && hour < 18) {
+      return "good afternoon";
+    } else {
+      return "good evening";
+    }
+  };
+
+  // Fetch schedule data
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const data = await getUserSchedule(token);
+        setScheduleItems(data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching schedule:", err);
+        setError("Failed to load schedule. Please try again.");
+        toast.error("Failed to load schedule. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchedule();
+  }, [token, navigate]);
+
+  // Format date for display
+  const formatScheduleDate = (dateString: string) => {
+    try {
+      const date = parseISO(dateString);
+      return format(date, "MM/dd/yy");
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  // Get initials from name
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((part) => part.charAt(0))
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  // Handle marking call as completed
+  const handleCompleteCall = async (scheduleId: string) => {
+    if (!token) return;
+
+    try {
+      await updateScheduleStatus(token, scheduleId, "completed");
+
+      // Update local state
+      setScheduleItems(
+        scheduleItems.map((item) =>
+          item._id === scheduleId ? { ...item, status: "completed" } : item
+        )
+      );
+
+      toast.success("Call marked as completed");
+    } catch (error) {
+      console.error("Error updating call status:", error);
+      toast.error("Failed to update call status");
+    }
+  };
+
+  // Filter schedule items
+  const filteredItems = scheduleItems.filter((item) => {
+    // Filter by search query
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.phone && item.phone.includes(searchQuery)) ||
+      (item.email &&
+        item.email.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    // Filter by date
+    let matchesFilter = true;
+    if (filterValue === "Today") {
+      try {
+        matchesFilter = isToday(parseISO(item.scheduledDate));
+      } catch (error) {
+        matchesFilter = false;
+      }
+    } else if (filterValue === "Tomorrow") {
+      try {
+        matchesFilter = isTomorrow(parseISO(item.scheduledDate));
+      } catch (error) {
+        matchesFilter = false;
+      }
+    } else if (filterValue === "This Week") {
+      try {
+        matchesFilter = isThisWeek(parseISO(item.scheduledDate));
+      } catch (error) {
+        matchesFilter = false;
+      }
+    }
+
+    // Only show upcoming calls
+    const isUpcoming = item.status === "upcoming";
+
+    return matchesSearch && matchesFilter && isUpcoming;
+  });
 
   const handleNavigation = (route: string) => {
     navigate(`/user${route}`);
@@ -76,7 +158,6 @@ export const UserSchedulePage: React.FC = () => {
   const handleSaveFilter = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Apply filter logic here
     setShowFilterTooltip(false);
   };
 
@@ -117,6 +198,12 @@ export const UserSchedulePage: React.FC = () => {
             Schedule
           </button>
         </div>
+      </div>
+
+      {/* Greeting */}
+      <div className="schedule-greeting">
+        <div className="leads-greeting">{getGreeting()}</div>
+        <div className="leads-name">{user?.name || user?.email}</div>
       </div>
 
       {/* Search Bar */}
@@ -179,12 +266,13 @@ export const UserSchedulePage: React.FC = () => {
                   className="schedule-filter-select"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <option value="Today">Today</option>
                   <option value="All">All</option>
+                  <option value="Today">Today</option>
+                  <option value="Tomorrow">Tomorrow</option>
+                  <option value="This Week">This Week</option>
                 </select>
               </div>
             </div>
-            <br /> <br />
             <button
               className="schedule-filter-save-btn"
               onClick={handleSaveFilter}
@@ -197,31 +285,49 @@ export const UserSchedulePage: React.FC = () => {
 
       {/* Schedule List */}
       <div className="schedule-list">
-        {filteredItems.map((item) => (
-          <div key={item.id} className="schedule-card">
-            <div className="schedule-card-header">
-              <div className="schedule-card-type">{item.type}</div>
-              <div className="schedule-card-date">Date</div>
-            </div>
-            <div className="schedule-card-header">
-              <div className="schedule-card-phone">{item.phone}</div>
-              <div className="schedule-card-date-value">{item.date}</div>
-            </div>
-
-            <div className="schedule-card-details">
-              <div className="schedule-call-icon">
-                <MdLocationOn size={20} />
-                <span>Call</span>
-              </div>
-            </div>
-            <div className="schedule-card-contact-info">
-              <div className="contact-avatar">
-                {item.avatar.substring(0, 1)}
-              </div>
-              <div className="contact-name">{item.contact}</div>
-            </div>
+        {loading ? (
+          <div className="schedule-loading">Loading schedule...</div>
+        ) : error ? (
+          <div className="schedule-error">{error}</div>
+        ) : filteredItems.length === 0 ? (
+          <div className="schedule-empty">
+            {searchQuery || filterValue !== "All"
+              ? "No scheduled calls match your search criteria"
+              : "No upcoming calls scheduled"}
           </div>
-        ))}
+        ) : (
+          filteredItems.map((item) => (
+            <div key={item._id} className="schedule-card">
+              <div className="schedule-card-header">
+                <div className="schedule-card-type">{item.type}</div>
+                <div className="schedule-card-date">Date</div>
+              </div>
+              <div className="schedule-card-header">
+                <div className="schedule-card-phone">
+                  {item.phone || "No phone"}
+                </div>
+                <div className="schedule-card-date-value">
+                  {formatScheduleDate(item.scheduledDate)} {item.scheduledTime}
+                </div>
+              </div>
+
+              <div className="schedule-card-details">
+                <div
+                  className="schedule-call-icon"
+                  onClick={() => handleCompleteCall(item._id)}
+                  title="Mark as completed"
+                >
+                  <MdLocationOn size={20} />
+                  <span>Call</span>
+                </div>
+              </div>
+              <div className="schedule-card-contact-info">
+                <div className="contact-avatar">{getInitials(item.name)}</div>
+                <div className="contact-name">{item.name}</div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Bottom Navigation */}

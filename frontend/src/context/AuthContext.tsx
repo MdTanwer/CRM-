@@ -17,6 +17,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string) => Promise<boolean>;
   logout: () => void;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -80,6 +81,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     toast.info("You have been logged out.");
   };
 
+  const setUserState = (user: User | null) => {
+    setUser(user);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -89,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         loading,
         login,
         logout,
+        setUser: setUserState,
       }}
     >
       {children}

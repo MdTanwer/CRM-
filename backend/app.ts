@@ -5,6 +5,7 @@ import leadRoutes from "./routes/leadRoutes";
 import authRoutes from "./routes/authRoutes";
 import cors from "cors";
 import { globalErrorHandler } from "./utils/errorHandler";
+import userRoutes from "./routes/userRoutes";
 // import { config } from "./utils/config";
 
 // Create Express app
@@ -29,6 +30,9 @@ app.use("/api/v1/employees", employeeRoutes);
 
 // Lead routes
 app.use("/api/v1/leads", leadRoutes);
+
+// User routes
+app.use("/api/v1/users", userRoutes);
 
 // Global error handler
 app.use(globalErrorHandler);

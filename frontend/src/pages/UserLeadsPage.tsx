@@ -4,24 +4,28 @@ import "../styles/user-leads.css";
 import { MdLocationOn } from "react-icons/md";
 import { HiPencilAlt } from "react-icons/hi";
 import { IoTime } from "react-icons/io5";
-
-interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  status: "Ongoing" | "Closed";
-  priority: "Hot" | "Warm" | "Cold";
-  date: string;
-}
+import { useAuth } from "../context/AuthContext";
+import {
+  getUserLeads,
+  updateLeadStatus,
+  updateLeadType,
+  scheduleLeadCall,
+} from "../services/leads.service";
+import type { Lead as LeadType } from "../services/leads.service";
+import { toast } from "react-toastify";
+import { format } from "date-fns";
 
 export const UserLeadsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, token } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilterTooltip, setShowFilterTooltip] = useState(false);
   const [filterValue, setFilterValue] = useState("All");
   const filterTooltipRef = useRef<HTMLDivElement>(null);
   const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const [leads, setLeads] = useState<LeadType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Type tooltip state
   const [showTypeTooltip, setShowTypeTooltip] = useState(false);
@@ -42,66 +46,107 @@ export const UserLeadsPage: React.FC = () => {
   // Status tooltip state
   const [showStatusTooltip, setShowStatusTooltip] = useState(false);
   const [activeStatusLead, setActiveStatusLead] = useState<string | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<"Ongoing" | "Closed">(
-    "Ongoing"
-  );
+  const [selectedStatus, setSelectedStatus] = useState<
+    "Open" | "Closed" | "Ongoing" | "Pending"
+  >("Ongoing");
   const statusTooltipRef = useRef<HTMLDivElement>(null);
   const statusButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const leads: Lead[] = [
-    {
-      id: "1",
-      name: "Tamer Finata",
-      email: "@tamerfinata@gmail.com",
-      status: "Ongoing",
-      priority: "Hot",
-      date: "April 04, 2025",
-    },
-    {
-      id: "2",
-      name: "Tamer Finata",
-      email: "@tamerfinata@gmail.com",
-      status: "Ongoing",
-      priority: "Warm",
-      date: "April 04, 2025",
-    },
-    {
-      id: "3",
-      name: "Tamer Finata",
-      email: "@tamerfinata@gmail.com",
-      status: "Closed",
-      priority: "Cold",
-      date: "April 04, 2025",
-    },
-  ];
+  // Get dynamic greeting based on time of day
+  const getGreeting = (): string => {
+    const hour = new Date().getHours();
 
-  const filteredLeads = leads.filter(
-    (lead) =>
-      lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleCall = (lead: Lead) => {
-    console.log("Calling", lead.name);
-    // Implement call functionality
+    if (hour >= 5 && hour < 12) {
+      return "good morning";
+    } else if (hour >= 12 && hour < 18) {
+      return "good afternoon";
+    } else {
+      return "good evening";
+    }
   };
 
-  const handleMessage = (lead: Lead) => {
-    console.log("Messaging", lead.name);
-    // Implement message functionality
+  // Format date function - moved before it's used in filteredLeads
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, "MMMM dd, yyyy");
+    } catch (error) {
+      return dateString;
+    }
   };
 
-  const handleEmail = (lead: Lead) => {
-    console.log("Emailing", lead.name);
-    // Implement email functionality
-  };
+  // Fetch leads for the logged-in user
+  useEffect(() => {
+    const fetchLeads = async () => {
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const data = await getUserLeads(token);
+        setLeads(data);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching leads:", err);
+        setError("Failed to load leads. Please try again.");
+        toast.error("Failed to load leads. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLeads();
+  }, [token, navigate]);
+
+  const filteredLeads = leads.filter((lead) => {
+    // If no search query, just filter by type
+    if (!searchQuery) {
+      return filterValue === "All" || lead.type === filterValue;
+    }
+
+    const query = searchQuery.toLowerCase();
+
+    // Search across all relevant lead fields
+    const matchesSearch =
+      // Basic info
+      lead.name.toLowerCase().includes(query) ||
+      (lead.email && lead.email.toLowerCase().includes(query)) ||
+      (lead.phone && lead.phone.toLowerCase().includes(query)) ||
+      // Status and type
+      lead.status.toLowerCase().includes(query) ||
+      lead.type.toLowerCase().includes(query) ||
+      // Location and language
+      lead.location.toLowerCase().includes(query) ||
+      lead.language.toLowerCase().includes(query) ||
+      // Dates (formatted for readability)
+      formatDate(lead.receivedDate).toLowerCase().includes(query) ||
+      formatDate(lead.createdAt).toLowerCase().includes(query);
+
+    // Filter by lead type
+    const matchesType = filterValue === "All" || lead.type === filterValue;
+
+    return matchesSearch && matchesType;
+  });
 
   const getStatusBadgeClass = (status: string) => {
-    return status === "Ongoing" ? "status-ongoing" : "status-closed";
+    switch (status) {
+      case "Open":
+        return "status-open";
+      case "Ongoing":
+        return "status-ongoing";
+      case "Closed":
+        return "status-closed";
+      case "Pending":
+        return "status-pending";
+      default:
+        return "status-ongoing";
+    }
   };
 
-  const getPriorityBadgeClass = (priority: string) => {
-    switch (priority) {
+  const getPriorityBadgeClass = (type: string) => {
+    switch (type) {
       case "Hot":
         return "priority-hot";
       case "Warm":
@@ -207,12 +252,26 @@ export const UserLeadsPage: React.FC = () => {
     }
   };
 
-  const handleTypeChange = (
+  const handleTypeChange = async (
     leadId: string,
-    priority: "Hot" | "Warm" | "Cold"
+    type: "Hot" | "Warm" | "Cold"
   ) => {
-    // Update lead priority logic here
-    console.log(`Changing lead ${leadId} priority to ${priority}`);
+    if (!token) return;
+
+    try {
+      // Update lead type in the backend
+      await updateLeadType(token, leadId, type);
+
+      // Update local state
+      setLeads(
+        leads.map((lead) => (lead._id === leadId ? { ...lead, type } : lead))
+      );
+
+      toast.success(`Lead type updated to ${type}`);
+    } catch (error) {
+      console.error("Error updating lead type:", error);
+      toast.error("Failed to update lead type");
+    }
 
     // Close tooltip after selection
     setShowTypeTooltip(false);
@@ -234,11 +293,25 @@ export const UserLeadsPage: React.FC = () => {
     }
   };
 
-  const handleSaveDateTime = (leadId: string) => {
-    // Update lead date/time logic here
-    console.log(
-      `Updating lead ${leadId} date to ${dateValue} and time to ${timeValue}`
-    );
+  const handleSaveDateTime = async (leadId: string) => {
+    if (!token || !dateValue || !timeValue) {
+      toast.error("Please provide both date and time");
+      return;
+    }
+
+    try {
+      // Schedule call in the backend
+      await scheduleLeadCall(token, leadId, dateValue, timeValue);
+
+      toast.success("Call scheduled successfully");
+
+      // Reset form
+      setDateValue("");
+      setTimeValue("");
+    } catch (error) {
+      console.error("Error scheduling call:", error);
+      toast.error("Failed to schedule call");
+    }
 
     // Close tooltip after saving
     setShowDateTimeTooltip(false);
@@ -248,7 +321,7 @@ export const UserLeadsPage: React.FC = () => {
   const toggleStatusTooltip = (
     e: React.MouseEvent,
     leadId: string,
-    currentStatus: "Ongoing" | "Closed"
+    currentStatus: "Open" | "Closed" | "Ongoing" | "Pending"
   ) => {
     e.preventDefault();
     e.stopPropagation();
@@ -265,9 +338,25 @@ export const UserLeadsPage: React.FC = () => {
     }
   };
 
-  const handleSaveStatus = (leadId: string) => {
-    // Update lead status logic here
-    console.log(`Updating lead ${leadId} status to ${selectedStatus}`);
+  const handleSaveStatus = async (leadId: string) => {
+    if (!token) return;
+
+    try {
+      // Update lead status in the backend
+      await updateLeadStatus(token, leadId, selectedStatus);
+
+      // Update local state
+      setLeads(
+        leads.map((lead) =>
+          lead._id === leadId ? { ...lead, status: selectedStatus } : lead
+        )
+      );
+
+      toast.success(`Lead status updated to ${selectedStatus}`);
+    } catch (error) {
+      console.error("Error updating lead status:", error);
+      toast.error("Failed to update lead status");
+    }
 
     // Close tooltip after saving
     setShowStatusTooltip(false);
@@ -282,8 +371,8 @@ export const UserLeadsPage: React.FC = () => {
           Canova<span style={{ color: "#E8E000" }}>CRM</span>
         </div>
 
-        <div className="leads-greeting">good morning</div>
-        <div className="leads-name">Ragesh Shrestha</div>
+        <div className="leads-greeting">{getGreeting()}</div>
+        <div className="leads-name">{user?.name || user?.email}</div>
       </div>
 
       {/* Search Bar */}
@@ -365,153 +454,181 @@ export const UserLeadsPage: React.FC = () => {
 
       {/* Leads List */}
       <div className="leads-list">
-        {filteredLeads.map((lead) => (
-          <div key={lead.id} className="lead-card">
-            <div className="lead-header">
-              <div className="lead-info">
-                <h3 className="lead-name">{lead.name}</h3>
-                <p className="lead-email">{lead.email}</p>
-              </div>
-              <div className="lead-status-circle">
-                <span
-                  className={`status-badge ${getStatusBadgeClass(lead.status)}`}
-                >
-                  {lead.status}
-                </span>
-              </div>
-            </div>
-
-            <div className="lead-date-section">
-              <span className="lead-date-label">date</span>
-              <div className="lead-date-value">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-                <span>{lead.date}</span>
-              </div>
-            </div>
-
-            <div className="lead-actions-row">
-              <button
-                className="action-btn type-btn"
-                onClick={(e) => toggleTypeTooltip(e, lead.id)}
-                title="Change Type"
-                ref={activeLead === lead.id ? typeButtonRef : null}
-              >
-                <HiPencilAlt />
-              </button>
-
-              {showTypeTooltip && activeLead === lead.id && (
-                <div className="type-tooltip" ref={typeTooltipRef}>
-                  <div className="type-tooltip-header">Type</div>
-                  <div className="type-options">
-                    <button
-                      className="type-option hot-option"
-                      onClick={() => handleTypeChange(lead.id, "Hot")}
-                    >
-                      Hot
-                    </button>
-                    <button
-                      className="type-option warm-option"
-                      onClick={() => handleTypeChange(lead.id, "Warm")}
-                    >
-                      Warm
-                    </button>
-                    <button
-                      className="type-option cold-option"
-                      onClick={() => handleTypeChange(lead.id, "Cold")}
-                    >
-                      Cold
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <button
-                className="action-btn datetime-btn"
-                onClick={(e) => toggleDateTimeTooltip(e, lead.id)}
-                title="Set Date & Time"
-                ref={activeDateTimeLead === lead.id ? dateTimeButtonRef : null}
-              >
-                <IoTime />
-              </button>
-
-              {showDateTimeTooltip && activeDateTimeLead === lead.id && (
-                <div className="datetime-tooltip" ref={dateTimeTooltipRef}>
-                  <div className="datetime-tooltip-header">Date</div>
-                  <input
-                    type="text"
-                    className="datetime-input"
-                    placeholder="dd/mm/yy"
-                    value={dateValue}
-                    onChange={(e) => setDateValue(e.target.value)}
-                  />
-                  <div className="datetime-tooltip-header">Time</div>
-                  <input
-                    type="text"
-                    className="datetime-input"
-                    placeholder="02:30PM"
-                    value={timeValue}
-                    onChange={(e) => setTimeValue(e.target.value)}
-                  />
-                  <button
-                    className="datetime-save-btn"
-                    onClick={() => handleSaveDateTime(lead.id)}
-                  >
-                    Save
-                  </button>
-                </div>
-              )}
-
-              <button
-                className="action-btn status-btn"
-                onClick={(e) => toggleStatusTooltip(e, lead.id, lead.status)}
-                title="Change Status"
-                ref={activeStatusLead === lead.id ? statusButtonRef : null}
-              >
-                <MdLocationOn />
-              </button>
-
-              {showStatusTooltip && activeStatusLead === lead.id && (
-                <div className="status-tooltip" ref={statusTooltipRef}>
-                  <div className="status-tooltip-header">
-                    Lead Status <span className="status-info-icon">i</span>
-                  </div>
-                  <div className="status-dropdown">
-                    <select
-                      value={selectedStatus}
-                      onChange={(e) =>
-                        setSelectedStatus(
-                          e.target.value as "Ongoing" | "Closed"
-                        )
-                      }
-                      className="status-select"
-                    >
-                      <option value="Ongoing">Ongoing</option>
-                      <option value="Closed">Closed</option>
-                    </select>
-                  </div>
-                  <button
-                    className="status-save-btn"
-                    onClick={() => handleSaveStatus(lead.id)}
-                  >
-                    Save
-                  </button>
-                </div>
-              )}
-            </div>
+        {loading ? (
+          <div className="leads-loading">Loading leads...</div>
+        ) : error ? (
+          <div className="leads-error">{error}</div>
+        ) : filteredLeads.length === 0 ? (
+          <div className="leads-empty">
+            {searchQuery || filterValue !== "All"
+              ? "No leads match your search criteria"
+              : "No leads assigned to you yet"}
           </div>
-        ))}
+        ) : (
+          filteredLeads.map((lead) => (
+            <div key={lead._id} className="lead-card">
+              <div className="lead-header">
+                <div className="lead-info">
+                  <h3 className="lead-name">{lead.name}</h3>
+                  <p className="lead-email">{lead.email || "No email"}</p>
+                </div>
+                <div className="lead-status-circle">
+                  <span
+                    className={`status-badge ${getStatusBadgeClass(
+                      lead.status
+                    )}`}
+                  >
+                    {lead.status}
+                  </span>
+                </div>
+              </div>
+
+              <div className="lead-date-section">
+                <span className="lead-date-label">date</span>
+                <div className="lead-date-value">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <rect
+                      x="3"
+                      y="4"
+                      width="18"
+                      height="18"
+                      rx="2"
+                      ry="2"
+                    ></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span>{formatDate(lead.receivedDate)}</span>
+                </div>
+              </div>
+
+              <div className="lead-actions-row">
+                <button
+                  className="action-btn type-btn"
+                  onClick={(e) => toggleTypeTooltip(e, lead._id)}
+                  title="Change Type"
+                  ref={activeLead === lead._id ? typeButtonRef : null}
+                >
+                  <HiPencilAlt />
+                </button>
+
+                {showTypeTooltip && activeLead === lead._id && (
+                  <div className="type-tooltip" ref={typeTooltipRef}>
+                    <div className="type-tooltip-header">Type</div>
+                    <div className="type-options">
+                      <button
+                        className="type-option hot-option"
+                        onClick={() => handleTypeChange(lead._id, "Hot")}
+                      >
+                        Hot
+                      </button>
+                      <button
+                        className="type-option warm-option"
+                        onClick={() => handleTypeChange(lead._id, "Warm")}
+                      >
+                        Warm
+                      </button>
+                      <button
+                        className="type-option cold-option"
+                        onClick={() => handleTypeChange(lead._id, "Cold")}
+                      >
+                        Cold
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  className="action-btn datetime-btn"
+                  onClick={(e) => toggleDateTimeTooltip(e, lead._id)}
+                  title="Set Date & Time"
+                  ref={
+                    activeDateTimeLead === lead._id ? dateTimeButtonRef : null
+                  }
+                >
+                  <IoTime />
+                </button>
+
+                {showDateTimeTooltip && activeDateTimeLead === lead._id && (
+                  <div className="datetime-tooltip" ref={dateTimeTooltipRef}>
+                    <div className="datetime-tooltip-header">Date</div>
+                    <input
+                      type="date"
+                      className="datetime-input"
+                      value={dateValue}
+                      onChange={(e) => setDateValue(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                    />
+                    <div className="datetime-tooltip-header">Time</div>
+                    <input
+                      type="time"
+                      className="datetime-input"
+                      value={timeValue}
+                      onChange={(e) => setTimeValue(e.target.value)}
+                    />
+                    <button
+                      className="datetime-save-btn"
+                      onClick={() => handleSaveDateTime(lead._id)}
+                    >
+                      Save
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  className="action-btn status-btn"
+                  onClick={(e) => toggleStatusTooltip(e, lead._id, lead.status)}
+                  title="Change Status"
+                  ref={activeStatusLead === lead._id ? statusButtonRef : null}
+                >
+                  <MdLocationOn />
+                </button>
+
+                {showStatusTooltip && activeStatusLead === lead._id && (
+                  <div className="status-tooltip" ref={statusTooltipRef}>
+                    <div className="status-tooltip-header">
+                      Lead Status <span className="status-info-icon">i</span>
+                    </div>
+                    <div className="status-dropdown">
+                      <select
+                        value={selectedStatus}
+                        onChange={(e) =>
+                          setSelectedStatus(
+                            e.target.value as
+                              | "Open"
+                              | "Closed"
+                              | "Ongoing"
+                              | "Pending"
+                          )
+                        }
+                        className="status-select"
+                      >
+                        <option value="Open">Open</option>
+                        <option value="Ongoing">Ongoing</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Closed">Closed</option>
+                      </select>
+                    </div>
+                    <button
+                      className="status-save-btn"
+                      onClick={() => handleSaveStatus(lead._id)}
+                    >
+                      Save
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Bottom Navigation */}

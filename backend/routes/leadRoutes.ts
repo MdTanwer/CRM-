@@ -1,4 +1,4 @@
-import express from "express";
+import express, { RequestHandler } from "express";
 import multer from "multer";
 import {
   getAllLeads,
@@ -8,7 +8,14 @@ import {
   deleteLead,
   uploadCSV,
   getLeadStats,
+  getMyLeads,
+  updateLeadStatus,
+  updateLeadType,
+  scheduleLeadCall,
+  getMySchedule,
+  updateScheduleStatus,
 } from "../controller/leadController";
+import { protect } from "../middleware/authMiddleware";
 
 const router = express.Router();
 
@@ -37,6 +44,42 @@ router.get("/stats", getLeadStats);
 
 // CSV upload route
 router.post("/upload-csv", upload.single("file"), uploadCSV);
+
+// Get leads assigned to the logged-in user
+router.get(
+  "/my-leads",
+  protect as RequestHandler,
+  getMyLeads as RequestHandler
+);
+
+// Update lead status and type
+router.patch(
+  "/:id/status",
+  protect as RequestHandler,
+  updateLeadStatus as RequestHandler
+);
+router.patch(
+  "/:id/type",
+  protect as RequestHandler,
+  updateLeadType as RequestHandler
+);
+
+// Schedule routes
+router.post(
+  "/:id/schedule",
+  protect as RequestHandler,
+  scheduleLeadCall as RequestHandler
+);
+router.get(
+  "/my-schedule",
+  protect as RequestHandler,
+  getMySchedule as RequestHandler
+);
+router.patch(
+  "/schedule/:id/status",
+  protect as RequestHandler,
+  updateScheduleStatus as RequestHandler
+);
 
 // CRUD routes
 router.route("/").get(getAllLeads).post(createLead);

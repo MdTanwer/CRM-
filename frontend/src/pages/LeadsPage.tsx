@@ -138,14 +138,8 @@ export const LeadsPage: React.FC = () => {
             </div>
             <div className="leads-action-buttons">
               <button
-                className="add-leads-btn"
-                onClick={() => setIsUploadModalOpen(true)}
-              >
-                <FaUpload /> Import Leads
-              </button>
-              <button
                 className="add-lead-btn"
-                onClick={() => navigate("/leads/add")}
+                onClick={() => setIsUploadModalOpen(true)}
               >
                 Add Lead
               </button>

@@ -124,3 +124,147 @@ export const getMe = async (
     next(error);
   }
 };
+
+// Get user profile
+export const getUserProfile = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = await User.findById(req.user?._id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        status: "fail",
+        message: "User not found",
+      });
+    }
+
+    // Get associated employee if exists
+    const employee = await Employee.findOne({ email: user.email });
+
+    const responseData = {
+      _id: user._id,
+      email: user.email,
+      firstName: employee?.firstName || "",
+      lastName: employee?.lastName || "",
+      role: user.role,
+    };
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        user: responseData,
+      },
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+// Update user profile
+export const updateUserProfile = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { firstName, lastName } = req.body;
+
+    // Find user
+    const user = await User.findById(req.user?._id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: "fail",
+        message: "User not found",
+      });
+    }
+
+    // Find associated employee if exists
+    let employee = await Employee.findOne({ email: user.email });
+
+    if (employee) {
+      // Update employee details
+      employee.firstName = firstName || employee.firstName;
+      employee.lastName = lastName || employee.lastName;
+      await employee.save();
+    } else {
+      // Create new employee record if it doesn't exist
+      employee = await Employee.create({
+        firstName: firstName || "",
+        lastName: lastName || "",
+        email: user.email,
+        status: "active",
+      });
+    }
+
+    const responseData = {
+      _id: user._id,
+      email: user.email,
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      role: user.role,
+    };
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        user: responseData,
+      },
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+// Update password
+export const updatePassword = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    // Check if current password and new password are provided
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Please provide both current and new password",
+      });
+    }
+
+    // Find user
+    const user = await User.findById(req.user?._id);
+
+    if (!user) {
+      return res.status(404).json({
+        status: "fail",
+        message: "User not found",
+      });
+    }
+
+    // Check if current password is correct
+    const isPasswordCorrect = await user.comparePassword(currentPassword);
+
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        status: "fail",
+        message: "Current password is incorrect",
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "Password updated successfully",
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};

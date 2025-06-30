@@ -8,6 +8,7 @@
   margin: 0 auto;
   position: relative;
   padding-bottom: 80px;
+  font-family: "Inter", sans-serif;
 }
 
 /* Header */
@@ -20,6 +21,9 @@
   padding: 16px 20px;
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .schedule-brand-logo {
@@ -27,7 +31,6 @@
   font-weight: 700;
   color: white;
   text-align: left;
-  font-family: "Inter", sans-serif;
   margin-bottom: 20px;
 }
 
@@ -51,44 +54,57 @@
   padding: 0;
 }
 
+/* Greeting section */
+.schedule-greeting {
+  display: flex;
+  flex-direction: column;
+  padding: 15px 20px;
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+}
+
+.leads-greeting {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.leads-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
 /* Search Container */
 .schedule-search-container {
-  padding: 16px 20px;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  padding: 15px 20px;
+  background-color: #fff;
   position: relative;
-  margin-bottom: 8px;
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid #eee;
 }
 
 .schedule-search-input-wrapper {
   position: relative;
-  display: flex;
-  align-items: center;
-  background-color: #f2f2f2;
-  border-radius: 12px;
-  padding: 0 16px;
-  height: 40px;
-  flex: 1;
+  flex-grow: 1;
 }
 
 .schedule-search-icon {
-  color: #666666;
-  margin-right: 8px;
-  width: 16px;
-  height: 16px;
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
 }
 
 .schedule-search-input {
-  flex: 1;
-  padding: 8px 0;
-  border: none;
-  background: transparent;
-  font-size: 15px;
-  color: #333333;
+  width: 100%;
+  padding: 10px 10px 10px 35px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
   outline: none;
-  font-family: "Inter", sans-serif;
 }
 
 .schedule-search-input::placeholder {
@@ -97,19 +113,16 @@
 }
 
 .schedule-filter-btn {
-  background-color: #f2f2f2;
-  border: none;
-  color: #666666;
-  cursor: pointer;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1000;
+  cursor: pointer;
+  color: #666;
 }
 
 .schedule-filter-btn svg {
@@ -314,14 +327,14 @@
 /* Filter Tooltip */
 .schedule-filter-tooltip {
   position: absolute;
-  top: 50px;
+  top: 70px;
   right: 20px;
-  width: 180px;
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  padding: 16px;
-  z-index: 1100;
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 15px;
+  z-index: 10;
+  width: 200px;
 }
 
 .schedule-filter-tooltip::before {
@@ -338,15 +351,14 @@
 }
 
 .schedule-filter-tooltip-header {
-  font-size: 16px;
   font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px;
   color: #333;
-  margin-bottom: 16px;
 }
 
 .schedule-filter-dropdown {
-  position: relative;
-  margin-bottom: 16px;
+  margin-bottom: 15px;
 }
 
 .schedule-filter-select-wrapper {
@@ -356,18 +368,15 @@
 
 .schedule-filter-select {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: #fff;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   font-size: 14px;
-  color: #333;
   appearance: none;
-  -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  cursor: pointer;
+  background-position: right 8px center;
+  background-size: 16px;
 }
 
 .schedule-filter-select option {
@@ -379,13 +388,41 @@
 
 .schedule-filter-save-btn {
   width: 100%;
-  padding: 10px;
-  background-color: #2051e5;
-  color: white;
+  padding: 8px;
+  background-color: #4a6cf7;
+  color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 14px;
-  font-weight: 500;
   cursor: pointer;
+}
+
+/* Loading, Error, and Empty States */
+.schedule-loading,
+.schedule-error,
+.schedule-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #666;
   text-align: center;
+  font-size: 14px;
+  background-color: #fff;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+.schedule-error {
+  color: #e53e3e;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .schedule-container {
+    max-width: 768px;
+    margin: 0 auto;
+    border-left: 1px solid #eee;
+    border-right: 1px solid #eee;
+  }
 }

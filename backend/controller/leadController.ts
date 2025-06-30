@@ -4,6 +4,8 @@ import { Employee } from "../models/Employee";
 import { AppError, catchAsync } from "../utils/errorHandler";
 import csv from "csv-parser";
 import { Readable } from "stream";
+import { IUser } from "../models/User";
+import { Schedule } from "../models/Schedule";
 
 // Get all leads with pagination, filtering and sorting
 export const getAllLeads = catchAsync(
@@ -469,3 +471,347 @@ export const deleteLead = catchAsync(
     });
   }
 );
+
+// Get leads assigned to the logged-in user
+export const getMyLeads = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Find the employee associated with the logged-in user
+    const employee = await Employee.findOne({ email: req.user?.email });
+
+    if (!employee) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Employee not found for this user",
+      });
+    }
+
+    // Find leads assigned to this employee
+    const leads = await Lead.find({ assignedEmployee: employee._id }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json({
+      status: "success",
+      results: leads.length,
+      data: {
+        leads,
+      },
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+// Update lead status
+export const updateLeadStatus = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate status
+    if (!["Open", "Closed", "Ongoing", "Pending"].includes(status)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Invalid status. Must be Open, Closed, Ongoing, or Pending",
+      });
+    }
+
+    // Find the employee associated with the logged-in user
+    const employee = await Employee.findOne({ email: req.user?.email });
+
+    if (!employee) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Employee not found for this user",
+      });
+    }
+
+    // Find the lead and check if it's assigned to this employee
+    const lead = await Lead.findById(id);
+
+    if (!lead) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Lead not found",
+      });
+    }
+
+    if (lead.assignedEmployee?.toString() !== employee._id.toString()) {
+      return res.status(403).json({
+        status: "fail",
+        message: "You are not authorized to update this lead",
+      });
+    }
+
+    // Update lead status
+    lead.status = status as "Open" | "Closed" | "Ongoing" | "Pending";
+
+    // If status is changed to Closed, update employee's closedLeads count
+    if (status === "Closed" && lead.status !== "Closed") {
+      employee.closedLeads += 1;
+      await employee.save();
+    }
+
+    await lead.save();
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        lead,
+      },
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+// Update lead type
+export const updateLeadType = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.body;
+
+    // Validate type
+    if (!["Hot", "Warm", "Cold"].includes(type)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Invalid type. Must be Hot, Warm, or Cold",
+      });
+    }
+
+    // Find the employee associated with the logged-in user
+    const employee = await Employee.findOne({ email: req.user?.email });
+
+    if (!employee) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Employee not found for this user",
+      });
+    }
+
+    // Find the lead and check if it's assigned to this employee
+    const lead = await Lead.findById(id);
+
+    if (!lead) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Lead not found",
+      });
+    }
+
+    if (lead.assignedEmployee?.toString() !== employee._id.toString()) {
+      return res.status(403).json({
+        status: "fail",
+        message: "You are not authorized to update this lead",
+      });
+    }
+
+    // Update lead type
+    lead.type = type as "Hot" | "Warm" | "Cold";
+    await lead.save();
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        lead,
+      },
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+// Schedule a call with lead
+export const scheduleLeadCall = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { date, time, notes } = req.body;
+
+    // Validate date and time
+    if (!date || !time) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Please provide both date and time",
+      });
+    }
+
+    // Find the employee associated with the logged-in user
+    const employee = await Employee.findOne({ email: req.user?.email });
+
+    if (!employee) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Employee not found for this user",
+      });
+    }
+
+    // Find the lead and check if it's assigned to this employee
+    const lead = await Lead.findById(id);
+
+    if (!lead) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Lead not found",
+      });
+    }
+
+    if (lead.assignedEmployee?.toString() !== employee._id.toString()) {
+      return res.status(403).json({
+        status: "fail",
+        message: "You are not authorized to schedule a call with this lead",
+      });
+    }
+
+    // Create a new schedule record
+    const schedule = await Schedule.create({
+      leadId: lead._id,
+      employeeId: employee._id,
+      scheduledDate: date,
+      scheduledTime: time,
+      status: "upcoming",
+      notes: notes || "",
+    });
+
+    res.status(201).json({
+      status: "success",
+      data: {
+        schedule,
+        lead: {
+          _id: lead._id,
+          name: lead.name,
+          email: lead.email,
+          phone: lead.phone,
+        },
+      },
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+// Get scheduled calls for the logged-in user
+export const getMySchedule = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Find the employee associated with the logged-in user
+    const employee = await Employee.findOne({ email: req.user?.email });
+
+    if (!employee) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Employee not found for this user",
+      });
+    }
+
+    // Find scheduled calls for this employee
+    const schedules = await Schedule.find({ employeeId: employee._id })
+      .sort({ scheduledDate: 1, scheduledTime: 1 })
+      .populate("leadId", "name email phone type");
+
+    // Format the schedule data for frontend
+    const formattedSchedules = schedules.map((schedule) => {
+      const lead = schedule.leadId as any;
+      return {
+        _id: schedule._id,
+        leadId: lead._id,
+        name: lead.name,
+        phone: lead.phone || "",
+        email: lead.email || "",
+        type: lead.type || "Cold call",
+        scheduledDate: schedule.scheduledDate,
+        scheduledTime: schedule.scheduledTime,
+        status: schedule.status,
+        createdAt: schedule.createdAt,
+      };
+    });
+
+    res.status(200).json({
+      status: "success",
+      results: formattedSchedules.length,
+      data: {
+        schedules: formattedSchedules,
+      },
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+// Update schedule status
+export const updateScheduleStatus = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // Validate status
+    if (!["upcoming", "completed", "cancelled"].includes(status)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Invalid status. Must be upcoming, completed, or cancelled",
+      });
+    }
+
+    // Find the employee associated with the logged-in user
+    const employee = await Employee.findOne({ email: req.user?.email });
+
+    if (!employee) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Employee not found for this user",
+      });
+    }
+
+    // Find the schedule and check if it belongs to this employee
+    const schedule = await Schedule.findById(id);
+
+    if (!schedule) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Schedule not found",
+      });
+    }
+
+    if (schedule.employeeId.toString() !== employee._id.toString()) {
+      return res.status(403).json({
+        status: "fail",
+        message: "You are not authorized to update this schedule",
+      });
+    }
+
+    // Update schedule status
+    schedule.status = status as "upcoming" | "completed" | "cancelled";
+    await schedule.save();
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        schedule,
+      },
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};

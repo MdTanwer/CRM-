@@ -1,19 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/user-profile.css";
 import { FaAngleLeft } from "react-icons/fa";
+import { useAuth } from "../context/AuthContext";
+import {
+  getUserProfile,
+  updateUserProfile,
+  updateUserPassword,
+} from "../services/user.service";
+import { toast } from "react-toastify";
 
 export const UserProfilePage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, token, setUser } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState({
-    firstName: "Rajesh",
-    lastName: "Mehta",
-    email: "rajesh.mehta55@gmail.com",
-    password: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
     confirmPassword: "",
   });
+  const [activeTab, setActiveTab] = useState<"profile" | "password">("profile");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const userData = await getUserProfile(token);
+        setProfileData({
+          firstName: userData.firstName || "",
+          lastName: userData.lastName || "",
+          email: userData.email || "",
+        });
+      } catch (err) {
+        console.error("Error fetching profile:", err);
+        toast.error("Failed to load profile data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [token, navigate]);
+
+  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfileData({
       ...profileData,
@@ -21,10 +61,89 @@ export const UserProfilePage: React.FC = () => {
     });
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData({
+      ...passwordData,
+      [name]: value,
+    });
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Save logic here
-    console.log("Saving profile data:", profileData);
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const updatedUser = await updateUserProfile(token, {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+      });
+
+      // Update user in context if needed
+      if (setUser) {
+        setUser({
+          ...user,
+          name: `${updatedUser.firstName} ${updatedUser.lastName}`,
+        });
+      }
+
+      toast.success("Profile updated successfully");
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      toast.error("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    // Validate passwords
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("New passwords don't match");
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await updateUserPassword(
+        token,
+        passwordData.currentPassword,
+        passwordData.newPassword
+      );
+
+      // Reset password fields
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      toast.success("Password updated successfully");
+    } catch (err) {
+      console.error("Error updating password:", err);
+      toast.error(
+        "Failed to update password. Please check your current password."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleNavigation = (route: string) => {
@@ -39,82 +158,137 @@ export const UserProfilePage: React.FC = () => {
           Canova<span style={{ color: "#E8E000" }}>CRM</span>
         </div>
         <div className="profile-header-nav">
-          <button className=" profile-back-btn" onClick={() => navigate(-1)}>
+          <button className="profile-back-btn" onClick={() => navigate(-1)}>
             <FaAngleLeft />
             Profile
           </button>
         </div>
       </div>
 
+      {/* Tab Navigation */}
+      <div className="profile-tabs">
+        <button
+          className={`profile-tab ${activeTab === "profile" ? "active" : ""}`}
+          onClick={() => setActiveTab("profile")}
+        >
+          Profile
+        </button>
+        <button
+          className={`profile-tab ${activeTab === "password" ? "active" : ""}`}
+          onClick={() => setActiveTab("password")}
+        >
+          Password
+        </button>
+      </div>
+
       {/* Profile Form */}
       <div className="profile-content">
-        <form onSubmit={handleSave}>
-          <div className="user-profile-form-group">
-            <label htmlFor="firstName">First name</label>
-            <input
-              type="text"
-              id="firstName"
-              name="firstName"
-              value={profileData.firstName}
-              onChange={handleChange}
-              className="user-profile-form-input"
-            />
-          </div>
+        {loading ? (
+          <div className="profile-loading">Loading...</div>
+        ) : activeTab === "profile" ? (
+          <form onSubmit={handleSaveProfile}>
+            <div className="user-profile-form-group">
+              <label htmlFor="firstName">First name</label>
+              <input
+                type="text"
+                id="firstName"
+                name="firstName"
+                value={profileData.firstName}
+                onChange={handleProfileChange}
+                className="user-profile-form-input"
+                required
+              />
+            </div>
 
-          <div className="user-profile-form-group">
-            <label htmlFor="lastName">Last name</label>
-            <input
-              type="text"
-              id="lastName"
-              name="lastName"
-              value={profileData.lastName}
-              onChange={handleChange}
-              className="user-profile-form-input"
-            />
-          </div>
+            <div className="user-profile-form-group">
+              <label htmlFor="lastName">Last name</label>
+              <input
+                type="text"
+                id="lastName"
+                name="lastName"
+                value={profileData.lastName}
+                onChange={handleProfileChange}
+                className="user-profile-form-input"
+                required
+              />
+            </div>
 
-          <div className="user-profile-form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={profileData.email}
-              onChange={handleChange}
-              className="user-profile-form-input"
-            />
-          </div>
+            <div className="user-profile-form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={profileData.email}
+                readOnly
+                className="user-profile-form-input user-profile-form-input-readonly"
+              />
+              <small className="form-text">Email cannot be changed</small>
+            </div>
 
-          <div className="user-profile-form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={profileData.password}
-              onChange={handleChange}
-              className="user-profile-form-input"
-              placeholder="••••••••••"
-            />
-          </div>
+            <button
+              type="submit"
+              className="user-profile-save-button"
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Save Profile"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleUpdatePassword}>
+            <div className="user-profile-form-group">
+              <label htmlFor="currentPassword">Current Password</label>
+              <input
+                type="password"
+                id="currentPassword"
+                name="currentPassword"
+                value={passwordData.currentPassword}
+                onChange={handlePasswordChange}
+                className="user-profile-form-input"
+                required
+                placeholder="••••••••••"
+              />
+            </div>
 
-          <div className="user-profile-form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={profileData.confirmPassword}
-              onChange={handleChange}
-              className="user-profile-form-input"
-              placeholder="••••••••••"
-            />
-          </div>
+            <div className="user-profile-form-group">
+              <label htmlFor="newPassword">New Password</label>
+              <input
+                type="password"
+                id="newPassword"
+                name="newPassword"
+                value={passwordData.newPassword}
+                onChange={handlePasswordChange}
+                className="user-profile-form-input"
+                required
+                placeholder="••••••••••"
+                minLength={6}
+              />
+            </div>
 
-          <button type="submit" className="user-profile-save-button">
-            Save
-          </button>
-        </form>
+            <div className="user-profile-form-group">
+              <label htmlFor="confirmPassword">Confirm New Password</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={passwordData.confirmPassword}
+                onChange={handlePasswordChange}
+                className="user-profile-form-input"
+                required
+                placeholder="••••••••••"
+                minLength={6}
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="user-profile-save-button"
+              disabled={loading}
+            >
+              {loading ? "Updating..." : "Update Password"}
+            </button>
+          </form>
+        )}
       </div>
 
       {/* Bottom Navigation */}
