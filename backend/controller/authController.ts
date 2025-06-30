@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import { User, IUser } from "../models/User";
 import mongoose from "mongoose";
 import { Employee } from "../models/Employee";
+import { AppError } from "../utils/errorHandler";
+import { createAndBroadcastActivity } from "./activityController";
 
 // JWT Secret - should be in env variables in production
 const JWT_SECRET = "your-secret-key";
@@ -190,6 +192,10 @@ export const updateUserProfile = async (
     // Find associated employee if exists
     let employee = await Employee.findOne({ email: user.email });
 
+    // Store original values for activity comparison
+    const originalFirstName = employee?.firstName || "";
+    const originalLastName = employee?.lastName || "";
+
     if (employee) {
       // Update employee details
       employee.firstName = firstName || employee.firstName;
@@ -219,6 +225,26 @@ export const updateUserProfile = async (
       user.password = password;
       await user.save();
     }
+
+    // Create and broadcast activity for profile update
+    await createAndBroadcastActivity(req, {
+      message: `You updated your profile`,
+      type: "profile_updated",
+      entityId: user._id.toString(),
+      entityType: "profile",
+      userId: user._id.toString(),
+      userName: `${employee.firstName} ${employee.lastName}`,
+      userType: user.role === "admin" ? "admin" : "employee",
+      metadata: {
+        profileType: "user",
+        originalName: `${originalFirstName} ${originalLastName}`,
+        newName: `${employee.firstName} ${employee.lastName}`,
+        email: user.email,
+        updatedFields: Object.keys(req.body),
+        passwordUpdated: !!password,
+        updatedAt: new Date().toISOString(),
+      },
+    });
 
     const responseData = {
       _id: user._id,

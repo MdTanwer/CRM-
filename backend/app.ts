@@ -1,16 +1,37 @@
 import express, { Request, Response, NextFunction } from "express";
+import http from "http";
+import { Server } from "socket.io";
 import connectDB from "./utils/database";
 import employeeRoutes from "./routes/employeeRoutes";
 import leadRoutes from "./routes/leadRoutes";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
+import activityRoutes from "./routes/activityRoutes";
 import cors from "cors";
 import { globalErrorHandler } from "./utils/errorHandler";
 import adminRoutes from "./routes/adminRoutes";
+import { setupSocketHandlers } from "./sockets/socketHandlers";
 // import { config } from "./utils/config";
 
 // Create Express app
 const app = express();
+const server = http.createServer(app);
+
+// Setup Socket.IO with CORS
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:5173", // Frontend URL
+    methods: ["GET", "POST"],
+    allowedHeaders: ["my-custom-header"],
+    credentials: true,
+  },
+});
+
+// Make io accessible to other modules
+app.set("io", io);
+
+// Setup Socket.IO handlers
+setupSocketHandlers(io);
 
 // Enable CORS for frontend requests
 app.use(cors());
@@ -35,6 +56,9 @@ app.use("/api/v1/employees", employeeRoutes);
 // Lead routes
 app.use("/api/v1/leads", leadRoutes);
 
+// Activity routes
+app.use("/api/v1/activities", activityRoutes);
+
 // Admin routes - no authentication required for demo
 app.use("/api/v1/admin", adminRoutes);
 
@@ -49,9 +73,10 @@ const startServer = async () => {
     // Connect to database
     await connectDB();
 
-    // Start server
-    app.listen(PORT, () => {
+    // Start server with Socket.IO
+    server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      console.log(`Socket.IO server ready for connections`);
     });
   } catch (error) {
     console.error("Server startup failed:", error);

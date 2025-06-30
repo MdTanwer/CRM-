@@ -5,12 +5,9 @@ import { StatsCards } from "../components/dashboard/StatsCards";
 import { SalesChart } from "../components/dashboard/SalesChart";
 import { ActivityFeed } from "../components/dashboard/ActivityFeed";
 import { LeadsTable } from "../components/dashboard/LeadsTable";
+import { AddEmployeeDemo } from "../components/demo/AddEmployeeDemo";
 import "../styles/dashboard.css";
-import {
-  dashboardStats,
-  recentActivity,
-  employeesData,
-} from "../data/dummyData";
+import { dashboardStats, employeesData } from "../data/dummyData";
 import type { DashboardStats } from "../data/dummyData";
 import "../styles/dashboard.css";
 import {
@@ -31,13 +28,13 @@ interface LeadStats {
 
 export const AdminDashboard: React.FC = () => {
   const location = useLocation();
-  const currentPage =
-    location.pathname === "/" ? "dashboard" : location.pathname.slice(1);
+  const currentPage = "dashboard";
 
   const [stats, setStats] = useState<DashboardStats[]>([]);
   const [unassignedLeadsCount, setUnassignedLeadsCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dataRefreshKey, setDataRefreshKey] = useState<number>(0);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
 
   // Fetch unassigned leads count from the backend
   const fetchUnassignedLeads = async () => {
@@ -235,6 +232,9 @@ export const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
+          {/* Demo Section for Real-time Testing */}
+          <AddEmployeeDemo />
+
           {/* Stats Cards */}
           <StatsCards stats={stats.length > 0 ? stats : dashboardStats} />
 
@@ -243,8 +243,8 @@ export const AdminDashboard: React.FC = () => {
             {/* Sales Chart */}
             <SalesChart key={`sales-chart-${dataRefreshKey}`} />
 
-            {/* Activity Feed */}
-            <ActivityFeed activities={recentActivity} />
+            {/* Activity Feed - Now handles its own real-time data */}
+            <ActivityFeed limit={10} />
           </div>
 
           {/* Leads Table */}

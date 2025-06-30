@@ -6,6 +6,7 @@ import csv from "csv-parser";
 import { Readable } from "stream";
 import { IUser } from "../models/User";
 import { Schedule } from "../models/Schedule";
+import { createAndBroadcastActivity } from "./activityController";
 
 // Get all leads with pagination, filtering and sorting
 export const getAllLeads = catchAsync(
@@ -303,7 +304,8 @@ export const uploadCSV = catchAsync(
             }
 
             // Create lead
-            await Lead.create(leadData);
+            const newLead = await Lead.create(leadData);
+
             successCount++;
           } catch (error: any) {
             errors.push(
@@ -312,6 +314,25 @@ export const uploadCSV = catchAsync(
               }`
             );
           }
+        }
+
+        // Create a single summary activity for the CSV upload
+        if (successCount > 0) {
+          await createAndBroadcastActivity(req, {
+            message: `CSV upload completed: ${successCount} new leads have been added to the system`,
+            type: "lead_created",
+            entityId: "bulk_upload",
+            entityType: "lead",
+            userId: "admin",
+            userName: "Admin User",
+            userType: "admin",
+            metadata: {
+              totalLeadsCreated: successCount,
+              totalErrors: errors.length,
+              uploadTimestamp: new Date().toISOString(),
+              uploadType: "csv_bulk_upload",
+            },
+          });
         }
 
         // Send response
@@ -591,6 +612,26 @@ export const createLead = catchAsync(
     }
 
     const newLead = await Lead.create(req.body);
+
+    // Create and broadcast activity for new lead
+    await createAndBroadcastActivity(req, {
+      message: `New lead "${newLead.name}" has been created`,
+      type: "lead_created",
+      entityId: (newLead._id as any).toString(),
+      entityType: "lead",
+      userId: "admin", // You can get this from req.user if authentication is implemented
+      userName: "Admin User",
+      userType: "admin",
+      metadata: {
+        leadName: newLead.name,
+        leadEmail: newLead.email,
+        leadPhone: newLead.phone,
+        leadLocation: newLead.location,
+        leadLanguage: newLead.language,
+        leadType: newLead.type,
+        assignedEmployee: newLead.assignedEmployee,
+      },
+    });
 
     // If lead was assigned to an employee, update their assigned leads count
     if (newLead.assignedEmployee) {

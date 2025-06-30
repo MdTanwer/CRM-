@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { Employee, IEmployee } from "../models/Employee";
 import { AppError, catchAsync } from "../utils/errorHandler";
+import { createAndBroadcastActivity } from "./activityController";
 
 // Get all employees with pagination, filtering and sorting
 export const getAllEmployees = catchAsync(
@@ -80,7 +81,6 @@ export const getEmployeeById = catchAsync(
 export const createEmployee = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     // Check if email already exists
-
     const data = req.body;
 
     const email = data.email;
@@ -92,6 +92,23 @@ export const createEmployee = catchAsync(
     }
 
     const newEmployee = await Employee.create(data);
+
+    // Create and broadcast activity for new employee
+    await createAndBroadcastActivity(req, {
+      message: `you added new employee: ${newEmployee.firstName} ${newEmployee.lastName}`,
+      type: "employee_added",
+      entityId: newEmployee._id.toString(),
+      entityType: "employee",
+      userId: "admin", // You can get this from req.user if authentication is implemented
+      userName: "Admin",
+      userType: "admin",
+      metadata: {
+        employeeName: `${newEmployee.firstName} ${newEmployee.lastName}`,
+        employeeId: newEmployee._id.toString(),
+        department: newEmployee.location,
+        email: newEmployee.email,
+      },
+    });
 
     res.status(201).json({
       status: "success",
@@ -128,6 +145,25 @@ export const updateEmployee = catchAsync(
       return next(new AppError("No employee found with that ID", 404));
     }
 
+    // Create and broadcast activity for employee update
+    await createAndBroadcastActivity(req, {
+      message: `You edited employee: ${employee.firstName} ${employee.lastName}`,
+      type: "employee_edited",
+      entityId: employee._id.toString(),
+      entityType: "employee",
+      userId: "admin", // You can get this from req.user if authentication is implemented
+      userName: "Admin",
+      userType: "admin",
+      metadata: {
+        employeeName: `${employee.firstName} ${employee.lastName}`,
+        employeeId: employee._id.toString(),
+        employeeEmail: employee.email,
+        employeeLocation: employee.location,
+        updatedFields: Object.keys(req.body),
+        updatedAt: new Date().toISOString(),
+      },
+    });
+
     res.status(200).json({
       status: "success",
       data: {
@@ -140,11 +176,38 @@ export const updateEmployee = catchAsync(
 // Delete employee
 export const deleteEmployee = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const employee = await Employee.findByIdAndDelete(req.params.id);
+    const employee = await Employee.findById(req.params.id);
 
     if (!employee) {
       return next(new AppError("No employee found with that ID", 404));
     }
+
+    // Store employee details before deletion for the activity
+    const employeeName = `${employee.firstName} ${employee.lastName}`;
+    const employeeEmail = employee.email;
+    const employeeLocation = employee.location;
+    const employeeId = employee._id.toString();
+
+    // Delete the employee
+    await Employee.findByIdAndDelete(req.params.id);
+
+    // Create and broadcast activity for employee deletion
+    await createAndBroadcastActivity(req, {
+      message: `You deleted employee: ${employeeName}`,
+      type: "employee_deleted",
+      entityId: employeeId,
+      entityType: "employee",
+      userId: "admin", // You can get this from req.user if authentication is implemented
+      userName: "Admin",
+      userType: "admin",
+      metadata: {
+        employeeName: employeeName,
+        employeeEmail: employeeEmail,
+        employeeLocation: employeeLocation,
+        employeeId: employeeId,
+        deletedAt: new Date().toISOString(),
+      },
+    });
 
     res.status(204).json({
       status: "success",
