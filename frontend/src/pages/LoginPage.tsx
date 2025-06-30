@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import "../styles/login.css";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
+  const [lastName, setLastName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -11,16 +13,16 @@ const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email) {
-      alert("Please enter your email");
+    if (!email || !lastName) {
+      alert("Please enter both your email and last name");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Login with email only (password is handled on the server)
-      const success = await login(email);
+      // Login with email and lastName
+      const success = await login(email, lastName);
 
       if (success) {
         navigate("/user");
@@ -36,13 +38,9 @@ const LoginPage: React.FC = () => {
     <div className="login-page">
       <div className="login-container">
         <h1>Employee Login</h1>
-        <p>
-          Enter your employee email to login. Your account will be automatically
-          created if this is your first login.
-        </p>
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
+          <div className="login-form-group">
             <label htmlFor="email">Email</label>
             <input
               type="email"
@@ -50,6 +48,18 @@ const LoginPage: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your employee email"
+              required
+            />
+          </div>
+
+          <div className="login-form-group">
+            <label htmlFor="lastName">Last Name</label>
+            <input
+              type="text"
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Enter your last name"
               required
             />
           </div>

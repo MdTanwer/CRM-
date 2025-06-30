@@ -15,7 +15,7 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string) => Promise<boolean>;
+  login: (email: string, lastName: string) => Promise<boolean>;
   logout: () => void;
   setUser: (user: User | null) => void;
 }
@@ -53,10 +53,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loadUser();
   }, [token]);
 
-  const login = async (email: string): Promise<boolean> => {
+  const login = async (email: string, lastName: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const { token: newToken, user: userData } = await loginUser(email);
+      const { token: newToken, user: userData } = await loginUser(
+        email,
+        lastName
+      );
 
       localStorage.setItem("token", newToken);
       setToken(newToken);
@@ -66,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return true;
     } catch (error) {
       console.error("Login failed:", error);
-      toast.error("Login failed. Please check your email.");
+      toast.error("Login failed. Please check your email and last name.");
       return false;
     } finally {
       setLoading(false);

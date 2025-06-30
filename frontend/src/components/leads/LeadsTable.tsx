@@ -1,12 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
   getPaginationRowModel,
   flexRender,
 } from "@tanstack/react-table";
-import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
-import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
+import type { ColumnDef } from "@tanstack/react-table";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "../../styles/leads.css";
@@ -48,20 +47,14 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
   onDataChange,
   onEditLead,
 }) => {
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
   const handleEditLead = (leadId: string) => {
     if (onEditLead) {
       onEditLead(leadId);
     }
-    setActiveMenu(null);
   };
 
   const handleDeleteLead = async (leadId: string) => {
     try {
-      setIsDeleting(true);
       // Call the delete API
       await axios.delete(`http://localhost:3000/api/v1/leads/${leadId}`);
 
@@ -78,15 +71,7 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
         error?.response?.data?.message || "Failed to delete lead";
       toast.error(errorMsg);
       console.error("Error deleting lead:", error);
-    } finally {
-      setIsDeleting(false);
-      setActiveMenu(null);
     }
-  };
-
-  const toggleMenu = (leadId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent the click from bubbling up
-    setActiveMenu(activeMenu === leadId ? null : leadId);
   };
 
   const getStatusBadgeClass = (status: string) => {
@@ -128,24 +113,6 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
 
   const columns = useMemo<ColumnDef<Lead, any>[]>(
     () => [
-      {
-        id: "select",
-        header: ({ table }) => (
-          <input
-            type="checkbox"
-            checked={table.getIsAllPageRowsSelected()}
-            onChange={table.getToggleAllPageRowsSelectedHandler()}
-          />
-        ),
-        cell: ({ row }) => (
-          <input
-            type="checkbox"
-            checked={row.getIsSelected()}
-            onChange={row.getToggleSelectedHandler()}
-          />
-        ),
-        size: 40,
-      },
       {
         accessorKey: "name",
         header: "Name",
@@ -219,72 +186,21 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
         },
         size: 150,
       },
-      {
-        id: "actions",
-        header: "",
-        cell: ({ row }) => (
-          <div className="lead-action-menu">
-            <button
-              className="lead-action-btn"
-              onClick={(e) => toggleMenu(row.original._id, e)}
-            >
-              <FaEllipsisV />
-            </button>
-            {activeMenu === row.original._id && (
-              <div
-                className="lead-action-tooltip"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <button
-                  className="lead-tooltip-btn"
-                  onClick={() => handleEditLead(row.original._id)}
-                >
-                  <FaEdit /> <span>Edit</span>
-                </button>
-                <button
-                  className="lead-tooltip-btn lead-delete-btn"
-                  onClick={() => handleDeleteLead(row.original._id)}
-                  disabled={isDeleting}
-                >
-                  <FaTrash />{" "}
-                  <span>{isDeleting ? "Deleting..." : "Delete"}</span>
-                </button>
-              </div>
-            )}
-          </div>
-        ),
-        size: 40,
-      },
     ],
-    [activeMenu, isDeleting]
+    []
   );
 
   const table = useReactTable({
     data,
     columns,
-    state: {
-      rowSelection,
-      pagination: { pageIndex, pageSize: PAGE_SIZE },
-    },
-    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     manualPagination: true,
     pageCount,
+    state: {
+      pagination: { pageIndex, pageSize: PAGE_SIZE },
+    },
   });
-
-  // Close menu when clicking outside
-  React.useEffect(() => {
-    const handleClickOutside = () => {
-      setActiveMenu(null);
-    };
-
-    document.addEventListener("click", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, []);
 
   return (
     <div className="leads-table-wrapper">

@@ -22,13 +22,13 @@ export const login = async (
   next: NextFunction
 ) => {
   try {
-    const { email } = req.body;
+    const { email, password } = req.body;
 
-    // Check if email exists
-    if (!email) {
+    // Check if email and password are provided
+    if (!email || !password) {
       return res.status(400).json({
         status: "fail",
-        message: "Please provide your email",
+        message: "Please provide your email and last name",
       });
     }
 
@@ -42,28 +42,33 @@ export const login = async (
       });
     }
 
+    // Verify that the provided password matches the employee's last name
+    if (password.toLowerCase() !== employee.lastName.toLowerCase()) {
+      return res.status(401).json({
+        status: "fail",
+        message: "Incorrect password. Please use your last name as password.",
+      });
+    }
+
     // Check if user account exists for this employee
     let user = (await User.findOne({ email }).select(
       "+password"
     )) as IUser | null;
 
-    // If no user account exists, create one with email as password
+    // If no user account exists, create one with lastName as password
     if (!user) {
       user = (await User.create({
         email,
-        password: email, // Password is the same as email
+        password: employee.lastName, // Password is the employee's last name
         role: "user",
       })) as IUser;
-    }
-
-    // Verify password (which is the same as email)
-    const isPasswordCorrect = await user.comparePassword(email);
-
-    if (!isPasswordCorrect) {
-      return res.status(401).json({
-        status: "fail",
-        message: "Incorrect password. Please use your email as password.",
-      });
+    } else {
+      // Update the password to current lastName in case it changed
+      const isPasswordCorrect = await user.comparePassword(employee.lastName);
+      if (!isPasswordCorrect) {
+        user.password = employee.lastName;
+        await user.save();
+      }
     }
 
     // Generate token
