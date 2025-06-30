@@ -17,6 +17,7 @@ import {
   getLeadSchedules,
   getEmployeeScheduleForDate,
   getSalesAnalytics,
+  getRecentLeads,
 } from "../controller/leadController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -47,6 +48,9 @@ router.get("/stats", getLeadStats);
 
 // Sales analytics route
 router.get("/sales-analytics", getSalesAnalytics);
+
+// Recent leads route for dashboard
+router.get("/recent", getRecentLeads);
 
 // CSV upload route
 router.post("/upload-csv", upload.single("file"), uploadCSV);

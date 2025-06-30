@@ -483,6 +483,80 @@ export const getSalesAnalytics = catchAsync(
   }
 );
 
+// Get recent leads for dashboard
+export const getRecentLeads = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Get query parameters with defaults
+    const limit = parseInt(req.query.limit as string) || 10;
+    const days = parseInt(req.query.days as string) || 7; // Default to last 7 days
+
+    // Calculate date range for recent leads
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - days);
+
+    // First, try to get leads from the specified recent period
+    let recentLeads = await Lead.find({
+      createdAt: { $gte: startDate, $lte: endDate },
+    })
+      .populate("assignedEmployee", "firstName lastName email")
+      .sort({ createdAt: -1 }) // Most recent first
+      .limit(limit);
+
+    // Get total count of recent leads in the specified period
+    const totalRecentLeads = await Lead.countDocuments({
+      createdAt: { $gte: startDate, $lte: endDate },
+    });
+
+    // If we don't have enough leads from the recent period, get more from all time
+    if (recentLeads.length < limit) {
+      const remainingCount = limit - recentLeads.length;
+
+      // Get additional leads from before the recent period
+      const olderLeads = await Lead.find({
+        createdAt: { $lt: startDate },
+      })
+        .populate("assignedEmployee", "firstName lastName email")
+        .sort({ createdAt: -1 })
+        .limit(remainingCount);
+
+      // Combine recent and older leads
+      recentLeads = [...recentLeads, ...olderLeads];
+    }
+
+    // Format the response data
+    const formattedLeads = recentLeads.map((lead) => ({
+      _id: lead._id,
+      name: lead.name,
+      email: lead.email,
+      phone: lead.phone,
+      status: lead.status,
+      type: lead.type,
+      language: lead.language,
+      location: lead.location,
+      receivedDate: lead.receivedDate,
+      assignedEmployee: lead.assignedEmployee,
+      createdAt: lead.createdAt,
+      updatedAt: lead.updatedAt,
+    }));
+
+    res.status(200).json({
+      status: "success",
+      results: formattedLeads.length,
+      totalRecentLeads,
+      requestedLimit: limit,
+      dateRange: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        days,
+      },
+      data: {
+        leads: formattedLeads,
+      },
+    });
+  }
+);
+
 // Create new lead with distribution
 export const createLead = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {

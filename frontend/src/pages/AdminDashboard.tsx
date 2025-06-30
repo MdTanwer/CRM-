@@ -8,7 +8,6 @@ import { LeadsTable } from "../components/dashboard/LeadsTable";
 import {
   dashboardStats,
   recentActivity,
-  leadsData,
   employeesData,
 } from "../data/dummyData";
 import type { DashboardStats } from "../data/dummyData";
@@ -255,7 +254,10 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Leads Table */}
-          <LeadsTable data={leadsData} />
+          <LeadsTable
+            key={`leads-table-${dataRefreshKey}`}
+            refreshKey={dataRefreshKey}
+          />
         </div>
       </div>
     </div>
