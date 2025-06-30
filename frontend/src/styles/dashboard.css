@@ -265,17 +265,22 @@
 
 /* Stats Cards */
 .stats-grid {
-  display: grid;
+  display: grid !important;
   grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   margin-bottom: 32px;
+  min-height: 120px; /* Ensure minimum height */
+  padding: 10px; /* Add some padding */
 }
 
 .stat-card {
-  background: #ffffff;
+  background: #ffffff !important;
   border-radius: 8px;
   padding: 20px;
   border: 1px solid #b1b1b1;
+  min-height: 100px; /* Ensure minimum height */
+  display: flex !important; /* Force display */
+  visibility: visible !important; /* Force visibility */
 }
 
 .stat-card-content {

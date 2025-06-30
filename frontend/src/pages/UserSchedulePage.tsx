@@ -106,12 +106,202 @@ export const UserSchedulePage: React.FC = () => {
 
   // Filter schedule items
   const filteredItems = scheduleItems.filter((item) => {
-    // Filter by search query
+    // If no search query, just filter by date
+    if (!searchQuery) {
+      let matchesFilter = true;
+      if (filterValue === "Today") {
+        try {
+          matchesFilter = isToday(parseISO(item.scheduledDate));
+        } catch (error) {
+          matchesFilter = false;
+        }
+      } else if (filterValue === "Tomorrow") {
+        try {
+          matchesFilter = isTomorrow(parseISO(item.scheduledDate));
+        } catch (error) {
+          matchesFilter = false;
+        }
+      } else if (filterValue === "This Week") {
+        try {
+          matchesFilter = isThisWeek(parseISO(item.scheduledDate));
+        } catch (error) {
+          matchesFilter = false;
+        }
+      }
+
+      // Only show upcoming calls
+      const isUpcoming = item.status === "upcoming";
+      return matchesFilter && isUpcoming;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+
+    // Simple text matching for basic fields
+    const simpleTextMatches = (
+      text: string | undefined | null,
+      searchQuery: string
+    ) => {
+      if (!text) return false;
+      const normalizedText = text.toLowerCase().trim();
+
+      // Exact match
+      if (normalizedText === searchQuery) return true;
+
+      // Contains match
+      if (normalizedText.includes(searchQuery)) return true;
+
+      // Word starts with query (for partial matches)
+      const words = normalizedText.split(/\s+/);
+      return words.some((word) => word.startsWith(searchQuery));
+    };
+
+    // Advanced text matching with abbreviations for specific fields
+    const advancedTextMatches = (
+      text: string | undefined | null,
+      searchQuery: string,
+      fieldType: "status" | "type"
+    ) => {
+      if (!text) return false;
+      const normalizedText = text.toLowerCase().trim();
+
+      // First try simple matching
+      if (simpleTextMatches(text, searchQuery)) return true;
+
+      // Then try abbreviations/synonyms
+      const getSearchVariations = (searchQuery: string, fieldType: string) => {
+        const variations = [searchQuery];
+
+        if (fieldType === "status") {
+          const statusMap: { [key: string]: string[] } = {
+            upcoming: ["upcoming", "scheduled", "pending", "active", "future"],
+            completed: ["completed", "done", "finished", "closed"],
+            cancelled: ["cancelled", "canceled", "aborted", "stopped"],
+          };
+
+          Object.entries(statusMap).forEach(([key, values]) => {
+            if (values.includes(searchQuery) && normalizedText.includes(key)) {
+              variations.push(key);
+            }
+          });
+        } else if (fieldType === "type") {
+          const typeMap: { [key: string]: string[] } = {
+            hot: ["hot", "urgent", "priority", "important", "high"],
+            warm: ["warm", "medium", "normal", "regular"],
+            cold: ["cold", "low", "future", "potential"],
+          };
+
+          Object.entries(typeMap).forEach(([key, values]) => {
+            if (values.includes(searchQuery) && normalizedText.includes(key)) {
+              variations.push(key);
+            }
+          });
+        }
+
+        return [...new Set(variations)];
+      };
+
+      const searchVariations = getSearchVariations(searchQuery, fieldType);
+      return searchVariations.some((variation) =>
+        normalizedText.includes(variation)
+      );
+    };
+
+    // Helper function for date and time matching with multiple formats
+    const dateTimeMatches = (
+      dateString: string,
+      timeString: string,
+      searchQuery: string
+    ) => {
+      try {
+        const date = new Date(dateString);
+
+        // Different date formats to check against
+        const dateFormats = [
+          format(date, "MMMM dd, yyyy").toLowerCase(), // "January 15, 2024"
+          date.toLocaleDateString().toLowerCase(), // "1/15/2024"
+          date
+            .toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+            .toLowerCase(), // "Jan 15, 2024"
+          date
+            .toLocaleDateString("en-US", { month: "long", day: "numeric" })
+            .toLowerCase(), // "January 15"
+          date
+            .toLocaleDateString("en-US", { month: "short", day: "numeric" })
+            .toLowerCase(), // "Jan 15"
+          date.toLocaleDateString("en-US", { month: "long" }).toLowerCase(), // "January"
+          date.toLocaleDateString("en-US", { month: "short" }).toLowerCase(), // "Jan"
+          date.getFullYear().toString(), // "2024"
+          dateString.split("T")[0], // "2024-01-15" (ISO format)
+        ];
+
+        // Time formats to check against
+        const timeFormats = [
+          timeString.toLowerCase(), // "14:30"
+          timeString.replace(":", "").toLowerCase(), // "1430"
+        ];
+
+        // Check if timeString can be converted to 12-hour format
+        try {
+          const [hours, minutes] = timeString.split(":");
+          const hour12 = parseInt(hours) % 12 || 12;
+          const ampm = parseInt(hours) >= 12 ? "pm" : "am";
+          const time12Format = `${hour12}:${minutes} ${ampm}`;
+          const time12FormatNoSpace = `${hour12}:${minutes}${ampm}`;
+          timeFormats.push(
+            time12Format.toLowerCase(),
+            time12FormatNoSpace.toLowerCase()
+          );
+        } catch (e) {
+          // If time conversion fails, continue with original formats
+        }
+
+        // Combined date and time formats
+        const combinedFormats = [
+          `${dateString} ${timeString}`.toLowerCase(),
+          `${date.toLocaleDateString()} ${timeString}`.toLowerCase(),
+        ];
+
+        return (
+          dateFormats.some((format) => format.includes(searchQuery)) ||
+          timeFormats.some((format) => format.includes(searchQuery)) ||
+          combinedFormats.some((format) => format.includes(searchQuery))
+        );
+      } catch (error) {
+        return false;
+      }
+    };
+
+    // Comprehensive search across all schedule item fields
     const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.phone && item.phone.includes(searchQuery)) ||
+      // Basic contact information (simple text matching)
+      simpleTextMatches(item.name, query) ||
+      simpleTextMatches(item.email, query) ||
+      simpleTextMatches(item.phone, query) ||
+      // Schedule classification (advanced matching with synonyms)
+      advancedTextMatches(item.status, query, "status") ||
+      advancedTextMatches(item.type, query, "type") ||
+      // Date and time searches with multiple formats
+      dateTimeMatches(item.scheduledDate, item.scheduledTime, query) ||
+      // ID search (for technical users)
+      item._id.toLowerCase().includes(query) ||
+      item.leadId.toLowerCase().includes(query) ||
+      // Partial phone number matching (without formatting)
+      (item.phone &&
+        item.phone.replace(/\D/g, "").includes(query.replace(/\D/g, ""))) ||
+      // Email domain search
       (item.email &&
-        item.email.toLowerCase().includes(searchQuery.toLowerCase()));
+        item.email.split("@")[1] &&
+        simpleTextMatches(item.email.split("@")[1], query)) ||
+      // Combined field searches
+      `${item.name} ${item.email || ""}`.toLowerCase().includes(query) ||
+      `${item.type} ${item.status}`.toLowerCase().includes(query) ||
+      `${item.scheduledDate} ${item.scheduledTime}`
+        .toLowerCase()
+        .includes(query);
 
     // Filter by date
     let matchesFilter = true;
@@ -185,22 +375,16 @@ export const UserSchedulePage: React.FC = () => {
   return (
     <div className="schedule-container">
       {/* Header */}
-      <div className="schedule-header">
-        <div className="schedule-brand-logo">
+      <div className="profile-header">
+        <div className="profile-brand-logo">
           Canova<span style={{ color: "#E8E000" }}>CRM</span>
         </div>
-        <div className="schedule-header-nav">
-          <button className="schedule-back-btn " onClick={() => navigate(-1)}>
+        <div className="profile-header-nav">
+          <button className="profile-back-btn" onClick={() => navigate(-1)}>
             <FaAngleLeft />
             Schedule
           </button>
         </div>
-      </div>
-
-      {/* Greeting */}
-      <div className="schedule-greeting">
-        <div className="leads-greeting">{getGreeting()}</div>
-        <div className="leads-name">{user?.name || user?.email}</div>
       </div>
 
       {/* Search Bar */}
