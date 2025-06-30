@@ -59,7 +59,6 @@
   background: transparent;
   display: flex;
   align-items: center;
-  gap: 12px;
   position: relative;
   margin-bottom: 8px;
 }
@@ -91,6 +90,7 @@
   color: #333333;
   outline: none;
   font-family: "Inter", sans-serif;
+  margin-right: 8px;
 }
 
 .leads-search-input::placeholder {
@@ -98,25 +98,45 @@
   font-size: 15px;
 }
 
-.leads-filter-btn {
-  background-color: #f2f2f2;
+.leads-filter-btn-inline {
+  background: none;
   border: none;
   color: #666666;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   flex-shrink: 0;
   position: relative;
-  z-index: 1000;
+  transition: all 0.2s;
 }
 
-.leads-filter-btn svg {
+.leads-filter-btn-inline:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.leads-filter-btn-inline.leads-filter-active {
+  background-color: #2051e5;
+  color: white;
+}
+
+.leads-filter-btn-inline svg {
   width: 16px;
   height: 16px;
+}
+
+.leads-filter-btn-inline .filter-active-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background-color: #ff6b00;
+  border-radius: 50%;
+  border: 1px solid white;
 }
 
 /* Filter Tooltip */
@@ -124,7 +144,7 @@
   position: absolute;
   top: 50px;
   right: 20px;
-  width: 180px;
+  width: 200px;
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -136,7 +156,7 @@
   content: "";
   position: absolute;
   top: -8px;
-  right: 20px;
+  right: 40px;
   width: 16px;
   height: 16px;
   background-color: white;
@@ -152,9 +172,20 @@
   margin-bottom: 16px;
 }
 
+.leads-filter-section {
+  margin-bottom: 16px;
+}
+
+.leads-filter-label {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 8px;
+}
+
 .leads-filter-dropdown {
   position: relative;
-  margin-bottom: 16px;
 }
 
 .leads-filter-select-wrapper {
@@ -196,6 +227,26 @@
   font-weight: 500;
   cursor: pointer;
   text-align: center;
+  margin-bottom: 8px;
+}
+
+.leads-filter-clear-btn {
+  width: 100%;
+  padding: 8px;
+  background-color: transparent;
+  color: #666;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.leads-filter-clear-btn:hover {
+  background-color: #f8f9fa;
+  border-color: #ccc;
 }
 
 /* Leads List */
@@ -213,14 +264,13 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: relative;
   margin-bottom: 16px;
-  background-color: #f6f6f5;
+  background-color: #eeeeee;
 }
 
 .lead-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
 }
 
 .lead-info {
@@ -229,7 +279,7 @@
 
 .lead-name {
   font-family: "Poppins", sans-serif;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 0;
   line-height: normal;
@@ -247,33 +297,53 @@
   margin: 0;
 }
 
+.schedule-indicator {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #2051e5;
+  background-color: #e8f0ff;
+  padding: 4px 8px;
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.schedule-indicator span {
+  font-size: 12px;
+}
+
 .lead-badges {
   display: flex;
   gap: 8px;
 }
 
 .lead-status-circle {
-  width: 70px;
-  height: 70px;
+  width: 90px;
+  height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  border-radius: 50%;
 }
 
-.status-badge {
+.lead-status-badge2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   font-family: "Poppins", sans-serif;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0;
-  border: 2px solid;
+  border: 10px solid;
   background-color: white;
+  padding: 20px;
 }
 
 .status-ongoing {
@@ -287,8 +357,12 @@
   background-color: transparent;
 }
 
-.lead-date-section {
-  margin-bottom: 16px;
+.lead-info-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 16px;
 }
 
 .lead-date-label {
@@ -296,7 +370,7 @@
   font-family: "Poppins", sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: #212525;
+  color: #0d1829;
   margin-bottom: 4px;
 }
 
@@ -306,7 +380,7 @@
   gap: 8px;
   color: #212525;
   font-family: "Poppins", sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -319,9 +393,9 @@
 .lead-actions-row {
   display: flex;
   gap: 16px;
-  margin-top: 16px;
   position: relative;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .action-btn {
@@ -539,6 +613,52 @@
   outline: none;
 }
 
+.datetime-input-conflict {
+  border-color: #ff6b6b;
+  background-color: #fff5f5;
+}
+
+.datetime-conflict-warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: #856404;
+  font-family: "Poppins", sans-serif;
+}
+
+.occupied-slots-info {
+  margin-bottom: 12px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.occupied-slots-header {
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.occupied-slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.occupied-slot {
+  font-family: "Poppins", sans-serif;
+  font-size: 11px;
+  color: #555;
+  padding: 2px 6px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+}
+
 .datetime-save-btn {
   width: 100%;
   padding: 10px;
@@ -552,6 +672,13 @@
   cursor: pointer;
   text-align: center;
   margin-top: 8px;
+  transition: background-color 0.2s;
+}
+
+.datetime-save-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* Status Button and Tooltip */

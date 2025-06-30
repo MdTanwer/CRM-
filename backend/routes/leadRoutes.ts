@@ -14,6 +14,8 @@ import {
   scheduleLeadCall,
   getMySchedule,
   updateScheduleStatus,
+  getLeadSchedules,
+  getEmployeeScheduleForDate,
 } from "../controller/leadController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -70,11 +72,27 @@ router.post(
   protect as RequestHandler,
   scheduleLeadCall as RequestHandler
 );
+
+// Get schedules for a specific lead
+router.get(
+  "/:id/schedules",
+  protect as RequestHandler,
+  getLeadSchedules as RequestHandler
+);
+
 router.get(
   "/my-schedule",
   protect as RequestHandler,
   getMySchedule as RequestHandler
 );
+
+// Get employee's schedule for a specific date
+router.get(
+  "/my-schedule/:date",
+  protect as RequestHandler,
+  getEmployeeScheduleForDate as RequestHandler
+);
+
 router.patch(
   "/schedule/:id/status",
   protect as RequestHandler,

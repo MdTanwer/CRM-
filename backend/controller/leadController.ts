@@ -551,11 +551,63 @@ export const updateLeadStatus = async (
       });
     }
 
+    // Check for future scheduled calls if trying to close the lead
+    if (status === "Closed") {
+      const currentDate = new Date();
+      const currentDateString = currentDate.toISOString().split("T")[0]; // YYYY-MM-DD format
+      const currentTime = currentDate.toTimeString().slice(0, 5); // HH:MM format
+
+      // Find upcoming scheduled calls for this lead
+      const futureSchedules = await Schedule.find({
+        leadId: id,
+        status: "upcoming",
+        $or: [
+          { scheduledDate: { $gt: currentDateString } },
+          {
+            scheduledDate: currentDateString,
+            scheduledTime: { $gt: currentTime },
+          },
+        ],
+      });
+
+      if (futureSchedules.length > 0) {
+        return res.status(400).json({
+          status: "fail",
+          message:
+            "Cannot close lead with future scheduled calls. Please complete or cancel scheduled calls first.",
+          data: {
+            futureSchedules: futureSchedules.map((schedule) => ({
+              id: schedule._id,
+              date: schedule.scheduledDate,
+              time: schedule.scheduledTime,
+            })),
+          },
+        });
+      }
+
+      // Auto-mark past schedules as completed if they exist
+      await Schedule.updateMany(
+        {
+          leadId: id,
+          status: "upcoming",
+          $or: [
+            { scheduledDate: { $lt: currentDateString } },
+            {
+              scheduledDate: currentDateString,
+              scheduledTime: { $lte: currentTime },
+            },
+          ],
+        },
+        { status: "completed" }
+      );
+    }
+
     // Update lead status
+    const previousStatus = lead.status;
     lead.status = status as "Open" | "Closed" | "Ongoing" | "Pending";
 
     // If status is changed to Closed, update employee's closedLeads count
-    if (status === "Closed" && lead.status !== "Closed") {
+    if (status === "Closed" && previousStatus !== "Closed") {
       employee.closedLeads += 1;
       await employee.save();
     }
@@ -675,6 +727,30 @@ export const scheduleLeadCall = async (
       return res.status(403).json({
         status: "fail",
         message: "You are not authorized to schedule a call with this lead",
+      });
+    }
+
+    // Check for existing schedules at the same time for this employee
+    const existingSchedule = await Schedule.findOne({
+      employeeId: employee._id,
+      scheduledDate: date,
+      scheduledTime: time,
+      status: "upcoming",
+    }).populate("leadId", "name");
+
+    if (existingSchedule) {
+      const conflictingLead = existingSchedule.leadId as any;
+      return res.status(400).json({
+        status: "fail",
+        message: `You already have a call scheduled at ${time} on ${date} with lead: ${conflictingLead.name}. Please choose a different time.`,
+        data: {
+          conflictingSchedule: {
+            id: existingSchedule._id,
+            leadName: conflictingLead.name,
+            date: existingSchedule.scheduledDate,
+            time: existingSchedule.scheduledTime,
+          },
+        },
       });
     }
 
@@ -809,6 +885,133 @@ export const updateScheduleStatus = async (
       status: "success",
       data: {
         schedule,
+      },
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+// Get schedules for a specific lead
+export const getLeadSchedules = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    // Find the employee associated with the logged-in user
+    const employee = await Employee.findOne({ email: req.user?.email });
+
+    if (!employee) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Employee not found for this user",
+      });
+    }
+
+    // Find the lead and check if it's assigned to this employee
+    const lead = await Lead.findById(id);
+
+    if (!lead) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Lead not found",
+      });
+    }
+
+    if (lead.assignedEmployee?.toString() !== employee._id.toString()) {
+      return res.status(403).json({
+        status: "fail",
+        message: "You are not authorized to view schedules for this lead",
+      });
+    }
+
+    // Get all schedules for this lead
+    const schedules = await Schedule.find({ leadId: id }).sort({
+      scheduledDate: 1,
+      scheduledTime: 1,
+    });
+
+    // Check for future schedules
+    const currentDate = new Date();
+    const currentDateString = currentDate.toISOString().split("T")[0];
+    const currentTime = currentDate.toTimeString().slice(0, 5);
+
+    const futureSchedules = schedules.filter(
+      (schedule) =>
+        schedule.status === "upcoming" &&
+        (schedule.scheduledDate > currentDateString ||
+          (schedule.scheduledDate === currentDateString &&
+            schedule.scheduledTime > currentTime))
+    );
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        schedules,
+        hasFutureSchedules: futureSchedules.length > 0,
+        futureSchedules,
+      },
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+// Get employee's schedules for a specific date
+export const getEmployeeScheduleForDate = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { date } = req.params;
+
+    // Validate date format
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Please provide a valid date in YYYY-MM-DD format",
+      });
+    }
+
+    // Find the employee associated with the logged-in user
+    const employee = await Employee.findOne({ email: req.user?.email });
+
+    if (!employee) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Employee not found for this user",
+      });
+    }
+
+    // Get all schedules for this employee on the specified date
+    const schedules = await Schedule.find({
+      employeeId: employee._id,
+      scheduledDate: date,
+      status: "upcoming",
+    })
+      .populate("leadId", "name")
+      .sort({ scheduledTime: 1 });
+
+    // Format the occupied time slots
+    const occupiedTimeSlots = schedules.map((schedule) => {
+      const lead = schedule.leadId as any;
+      return {
+        time: schedule.scheduledTime,
+        leadName: lead.name,
+        scheduleId: schedule._id,
+      };
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        date,
+        occupiedTimeSlots,
+        totalSchedules: schedules.length,
       },
     });
   } catch (error: any) {
