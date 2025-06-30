@@ -87,12 +87,15 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
       newErrors.email = "Please enter a valid email address";
     }
 
-    if (!formData.location) {
-      newErrors.location = "Location is required";
-    }
+    // Only validate location and preferredLanguage when adding new employee
+    if (!isEditing) {
+      if (!formData.location) {
+        newErrors.location = "Location is required";
+      }
 
-    if (!formData.preferredLanguage) {
-      newErrors.preferredLanguage = "Preferred language is required";
+      if (!formData.preferredLanguage) {
+        newErrors.preferredLanguage = "Preferred language is required";
+      }
     }
 
     setErrors(newErrors);
@@ -197,7 +200,8 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
-                required
+                required={!isEditing}
+                disabled={isEditing}
               >
                 <option value="">Select location</option>
                 <option value="pune">Pune</option>
@@ -226,7 +230,8 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                 name="preferredLanguage"
                 value={formData.preferredLanguage}
                 onChange={handleInputChange}
-                required
+                required={!isEditing}
+                disabled={isEditing}
               >
                 <option value="">Select language</option>
                 <option value="hindi">Hindi</option>

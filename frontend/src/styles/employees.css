@@ -624,10 +624,24 @@
   color: #9ca3af;
 }
 
+.form-group select:disabled {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+  border-color: #d1d5db;
+}
+
 .error-message {
   color: #ef4444;
   font-size: 12px;
   margin-top: 4px;
+}
+
+.field-disabled-notice {
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 4px;
+  font-style: italic;
 }
 
 .form-help-text {

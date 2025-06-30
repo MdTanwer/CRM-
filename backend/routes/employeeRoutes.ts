@@ -5,7 +5,6 @@ import {
   createEmployee,
   updateEmployee,
   deleteEmployee,
-  updateEmployeeStatus,
   getEmployeeStats,
 } from "../controller/employeeController";
 
@@ -22,8 +21,5 @@ router
   .get(getEmployeeById)
   .patch(updateEmployee)
   .delete(deleteEmployee);
-
-// Status update route
-router.patch("/:id/status", updateEmployeeStatus);
 
 export default router;
