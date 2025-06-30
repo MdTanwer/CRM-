@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const API_URL = "http://localhost:3000/api/v1/auth";
+import { API_BASE_URL, AUTH_API } from "../config/api.config";
 
 interface AuthResponse {
   status: string;
@@ -19,7 +18,7 @@ interface AuthResponse {
 // Login user
 export const loginUser = async (email: string) => {
   try {
-    const response = await axios.post<AuthResponse>(`${API_URL}/login`, {
+    const response = await axios.post<AuthResponse>(`${AUTH_API}/login`, {
       email,
     });
 
@@ -39,7 +38,7 @@ export const loginUser = async (email: string) => {
 // Get current user
 export const getCurrentUser = async (token: string) => {
   try {
-    const response = await axios.get<AuthResponse>(`${API_URL}/me`, {
+    const response = await axios.get<AuthResponse>(`${AUTH_API}/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -58,7 +57,7 @@ export const getCurrentUser = async (token: string) => {
 // Create axios instance with auth header
 export const createAuthenticatedAxiosInstance = (token: string) => {
   return axios.create({
-    baseURL: "http://localhost:3000/api/v1",
+    baseURL: API_BASE_URL,
     headers: {
       Authorization: `Bearer ${token}`,
     },

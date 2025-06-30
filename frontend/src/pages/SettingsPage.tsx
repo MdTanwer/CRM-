@@ -1,8 +1,15 @@
-import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Sidebar } from "../components/layout/Sidebar";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "../styles/dashboard.css";
 import "../styles/settings.css";
+import "../styles/employees.css";
+
+// API URLs
+const API_BASE_URL = "http://localhost:3000/api/v1";
+const ADMIN_API = `${API_BASE_URL}/admin`;
 
 export const SettingsPage: React.FC = () => {
   const location = useLocation();
@@ -10,12 +17,42 @@ export const SettingsPage: React.FC = () => {
     location.pathname === "/" ? "dashboard" : location.pathname.slice(1);
 
   const [profileData, setProfileData] = useState({
-    firstName: "Sutirtho",
-    lastName: "Pal",
-    email: "Sutirthopal@gmail.com",
+    firstName: "",
+    lastName: "",
+    email: "",
     password: "",
     confirmPassword: "",
+    role: "",
   });
+
+  // Fetch superadmin data on component mount
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
+
+  const fetchAdminData = async () => {
+    try {
+      // Fetch admin data from API
+      const response = await fetch(ADMIN_API);
+      const result = await response.json();
+
+      if (result.status === "success") {
+        const userData = result.data.user;
+        setProfileData({
+          firstName: userData.firstName || "",
+          lastName: userData.lastName || "",
+          email: userData.email || "",
+          role: userData.role || "superadmin",
+          password: "",
+          confirmPassword: "",
+        });
+      } else {
+        toast.error("Failed to load admin data");
+      }
+    } catch (error) {
+      toast.error("Error loading admin data. Please try again.");
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -25,26 +62,79 @@ export const SettingsPage: React.FC = () => {
     }));
   };
 
-  const handleSave = () => {
-    // Here you would typically save to your backend
-    console.log("Profile data:", profileData);
-    alert("Profile updated successfully!");
+  const handleSave = async () => {
+    try {
+      // Validate passwords if both are provided
+      if (
+        profileData.password &&
+        profileData.password !== profileData.confirmPassword
+      ) {
+        toast.error("Passwords do not match");
+
+        return;
+      }
+
+      // Send update to API
+      const response = await fetch(`${ADMIN_API}/update`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+          email: profileData.email,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.status === "success") {
+        toast.success("Superadmin profile updated successfully!");
+      } else {
+        toast.error(result.message || "Failed to update profile");
+      }
+    } catch (error) {
+      toast.error("Failed to update profile. Please try again.");
+    }
   };
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-container" style={{ backgroundColor: "white" }}>
       <Sidebar currentPage={currentPage} />
 
       <div className="main-content">
         {/* Custom Settings Header */}
-        <div className="header">
-          <div className="header-actions"></div>
+        <div className="emp-header">
+          <div className="emp-header-actions">
+            <div className="emp-search-container">
+              <input
+                type="text"
+                placeholder="Search employees by name, ID..."
+                className="search-input"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="settings-content">
+        <div
+          className="emp-breadcrumbs"
+          style={{ marginTop: "10px", marginLeft: "50px" }}
+        >
+          <span className="emp-breadcrumb-item">Home</span>
+          <span className="emp-breadcrumb-separator">&gt;</span>
+          <Link
+            to="/settings"
+            className="emp-breadcrumb-item"
+            style={{ textDecoration: "none" }}
+          >
+            Settings
+          </Link>
+        </div>
+        <div className="settings-content" style={{ backgroundColor: "white" }}>
           <div className="settings-container">
             <div className="profile-section">
-              <h2 className="profile-title">Edit Profile</h2>
+              <p className="profile-title">Edit Profile</p>
 
               <div className="profile-form">
                 <div className="form-row">
@@ -56,7 +146,7 @@ export const SettingsPage: React.FC = () => {
                       name="firstName"
                       value={profileData.firstName}
                       onChange={handleInputChange}
-                      placeholder="Sutirtho"
+                      placeholder="First name"
                     />
                   </div>
                 </div>
@@ -70,7 +160,7 @@ export const SettingsPage: React.FC = () => {
                       name="lastName"
                       value={profileData.lastName}
                       onChange={handleInputChange}
-                      placeholder="Pal"
+                      placeholder="Last name"
                     />
                   </div>
                 </div>
@@ -84,8 +174,23 @@ export const SettingsPage: React.FC = () => {
                       name="email"
                       value={profileData.email}
                       onChange={handleInputChange}
-                      placeholder="Sutirthopal@gmail.com"
+                      placeholder="Email address"
                     />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="role">Role</label>
+                    <input
+                      type="text"
+                      id="role"
+                      name="role"
+                      value={profileData.role}
+                      disabled={true}
+                      className="disabled-input"
+                    />
+                    <small className="form-hint">Role cannot be changed</small>
                   </div>
                 </div>
 
