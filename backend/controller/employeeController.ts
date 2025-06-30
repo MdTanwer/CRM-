@@ -154,33 +154,6 @@ export const deleteEmployee = catchAsync(
 );
 
 // Update employee status
-export const updateEmployeeStatus = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.body.status || !["active", "inactive"].includes(req.body.status)) {
-      return next(new AppError("Please provide a valid status", 400));
-    }
-
-    const employee = await Employee.findByIdAndUpdate(
-      req.params.id,
-      { status: req.body.status },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
-
-    if (!employee) {
-      return next(new AppError("No employee found with that ID", 404));
-    }
-
-    res.status(200).json({
-      status: "success",
-      data: {
-        employee,
-      },
-    });
-  }
-);
 
 // Get employee statistics
 export const getEmployeeStats = catchAsync(

@@ -4,9 +4,21 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   flexRender,
+  getSortedRowModel,
 } from "@tanstack/react-table";
-import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
-import { FaEllipsisV, FaEdit, FaTrash } from "react-icons/fa";
+import type {
+  ColumnDef,
+  RowSelectionState,
+  SortingState,
+} from "@tanstack/react-table";
+import {
+  FaEllipsisV,
+  FaEdit,
+  FaTrash,
+  FaSort,
+  FaSortUp,
+  FaSortDown,
+} from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "../../styles/employees.css";
@@ -40,8 +52,6 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
-const PAGE_SIZE = 2;
-
 export const EmployeesTable: React.FC<EmployeesTableProps> = ({
   data,
   pageCount,
@@ -53,6 +63,7 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const handleEditEmployee = (employeeId: string) => {
     if (onEditEmployee) {
@@ -96,26 +107,27 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
   const columns = useMemo<ColumnDef<Employee, any>[]>(
     () => [
       {
-        id: "select",
-        header: ({ table }) => (
-          <input
-            type="checkbox"
-            checked={table.getIsAllPageRowsSelected()}
-            onChange={table.getToggleAllPageRowsSelectedHandler()}
-          />
-        ),
-        cell: ({ row }) => (
-          <input
-            type="checkbox"
-            checked={row.getIsSelected()}
-            onChange={row.getToggleSelectedHandler()}
-          />
-        ),
-        size: 40,
-      },
-      {
-        accessorKey: "firstName",
-        header: "Name",
+        id: "name",
+        accessorFn: (row) => `${row.firstName} ${row.lastName}`,
+        header: ({ column }) => {
+          return (
+            <div
+              className="emp-column-header"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span>Name</span>
+              {column.getIsSorted() === "asc" ? (
+                <FaSortUp className="sort-icon" />
+              ) : column.getIsSorted() === "desc" ? (
+                <FaSortDown className="sort-icon" />
+              ) : (
+                <FaSort className="sort-icon" />
+              )}
+            </div>
+          );
+        },
         cell: ({ row }) => {
           const emp = row.original;
           return (
@@ -141,28 +153,104 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
           );
         },
         size: 220,
+        enableSorting: true,
       },
       {
         accessorKey: "employeeId",
-        header: "Employee ID",
+        header: ({ column }) => {
+          return (
+            <div
+              className="emp-column-header"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span>Employee ID</span>
+              {column.getIsSorted() === "asc" ? (
+                <FaSortUp className="sort-icon" />
+              ) : column.getIsSorted() === "desc" ? (
+                <FaSortDown className="sort-icon" />
+              ) : (
+                <FaSort className="sort-icon" />
+              )}
+            </div>
+          );
+        },
         cell: ({ getValue }) => <span className="emp-id">{getValue()}</span>,
         size: 120,
+        enableSorting: true,
       },
       {
         accessorKey: "assignedLeads",
-        header: "Assigned Leads",
+        header: ({ column }) => {
+          return (
+            <div
+              className="emp-column-header"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span>Assigned Leads</span>
+              {column.getIsSorted() === "asc" ? (
+                <FaSortUp className="sort-icon" />
+              ) : column.getIsSorted() === "desc" ? (
+                <FaSortDown className="sort-icon" />
+              ) : (
+                <FaSort className="sort-icon" />
+              )}
+            </div>
+          );
+        },
         cell: ({ getValue }) => <span>{getValue()}</span>,
         size: 80,
+        enableSorting: true,
       },
       {
         accessorKey: "closedLeads",
-        header: "Closed Leads",
+        header: ({ column }) => {
+          return (
+            <div
+              className="emp-column-header"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span>Closed Leads</span>
+              {column.getIsSorted() === "asc" ? (
+                <FaSortUp className="sort-icon" />
+              ) : column.getIsSorted() === "desc" ? (
+                <FaSortDown className="sort-icon" />
+              ) : (
+                <FaSort className="sort-icon" />
+              )}
+            </div>
+          );
+        },
         cell: ({ getValue }) => <span>{getValue()}</span>,
         size: 80,
+        enableSorting: true,
       },
       {
         accessorKey: "status",
-        header: "Status",
+        header: ({ column }) => {
+          return (
+            <div
+              className="emp-column-header"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span>Status</span>
+              {column.getIsSorted() === "asc" ? (
+                <FaSortUp className="sort-icon" />
+              ) : column.getIsSorted() === "desc" ? (
+                <FaSortDown className="sort-icon" />
+              ) : (
+                <FaSort className="sort-icon" />
+              )}
+            </div>
+          );
+        },
         cell: ({ getValue }) => (
           <span
             className={`emp-status-badge ${
@@ -179,6 +267,7 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
           </span>
         ),
         size: 80,
+        enableSorting: true,
       },
       {
         id: "actions",
@@ -215,6 +304,7 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
           </div>
         ),
         size: 40,
+        enableSorting: false,
       },
     ],
     [activeMenu, isDeleting]
@@ -225,13 +315,24 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
     columns,
     state: {
       rowSelection,
-      pagination: { pageIndex, pageSize: PAGE_SIZE },
+      sorting,
     },
+    enableSorting: true,
     onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    getSortedRowModel: getSortedRowModel(),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    manualPagination: true,
-    pageCount,
+    manualPagination: false,
+    manualSorting: false,
+    pageCount: Math.ceil(data.length / 5),
+    initialState: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: 5,
+      },
+    },
+    debugTable: false,
   });
 
   // Close menu when clicking outside
@@ -279,34 +380,38 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
       <div className="emp-table-pagination">
         <button
           className="emp-pagination-btn"
-          onClick={() => onPageChange(pageIndex - 1)}
-          disabled={pageIndex === 0}
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
         >
           &lt; Previous
         </button>
         <span className="emp-pagination-pages">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((pageNumber) => {
-            // Only show page numbers up to the actual page count
-            if (pageNumber <= pageCount) {
-              return (
-                <button
-                  key={pageNumber}
-                  className={`emp-pagination-page${
-                    pageIndex === pageNumber - 1 ? " active" : ""
-                  }`}
-                  onClick={() => onPageChange(pageNumber - 1)}
-                >
-                  {pageNumber}
-                </button>
-              );
+          {Array.from({ length: table.getPageCount() }, (_, i) => i + 1).map(
+            (pageNumber) => {
+              // Only show first 10 pages to avoid UI overflow
+              if (pageNumber <= 10 && pageNumber <= table.getPageCount()) {
+                return (
+                  <button
+                    key={pageNumber}
+                    className={`emp-pagination-page${
+                      table.getState().pagination.pageIndex === pageNumber - 1
+                        ? " active"
+                        : ""
+                    }`}
+                    onClick={() => table.setPageIndex(pageNumber - 1)}
+                  >
+                    {pageNumber}
+                  </button>
+                );
+              }
+              return null;
             }
-            return null;
-          })}
+          )}
         </span>
         <button
           className="emp-pagination-btn"
-          onClick={() => onPageChange(pageIndex + 1)}
-          disabled={pageIndex === pageCount - 1}
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
         >
           Next &gt;
         </button>

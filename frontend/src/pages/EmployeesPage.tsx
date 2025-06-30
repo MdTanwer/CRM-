@@ -21,7 +21,7 @@ interface Employee {
   avatarUrl?: string;
 }
 
-const PAGE_SIZE = 2;
+const PAGE_SIZE = 5;
 
 export const EmployeesPage: React.FC = () => {
   const location = useLocation();
@@ -31,12 +31,14 @@ export const EmployeesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0); // Used to force refresh the employee list
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageCount, setPageCount] = useState(1);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchEmployees = useCallback(async (page: number) => {
     setIsLoading(true);
@@ -52,24 +54,25 @@ export const EmployeesPage: React.FC = () => {
       const totalEmployees =
         response.data.totalEmployees || response.data.data?.totalEmployees || 0;
       setPageCount(Math.ceil(totalEmployees / PAGE_SIZE));
-      setEmployees(
-        apiData.map((emp: any) => ({
-          _id: emp._id,
-          firstName: emp.firstName,
-          lastName: emp.lastName,
-          email: emp.email,
-          employeeId: emp.employeeId || "#23454GH6JY7T6", // Placeholder, replace with real if available
-          location: emp.location || "",
-          preferredLanguage: emp.preferredLanguage || "",
-          assignedLeads: emp.assignedLeads || 0,
-          closedLeads: emp.closedLeads || 0,
-          status: emp.status || "active",
-          avatarUrl: undefined, // You can add logic for avatar if available
-        }))
-      );
+      const formattedEmployees = apiData.map((emp: any) => ({
+        _id: emp._id,
+        firstName: emp.firstName,
+        lastName: emp.lastName,
+        email: emp.email,
+        employeeId: emp.employeeId || "",
+        location: emp.location || "",
+        preferredLanguage: emp.preferredLanguage || "",
+        assignedLeads: emp.assignedLeads || 0,
+        closedLeads: emp.closedLeads || 0,
+        status: emp.status || "",
+        avatarUrl: undefined, // You can add logic for avatar if available
+      }));
+      setEmployees(formattedEmployees);
+      setFilteredEmployees(formattedEmployees);
     } catch (err) {
       setError("Failed to fetch employees. Please try again later.");
       setEmployees([]);
+      setFilteredEmployees([]);
     } finally {
       setIsLoading(false);
     }
@@ -78,6 +81,36 @@ export const EmployeesPage: React.FC = () => {
   useEffect(() => {
     fetchEmployees(pageIndex);
   }, [fetchEmployees, pageIndex, refreshKey]);
+
+  // Search functionality
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredEmployees(employees);
+      return;
+    }
+
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    const filtered = employees.filter((employee) => {
+      return (
+        employee.firstName.toLowerCase().includes(lowerSearchTerm) ||
+        employee.lastName.toLowerCase().includes(lowerSearchTerm) ||
+        employee.email.toLowerCase().includes(lowerSearchTerm) ||
+        employee.employeeId.toLowerCase().includes(lowerSearchTerm) ||
+        employee.location.toLowerCase().includes(lowerSearchTerm) ||
+        employee.preferredLanguage.toLowerCase().includes(lowerSearchTerm) ||
+        employee.status.toLowerCase().includes(lowerSearchTerm) ||
+        `${employee.assignedLeads}`.includes(lowerSearchTerm) ||
+        `${employee.closedLeads}`.includes(lowerSearchTerm)
+      );
+    });
+
+    setFilteredEmployees(filtered);
+  }, [searchTerm, employees]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setPageIndex(0); // Reset to first page when searching
+  };
 
   const handleAddEmployee = () => {
     setCurrentEmployee(null);
@@ -103,25 +136,20 @@ export const EmployeesPage: React.FC = () => {
 
   const handleSaveEmployee = async (employeeData: any) => {
     try {
-      console.log("Employee data to save:", employeeData);
-
       if (isEditing && currentEmployee) {
-        // Update existing employee
-        console.log("Updating employee:", currentEmployee._id);
         const response = await axios.patch(
           `http://localhost:3000/api/v1/employees/${currentEmployee._id}`,
           employeeData
         );
-        console.log("Update response:", response.data);
+
         toast.success("Employee updated successfully!");
       } else {
         // Create new employee
-        console.log("Creating new employee");
+
         const response = await axios.post(
           "http://localhost:3000/api/v1/employees",
           employeeData
         );
-        console.log("Create response:", response.data);
         toast.success("Employee added successfully!");
       }
 
@@ -131,17 +159,12 @@ export const EmployeesPage: React.FC = () => {
       setIsEditing(false);
       setRefreshKey((prevKey) => prevKey + 1); // Increment to force refresh
     } catch (error: any) {
-      console.error("Error data:", error.response?.data);
       const msg =
         error?.response?.data?.message ||
         `Failed to ${
           isEditing ? "update" : "create"
         } employee. Please try again.`;
       toast.error(msg);
-      console.error(
-        `Error ${isEditing ? "updating" : "creating"} employee:`,
-        error
-      );
     }
   };
 
@@ -157,7 +180,9 @@ export const EmployeesPage: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search employees by name, ID..."
-                className="search-input"
+                className="emp-search-input"
+                value={searchTerm}
+                onChange={handleSearchChange}
               />
             </div>
           </div>
@@ -188,11 +213,11 @@ export const EmployeesPage: React.FC = () => {
             <div>Loading employees...</div>
           ) : error ? (
             <div>Error: {error}</div>
-          ) : employees.length === 0 ? (
+          ) : filteredEmployees.length === 0 ? (
             <div>No employees found.</div>
           ) : (
             <EmployeesTable
-              data={employees}
+              data={filteredEmployees}
               pageCount={pageCount}
               pageIndex={pageIndex}
               onPageChange={setPageIndex}

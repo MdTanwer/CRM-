@@ -5,6 +5,7 @@ export interface IEmployee extends Document {
   firstName: string;
   lastName: string;
   email: string;
+  employeeId: string;
   location: string;
   preferredLanguage: string;
   assignedLeads: number;
@@ -41,6 +42,11 @@ const employeeSchema = new Schema<IEmployee>(
         /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
         "Please provide a valid email address",
       ],
+    },
+    employeeId: {
+      type: String,
+      unique: true,
+      required: false,
     },
     location: {
       type: String,
@@ -86,8 +92,37 @@ const employeeSchema = new Schema<IEmployee>(
   }
 );
 
+// Pre-save middleware to generate employeeId if not provided
+employeeSchema.pre("save", async function (next) {
+  if (this.isNew && !this.employeeId) {
+    try {
+      // Generate employee ID with format: EMP + year + random 6-digit number
+      let employeeId: string;
+      let exists = true;
+
+      do {
+        const year = new Date().getFullYear();
+        const randomNum = Math.floor(100000 + Math.random() * 900000);
+        employeeId = `EMP${year}${randomNum}`;
+
+        // Check if this ID already exists
+        const existingEmployee = await (this.constructor as any).findOne({
+          employeeId,
+        });
+        exists = !!existingEmployee;
+      } while (exists);
+
+      this.employeeId = employeeId;
+    } catch (error: any) {
+      return next(error);
+    }
+  }
+  next();
+});
+
 // Indexes for better query performance
 employeeSchema.index({ email: 1 }, { unique: true });
+employeeSchema.index({ employeeId: 1 }, { unique: true });
 employeeSchema.index({ status: 1 });
 employeeSchema.index({ location: 1 });
 employeeSchema.index({ preferredLanguage: 1 });

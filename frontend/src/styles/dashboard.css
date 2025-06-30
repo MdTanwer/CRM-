@@ -94,8 +94,7 @@
   font-size: 14px;
   background-color: #f8f9fa;
   color: #495057;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.02);
+
   outline: none;
 }
 
@@ -103,12 +102,10 @@
   outline: none;
   border-color: none;
   background-color: #ffffff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .search-input::placeholder {
   color: #9ca3af;
-  font-style: italic;
 }
 
 .search-icon {
