@@ -16,6 +16,7 @@ import {
   updateScheduleStatus,
   getLeadSchedules,
   getEmployeeScheduleForDate,
+  getSalesAnalytics,
 } from "../controller/leadController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -43,6 +44,9 @@ const upload = multer({
 
 // Statistics route
 router.get("/stats", getLeadStats);
+
+// Sales analytics route
+router.get("/sales-analytics", getSalesAnalytics);
 
 // CSV upload route
 router.post("/upload-csv", upload.single("file"), uploadCSV);

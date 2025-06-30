@@ -384,6 +384,105 @@ export const getLeadStats = catchAsync(
   }
 );
 
+// Get sales analytics data
+export const getSalesAnalytics = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Get the date range from query parameters or use default (last 14 days)
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(
+      endDate.getDate() - (parseInt(req.query.days as string) || 14)
+    );
+
+    // Aggregate closed leads by date
+    const salesData = await Lead.aggregate([
+      {
+        $match: {
+          status: "Closed",
+          updatedAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
+    // Get total leads created per day for the same period
+    const leadsData = await Lead.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ]);
+
+    // Format the data for the chart
+    const formattedData = [];
+    let currentDate = new Date(startDate);
+    let cumulativeSales = 0;
+
+    // Create array of all dates in range
+    while (currentDate <= endDate) {
+      const dateStr = currentDate.toISOString().split("T")[0];
+      const dayName = new Intl.DateTimeFormat("en-US", {
+        weekday: "short",
+      }).format(currentDate);
+
+      // Find sales for this date
+      const salesForDate = salesData.find((item) => item._id === dateStr);
+      const dailySales = salesForDate ? salesForDate.count : 0;
+
+      // Find leads for this date
+      const leadsForDate = leadsData.find((item) => item._id === dateStr);
+      const dailyLeads = leadsForDate ? leadsForDate.count : 0;
+
+      // Calculate cumulative sales
+      cumulativeSales += dailySales;
+
+      // For today, we show cumulative sales up to current time
+      // For past days, we show total sales for the entire day
+      formattedData.push({
+        date: dateStr,
+        day: dayName,
+        value: cumulativeSales,
+        dailySales,
+        dailyLeads,
+        // For today, include the hour data
+        isToday: dateStr === endDate.toISOString().split("T")[0],
+      });
+
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        salesAnalytics: formattedData,
+      },
+    });
+  }
+);
+
 // Create new lead with distribution
 export const createLead = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {

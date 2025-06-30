@@ -579,3 +579,53 @@
     margin: 0 16px;
   }
 } */
+
+/* Add styles for refresh button */
+.refresh-button {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.refresh-button:hover {
+  background-color: #2563eb;
+}
+
+.refresh-button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* Loading indicator styles */
+.loading-indicator {
+  font-size: 14px;
+  color: #6b7280;
+  margin-left: 10px;
+}
+
+.error-indicator {
+  font-size: 14px;
+  color: #ef4444;
+  margin-left: 10px;
+}
+
+/* Chart header styles */
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.chart-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}

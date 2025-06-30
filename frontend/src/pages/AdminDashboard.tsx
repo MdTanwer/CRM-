@@ -37,6 +37,7 @@ export const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats[]>([]);
   const [unassignedLeadsCount, setUnassignedLeadsCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [dataRefreshKey, setDataRefreshKey] = useState<number>(0);
 
   // Fetch unassigned leads count from the backend
   const fetchUnassignedLeads = async () => {
@@ -95,6 +96,31 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  // Function to refresh all dashboard data
+  const refreshDashboardData = () => {
+    setIsLoading(true);
+
+    // Fetch data from backend
+    const fetchData = async () => {
+      try {
+        // Try to get stats first, fall back to counting unassigned leads
+        await fetchLeadStats().catch(async () => {
+          await fetchUnassignedLeads();
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        // Fall back to dummy data if both API calls fail
+        setUnassignedLeadsCount(0);
+      } finally {
+        setIsLoading(false);
+        // Increment refresh key to trigger child component refreshes
+        setDataRefreshKey((prevKey) => prevKey + 1);
+      }
+    };
+
+    fetchData();
+  };
+
   useEffect(() => {
     // Set loading state
     setIsLoading(true);
@@ -117,6 +143,14 @@ export const AdminDashboard: React.FC = () => {
 
     // Fetch data from backend
     fetchData();
+
+    // Set up auto-refresh every 5 minutes
+    const refreshInterval = setInterval(() => {
+      refreshDashboardData();
+    }, 5 * 60 * 1000);
+
+    // Clean up interval on component unmount
+    return () => clearInterval(refreshInterval);
   }, []);
 
   // Update stats whenever unassignedLeadsCount or other values change
@@ -186,6 +220,13 @@ export const AdminDashboard: React.FC = () => {
                 className="search-input"
               />
             </div>
+            <button
+              className="refresh-button"
+              onClick={refreshDashboardData}
+              disabled={isLoading}
+            >
+              Refresh Data
+            </button>
           </div>
         </div>
 
@@ -207,7 +248,7 @@ export const AdminDashboard: React.FC = () => {
           {/* Two Column Layout */}
           <div className="dashboard-grid">
             {/* Sales Chart */}
-            <SalesChart />
+            <SalesChart key={`sales-chart-${dataRefreshKey}`} />
 
             {/* Activity Feed */}
             <ActivityFeed activities={recentActivity} />
