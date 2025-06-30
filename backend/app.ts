@@ -3,6 +3,7 @@ import connectDB from "./utils/database";
 import employeeRoutes from "./routes/employeeRoutes";
 import leadRoutes from "./routes/leadRoutes";
 import authRoutes from "./routes/authRoutes";
+import userRoutes from "./routes/userRoutes";
 import cors from "cors";
 import { globalErrorHandler } from "./utils/errorHandler";
 import adminRoutes from "./routes/adminRoutes";
@@ -24,6 +25,9 @@ app.get("/api/v1", (req: Request, res: Response) => {
 
 // Auth routes
 app.use("/api/v1/auth", authRoutes);
+
+// User routes
+app.use("/api/v1/users", userRoutes);
 
 // Employee routes
 app.use("/api/v1/employees", employeeRoutes);

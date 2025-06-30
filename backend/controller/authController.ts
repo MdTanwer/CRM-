@@ -175,7 +175,7 @@ export const updateUserProfile = async (
   next: NextFunction
 ) => {
   try {
-    const { firstName, lastName } = req.body;
+    const { firstName, lastName, password, confirmPassword } = req.body;
 
     // Find user
     const user = await User.findById(req.user?._id);
@@ -203,6 +203,21 @@ export const updateUserProfile = async (
         email: user.email,
         status: "active",
       });
+    }
+
+    // Handle password update if provided
+    if (password) {
+      // Validate that password and confirmPassword match
+      if (password !== confirmPassword) {
+        return res.status(400).json({
+          status: "fail",
+          message: "Password and confirm password do not match",
+        });
+      }
+
+      // Update user password
+      user.password = password;
+      await user.save();
     }
 
     const responseData = {
