@@ -19,6 +19,15 @@ import {
   FaHandshake,
   FaGaugeHigh,
 } from "react-icons/fa6";
+import axios from "axios";
+import { LEAD_API } from "../config/api.config";
+
+interface LeadStats {
+  stats: { _id: string | null; count: number }[];
+  typeStats: { _id: string; count: number }[];
+  locationStats: { _id: string; count: number }[];
+  languageStats: { _id: string; count: number }[];
+}
 
 export const AdminDashboard: React.FC = () => {
   const location = useLocation();
@@ -26,7 +35,91 @@ export const AdminDashboard: React.FC = () => {
     location.pathname === "/" ? "dashboard" : location.pathname.slice(1);
 
   const [stats, setStats] = useState<DashboardStats[]>([]);
+  const [unassignedLeadsCount, setUnassignedLeadsCount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Fetch unassigned leads count from the backend
+  const fetchUnassignedLeads = async () => {
+    try {
+      // Get all leads with no assigned employee
+      const response = await axios.get(`${LEAD_API}`, {
+        params: {
+          assignedEmployee: "null", // Query for leads with null assignedEmployee
+        },
+      });
+
+      // Check the response structure and extract the total count
+      if (response.data && response.data.totalLeads) {
+        setUnassignedLeadsCount(response.data.totalLeads);
+      } else if (
+        response.data &&
+        response.data.data &&
+        response.data.data.leads
+      ) {
+        // Count the leads that have null assignedEmployee
+        const unassignedLeads = response.data.data.leads.filter(
+          (lead: any) =>
+            lead.assignedEmployee === null ||
+            lead.assignedEmployee === undefined
+        );
+        setUnassignedLeadsCount(unassignedLeads.length);
+      }
+    } catch (error) {
+      console.error("Failed to fetch unassigned leads:", error);
+      // Use a fallback value if the API call fails
+      setUnassignedLeadsCount(0);
+    }
+  };
+
+  // Fetch lead statistics from the backend
+  const fetchLeadStats = async () => {
+    try {
+      const response = await axios.get<{ status: string; data: LeadStats }>(
+        `${LEAD_API}/stats`
+      );
+
+      if (response.data && response.data.data) {
+        const statsData = response.data.data;
+
+        // Find unassigned leads count from stats
+        // In MongoDB aggregation, null _id represents documents where assignedEmployee is null
+        const unassignedStat = statsData.stats.find(
+          (stat) => stat._id === null
+        );
+        if (unassignedStat) {
+          setUnassignedLeadsCount(unassignedStat.count);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch lead statistics:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Set loading state
+    setIsLoading(true);
+
+    // Fetch data from backend
+    const fetchData = async () => {
+      try {
+        // Try to get stats first, fall back to counting unassigned leads
+        await fetchLeadStats().catch(async () => {
+          await fetchUnassignedLeads();
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        // Fall back to dummy data if both API calls fail
+        setUnassignedLeadsCount(0);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Fetch data from backend
+    fetchData();
+  }, []);
+
+  // Update stats whenever unassignedLeadsCount or other values change
   useEffect(() => {
     // Calculate total leads and closed leads
     const totalLeads = employeesData.reduce(
@@ -51,8 +144,8 @@ export const AdminDashboard: React.FC = () => {
     const dynamicStats: DashboardStats[] = [
       {
         id: "1",
-        title: "Upcoming Calls",
-        value: "12", // This will be dynamic in the future
+        title: "Unassigned Leads",
+        value: isLoading ? "Loading..." : `${unassignedLeadsCount}`,
         icon: <FaMoneyBills size={25} />,
       },
       {
@@ -76,7 +169,7 @@ export const AdminDashboard: React.FC = () => {
     ];
 
     setStats(dynamicStats);
-  }, []);
+  }, [unassignedLeadsCount, isLoading]);
 
   return (
     <div className="dashboard-container">
