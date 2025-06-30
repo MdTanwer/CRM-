@@ -203,3 +203,76 @@ export const getEmployeeStats = catchAsync(
     });
   }
 );
+
+// Get recent employees for dashboard
+export const getRecentEmployees = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Get query parameters with defaults
+    const limit = parseInt(req.query.limit as string) || 10;
+    const days = parseInt(req.query.days as string) || 7; // Default to last 7 days
+
+    // Calculate date range for recent employees
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - days);
+
+    // First, try to get employees from the specified recent period
+    let recentEmployees = await Employee.find({
+      createdAt: { $gte: startDate, $lte: endDate },
+    })
+      .sort({ createdAt: -1 }) // Most recent first
+      .limit(limit);
+
+    // Get total count of recent employees in the specified period
+    const totalRecentEmployees = await Employee.countDocuments({
+      createdAt: { $gte: startDate, $lte: endDate },
+    });
+
+    // If we don't have enough employees from the recent period, get more from all time
+    if (recentEmployees.length < limit) {
+      const remainingCount = limit - recentEmployees.length;
+
+      // Get additional employees from before the recent period
+      const olderEmployees = await Employee.find({
+        createdAt: { $lt: startDate },
+      })
+        .sort({ createdAt: -1 })
+        .limit(remainingCount);
+
+      // Combine recent and older employees
+      recentEmployees = [...recentEmployees, ...olderEmployees];
+    }
+
+    // Format the response data
+    const formattedEmployees = recentEmployees.map((employee) => ({
+      _id: employee._id,
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      email: employee.email,
+      employeeId: employee.employeeId,
+      location: employee.location,
+      preferredLanguage: employee.preferredLanguage,
+      assignedLeads: employee.assignedLeads,
+      closedLeads: employee.closedLeads,
+      status: employee.status,
+      avatarUrl: employee.avatarUrl,
+      createdAt: employee.createdAt,
+      updatedAt: employee.updatedAt,
+    }));
+
+    res.status(200).json({
+      status: "success",
+      results: formattedEmployees.length,
+      totalRecentEmployees,
+      requestedLimit: limit,
+      dateRange: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        days,
+      },
+      data: {
+        employees: formattedEmployees,
+      },
+    });
+  }
+);

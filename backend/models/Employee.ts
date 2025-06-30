@@ -11,6 +11,7 @@ export interface IEmployee extends Document {
   assignedLeads: number;
   closedLeads: number;
   status: "active" | "inactive";
+  avatarUrl?: string;
   createdAt: Date;
   updatedAt: Date;
   getFullName(): string;
@@ -73,6 +74,11 @@ const employeeSchema = new Schema<IEmployee>(
         message: "Status must be either active or inactive",
       },
       default: "active",
+    },
+    avatarUrl: {
+      type: String,
+      trim: true,
+      required: false,
     },
   },
   {
