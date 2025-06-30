@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Tooltip,
   Legend,
+  Cell,
 } from "recharts";
 import { salesAnalyticsData } from "../../data/dummyData";
 import "../../styles/dashboard.css";
@@ -32,22 +33,80 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         className="custom-tooltip"
         style={{
           backgroundColor: "#ffffff",
-          padding: "10px",
+          padding: "12px",
           border: "1px solid #e5e7eb",
-          borderRadius: "6px",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+          borderRadius: "8px",
+          boxShadow:
+            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+          fontSize: "13px",
+          lineHeight: "1.4",
         }}
       >
-        <p style={{ margin: 0, fontWeight: "bold", color: "#1f2937" }}>
+        <p
+          style={{
+            margin: "0 0 6px 0",
+            fontWeight: "600",
+            color: "#1f2937",
+            fontSize: "14px",
+          }}
+        >
           {`${data.day} (${data.date})`}
         </p>
-        <p style={{ margin: 0, color: "#3b82f6" }}>
+        <p
+          style={{
+            margin: "2px 0",
+            color: "#3b82f6",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <span
+            style={{
+              width: "8px",
+              height: "8px",
+              backgroundColor: "#3b82f6",
+              borderRadius: "50%",
+              marginRight: "6px",
+            }}
+          ></span>
           {`Total Sales: ${data.value}`}
         </p>
-        <p style={{ margin: 0, color: "#10b981" }}>
+        <p
+          style={{
+            margin: "2px 0",
+            color: "#10b981",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <span
+            style={{
+              width: "8px",
+              height: "8px",
+              backgroundColor: "#10b981",
+              borderRadius: "50%",
+              marginRight: "6px",
+            }}
+          ></span>
           {`Daily Sales: ${data.dailySales}`}
         </p>
-        <p style={{ margin: 0, color: "#6b7280" }}>
+        <p
+          style={{
+            margin: "2px 0 0 0",
+            color: "#6b7280",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <span
+            style={{
+              width: "8px",
+              height: "8px",
+              backgroundColor: "#6b7280",
+              borderRadius: "50%",
+              marginRight: "6px",
+            }}
+          ></span>
           {`Daily Leads: ${data.dailyLeads}`}
         </p>
       </div>
@@ -61,6 +120,7 @@ export const SalesChart: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [maxValue, setMaxValue] = useState<number>(60);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchSalesData = async () => {
@@ -104,6 +164,8 @@ export const SalesChart: React.FC = () => {
     fetchSalesData();
   }, []);
 
+  const chartData = salesData.length > 0 ? salesData : salesAnalyticsData;
+
   return (
     <div className="chart-section">
       <div className="chart-header">
@@ -117,7 +179,7 @@ export const SalesChart: React.FC = () => {
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={salesData.length > 0 ? salesData : salesAnalyticsData}
+            data={chartData}
             margin={{
               top: 20,
               right: 30,
@@ -125,6 +187,16 @@ export const SalesChart: React.FC = () => {
               bottom: 20,
             }}
             barCategoryGap="20%"
+            onMouseMove={(data) => {
+              if (
+                data &&
+                data.activeTooltipIndex !== undefined &&
+                typeof data.activeTooltipIndex === "number"
+              ) {
+                setHoveredIndex(data.activeTooltipIndex);
+              }
+            }}
+            onMouseLeave={() => setHoveredIndex(null)}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis
@@ -142,17 +214,28 @@ export const SalesChart: React.FC = () => {
                 Math.round((maxValue * i) / 5)
               )}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ fill: "rgba(59, 130, 246, 0.1)", stroke: "none" }}
+              position={{ x: undefined, y: undefined }}
+              allowEscapeViewBox={{ x: false, y: true }}
+            />
             <Legend />
             <Bar
               name="Total Sales"
               dataKey="value"
-              fill="#d1d5db"
-              stroke="#9ca3af"
-              strokeWidth={1}
-              radius={[2, 2, 0, 0]}
-              className="chart-bar"
-            />
+              radius={[3, 3, 0, 0]}
+              style={{ cursor: "pointer" }}
+            >
+              {chartData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={hoveredIndex === index ? "#9ca3af" : "#d1d5db"}
+                  stroke={hoveredIndex === index ? "#6b7280" : "#9ca3af"}
+                  strokeWidth={hoveredIndex === index ? 2 : 1}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>

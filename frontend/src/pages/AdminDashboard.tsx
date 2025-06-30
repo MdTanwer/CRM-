@@ -5,6 +5,7 @@ import { StatsCards } from "../components/dashboard/StatsCards";
 import { SalesChart } from "../components/dashboard/SalesChart";
 import { ActivityFeed } from "../components/dashboard/ActivityFeed";
 import { LeadsTable } from "../components/dashboard/LeadsTable";
+import "../styles/dashboard.css";
 import {
   dashboardStats,
   recentActivity,
@@ -210,22 +211,15 @@ export const AdminDashboard: React.FC = () => {
 
       <div className="main-content">
         {/* Custom Dashboard Header */}
-        <div className="header">
-          <div className="header-actions">
-            <div className="search-container">
+        <div className="emp-header">
+          <div className="emp-header-actions">
+            <div className="emp-search-container">
               <input
                 type="text"
-                placeholder="Search leads, employees..."
-                className="search-input"
+                placeholder="Search employees by name, ID..."
+                className="emp-search-input"
               />
             </div>
-            <button
-              className="refresh-button"
-              onClick={refreshDashboardData}
-              disabled={isLoading}
-            >
-              Refresh Data
-            </button>
           </div>
         </div>
 

@@ -358,19 +358,18 @@
 
 /* Chart Bar Hover Effects */
 .chart-bar {
-  cursor: default;
+  cursor: pointer;
 }
 
+/* Remove global recharts hover effects to allow individual bar control */
 .recharts-bar-rectangle {
-  fill: #d1d5db !important;
-  stroke: #9ca3af !important;
-  stroke-width: 1 !important;
+  transition: all 0.2s ease-in-out;
 }
 
-.recharts-bar-rectangle:hover {
-  fill: #d1d5db !important;
-  stroke: #9ca3af !important;
-  stroke-width: 1 !important;
+/* Custom tooltip styling */
+.custom-tooltip {
+  z-index: 1000;
+  pointer-events: none;
 }
 
 /* Activity Section */
