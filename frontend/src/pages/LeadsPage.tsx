@@ -45,6 +45,7 @@ export const LeadsPage: React.FC = () => {
   const [pageCount, setPageCount] = useState(1);
   const [totalLeads, setTotalLeads] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchTimeout, setSearchTimeout] = useState<number | null>(null);
 
   const fetchLeads = useCallback(
     async (page: number = 0) => {
@@ -79,23 +80,33 @@ export const LeadsPage: React.FC = () => {
     fetchLeads(pageIndex);
   }, [fetchLeads, pageIndex, refreshKey]);
 
-  // Handle search input change
+  // Handle search input change with debouncing
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
+
+    // Clear existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set new timeout for debounced search
+    const timeout = setTimeout(() => {
+      setPageIndex(0); // Reset to first page when searching
+      fetchLeads(0);
+    }, 500); // 500ms delay
+
+    setSearchTimeout(timeout);
   };
 
-  // Handle search form submission
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPageIndex(0); // Reset to first page
-    fetchLeads(0);
-  };
-
-  // Handle edit lead
-  const handleEditLead = (leadId: string) => {
-    // Navigate to edit lead page or open edit modal
-    navigate(`/leads/edit/${leadId}`);
-  };
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   return (
     <div className="dashboard-container">
@@ -103,6 +114,7 @@ export const LeadsPage: React.FC = () => {
 
       <div className="main-content">
         {/* Custom Leads Header */}
+
         <div className="emp-header">
           <div className="emp-header-actions">
             <div className="emp-search-container">
@@ -158,7 +170,6 @@ export const LeadsPage: React.FC = () => {
                 // Refresh the leads list by incrementing refreshKey
                 setRefreshKey((prevKey) => prevKey + 1);
               }}
-              onEditLead={handleEditLead}
             />
           )}
         </div>

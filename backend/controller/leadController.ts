@@ -42,12 +42,105 @@ export const getAllLeads = catchAsync(
 
     // Search
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search as string, "i");
-      query.$or = [
+      const searchTerm = req.query.search as string;
+      const searchRegex = new RegExp(searchTerm, "i");
+
+      // Create search conditions for all lead fields
+      const searchConditions: Record<string, any>[] = [
         { name: searchRegex },
         { email: searchRegex },
         { phone: searchRegex },
+        { status: searchRegex },
+        { type: searchRegex },
+        { language: searchRegex },
+        { location: searchRegex },
       ];
+
+      // Search in date fields (multiple formats)
+      // Try to parse as date and search in receivedDate
+      if (!isNaN(Date.parse(searchTerm))) {
+        const searchDate = new Date(searchTerm);
+        const nextDay = new Date(searchDate);
+        nextDay.setDate(searchDate.getDate() + 1);
+
+        searchConditions.push({
+          receivedDate: {
+            $gte: searchDate,
+            $lt: nextDay,
+          },
+        });
+      }
+
+      // Search in partial date formats (e.g., "2024", "Jan", "January")
+      if (searchTerm.match(/^\d{4}$/)) {
+        // Year search
+        const year = parseInt(searchTerm);
+        searchConditions.push({
+          receivedDate: {
+            $gte: new Date(`${year}-01-01`),
+            $lt: new Date(`${year + 1}-01-01`),
+          },
+        });
+      }
+
+      // Month name search
+      const monthNames = [
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+      ];
+      const monthIndex = monthNames.findIndex((month) =>
+        month.startsWith(searchTerm.toLowerCase())
+      );
+
+      if (monthIndex !== -1) {
+        const currentYear = new Date().getFullYear();
+        searchConditions.push({
+          receivedDate: {
+            $gte: new Date(currentYear, monthIndex, 1),
+            $lt: new Date(currentYear, monthIndex + 1, 1),
+          },
+        });
+      }
+
+      // Search in assigned employee information
+      try {
+        const matchingEmployees = await Employee.find({
+          $or: [
+            { firstName: searchRegex },
+            { lastName: searchRegex },
+            { email: searchRegex },
+            { employeeId: searchRegex },
+          ],
+        }).select("_id");
+
+        if (matchingEmployees.length > 0) {
+          const employeeIds = matchingEmployees.map((emp) => emp._id);
+          searchConditions.push({ assignedEmployee: { $in: employeeIds } });
+        }
+
+        // Also search for "unassigned" keyword
+        if (
+          searchTerm.toLowerCase().includes("unassigned") ||
+          searchTerm.toLowerCase().includes("none")
+        ) {
+          searchConditions.push({ assignedEmployee: { $exists: false } });
+          searchConditions.push({ assignedEmployee: null });
+        }
+      } catch (employeeSearchError) {
+        console.error("Error searching employees:", employeeSearchError);
+      }
+
+      query.$or = searchConditions;
     }
 
     // Execute query with pagination

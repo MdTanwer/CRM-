@@ -3,9 +3,11 @@ import {
   useReactTable,
   getCoreRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   flexRender,
 } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
+import { FaSort, FaSortUp, FaSortDown } from "react-icons/fa";
 
 import "../../styles/leads.css";
 
@@ -33,7 +35,6 @@ interface LeadsTableProps {
   pageIndex: number;
   onPageChange: (page: number) => void;
   onDataChange?: () => void;
-  onEditLead?: (leadId: string) => void;
 }
 
 const PAGE_SIZE = 10;
@@ -72,7 +73,25 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
     () => [
       {
         accessorKey: "name",
-        header: "Name",
+        header: ({ column }) => {
+          return (
+            <div
+              className="lead-column-header"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span>Name</span>
+              {column.getIsSorted() === "asc" ? (
+                <FaSortUp className="sort-icon" />
+              ) : column.getIsSorted() === "desc" ? (
+                <FaSortDown className="sort-icon" />
+              ) : (
+                <FaSort className="sort-icon" />
+              )}
+            </div>
+          );
+        },
         cell: ({ row }) => {
           const lead = row.original;
           return (
@@ -87,11 +106,30 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
           );
         },
         size: 200,
+        enableSorting: true,
       },
 
       {
         accessorKey: "status",
-        header: "Status",
+        header: ({ column }) => {
+          return (
+            <div
+              className="lead-column-header"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span>Status</span>
+              {column.getIsSorted() === "asc" ? (
+                <FaSortUp className="sort-icon" />
+              ) : column.getIsSorted() === "desc" ? (
+                <FaSortDown className="sort-icon" />
+              ) : (
+                <FaSort className="sort-icon" />
+              )}
+            </div>
+          );
+        },
         cell: ({ getValue }) => (
           <span
             className={`lead-status-badge ${getStatusBadgeClass(getValue())}`}
@@ -100,28 +138,109 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
           </span>
         ),
         size: 100,
+        enableSorting: true,
       },
       {
         accessorKey: "location",
-        header: "Location",
+        header: ({ column }) => {
+          return (
+            <div
+              className="lead-column-header"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span>Location</span>
+              {column.getIsSorted() === "asc" ? (
+                <FaSortUp className="sort-icon" />
+              ) : column.getIsSorted() === "desc" ? (
+                <FaSortDown className="sort-icon" />
+              ) : (
+                <FaSort className="sort-icon" />
+              )}
+            </div>
+          );
+        },
         cell: ({ getValue }) => <span>{getValue()}</span>,
         size: 120,
+        enableSorting: true,
       },
       {
         accessorKey: "language",
-        header: "Language",
+        header: ({ column }) => {
+          return (
+            <div
+              className="lead-column-header"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span>Language</span>
+              {column.getIsSorted() === "asc" ? (
+                <FaSortUp className="sort-icon" />
+              ) : column.getIsSorted() === "desc" ? (
+                <FaSortDown className="sort-icon" />
+              ) : (
+                <FaSort className="sort-icon" />
+              )}
+            </div>
+          );
+        },
         cell: ({ getValue }) => <span>{getValue()}</span>,
         size: 120,
+        enableSorting: true,
       },
       {
         accessorKey: "receivedDate",
-        header: "Received Date",
+        header: ({ column }) => {
+          return (
+            <div
+              className="lead-column-header"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span>Received Date</span>
+              {column.getIsSorted() === "asc" ? (
+                <FaSortUp className="sort-icon" />
+              ) : column.getIsSorted() === "desc" ? (
+                <FaSortDown className="sort-icon" />
+              ) : (
+                <FaSort className="sort-icon" />
+              )}
+            </div>
+          );
+        },
         cell: ({ getValue }) => <span>{formatDate(getValue() as string)}</span>,
         size: 150,
+        enableSorting: true,
+        sortingFn: (rowA, rowB) => {
+          const dateA = new Date(rowA.original.receivedDate);
+          const dateB = new Date(rowB.original.receivedDate);
+          return dateA.getTime() - dateB.getTime();
+        },
       },
       {
         id: "assignedTo",
-        header: "Assigned To",
+        header: ({ column }) => {
+          return (
+            <div
+              className="lead-column-header"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              <span>Assigned To</span>
+              {column.getIsSorted() === "asc" ? (
+                <FaSortUp className="sort-icon" />
+              ) : column.getIsSorted() === "desc" ? (
+                <FaSortDown className="sort-icon" />
+              ) : (
+                <FaSort className="sort-icon" />
+              )}
+            </div>
+          );
+        },
         cell: ({ row }) => {
           const lead = row.original;
           return (
@@ -133,6 +252,16 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
           );
         },
         size: 150,
+        enableSorting: true,
+        sortingFn: (rowA, rowB) => {
+          const nameA = rowA.original.assignedEmployee
+            ? `${rowA.original.assignedEmployee.firstName} ${rowA.original.assignedEmployee.lastName}`
+            : "Unassigned";
+          const nameB = rowB.original.assignedEmployee
+            ? `${rowB.original.assignedEmployee.firstName} ${rowB.original.assignedEmployee.lastName}`
+            : "Unassigned";
+          return nameA.localeCompare(nameB);
+        },
       },
     ],
     []
@@ -143,6 +272,7 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     manualPagination: true,
     pageCount,
     state: {
