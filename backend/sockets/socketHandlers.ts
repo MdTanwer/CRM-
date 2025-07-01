@@ -48,6 +48,18 @@ export const setupSocketHandlers = (io: Server) => {
       socket.broadcast.emit("activity_update", activityData);
     });
 
+    // Handle test messages for debugging
+    socket.on("test_message", (data) => {
+      console.log("📧 Test message received from frontend:", data);
+
+      // Echo back to all clients
+      io.emit("test_event", {
+        message: "Test response from backend",
+        originalMessage: data.message,
+        timestamp: new Date().toISOString(),
+      });
+    });
+
     // Handle employee-specific activities
     socket.on("employee_added", (employeeData) => {
       const activityData = {

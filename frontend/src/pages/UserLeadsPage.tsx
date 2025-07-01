@@ -22,6 +22,7 @@ import { toast } from "react-toastify";
 import { format } from "date-fns";
 import { BottomNavigation } from "../components/BottomNavigation";
 import { FaAngleLeft } from "react-icons/fa";
+import userSocketService from "../services/userSocket.service";
 
 export const UserLeadsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -38,6 +39,9 @@ export const UserLeadsPage: React.FC = () => {
   const [leadsWithSchedules, setLeadsWithSchedules] = useState<Set<string>>(
     new Set()
   );
+
+  // Socket connection state
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   // Type tooltip state
   const [showTypeTooltip, setShowTypeTooltip] = useState(false);
@@ -129,6 +133,94 @@ export const UserLeadsPage: React.FC = () => {
 
     fetchLeads();
   }, [token, navigate]);
+
+  // Initialize socket connection for real-time updates
+  useEffect(() => {
+    if (user && user._id && user.name) {
+      console.log("UserLeadsPage: Initializing socket for user:", user);
+
+      // Connect to socket if not already connected
+      if (!userSocketService.isConnected()) {
+        userSocketService.connect({
+          userId: user._id,
+          userName: user.name,
+          userType: "employee",
+        });
+        console.log("UserLeadsPage: Connected to socket");
+      } else {
+        console.log(
+          "UserLeadsPage: Socket already connected, reusing existing connection"
+        );
+      }
+
+      // Subscribe to activity updates
+      const unsubscribeActivity = userSocketService.onActivityUpdate(
+        (newActivity) => {
+          console.log("UserLeadsPage: Received activity update:", newActivity);
+
+          // Show toast notification for real-time updates
+          if (newActivity.type === "lead_status_changed") {
+            // Refresh leads data to show the updated status
+            if (token) {
+              getUserLeads(token)
+                .then((data) => {
+                  setLeads(data);
+                  console.log(
+                    "UserLeadsPage: Refreshed leads after real-time update"
+                  );
+                })
+                .catch((err) => {
+                  console.error("UserLeadsPage: Error refreshing leads:", err);
+                });
+            }
+
+            // Show toast notification for other employees' activities
+            if (
+              newActivity.metadata?.employeeId &&
+              newActivity.metadata.employeeId !== user._id
+            ) {
+              toast.info(
+                `📊 ${newActivity.metadata.employeeName} updated lead "${newActivity.metadata.leadName}"`
+              );
+            }
+          } else if (newActivity.type === "deal_closed") {
+            // Show toast notification for deal closed
+            if (
+              newActivity.metadata?.employeeId &&
+              newActivity.metadata.employeeId !== user._id
+            ) {
+              toast.success(
+                `🎉 ${newActivity.metadata.employeeName} closed a deal!`
+              );
+            }
+          }
+        }
+      );
+
+      // Subscribe to connection status
+      const unsubscribeConnection = userSocketService.onConnectionChange(
+        (connected) => {
+          console.log(
+            "UserLeadsPage: Socket connection status changed:",
+            connected
+          );
+          setIsSocketConnected(connected);
+        }
+      );
+
+      // Set initial connection status
+      setIsSocketConnected(userSocketService.isConnected());
+
+      // Cleanup - only unsubscribe, keep socket connected globally
+      return () => {
+        console.log(
+          "UserLeadsPage: Cleaning up socket subscriptions (keeping connection alive)"
+        );
+        unsubscribeActivity();
+        unsubscribeConnection();
+      };
+    }
+  }, [user, token]);
 
   const filteredLeads = leads.filter((lead) => {
     // If no search query, just filter by type and status
@@ -673,6 +765,27 @@ export const UserLeadsPage: React.FC = () => {
             <FaAngleLeft />
             Leads
           </button>
+          {/* Socket connection indicator */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              fontSize: "12px",
+              color: isSocketConnected ? "#10b981" : "#ef4444",
+              marginLeft: "10px",
+            }}
+          >
+            <div
+              style={{
+                width: "6px",
+                height: "6px",
+                borderRadius: "50%",
+                backgroundColor: isSocketConnected ? "#10b981" : "#ef4444",
+              }}
+            ></div>
+            {isSocketConnected ? "Live" : "Offline"}
+          </div>
         </div>
       </div>
       {/* Search Bar */}

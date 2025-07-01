@@ -11,6 +11,13 @@ import {
   isUserCheckedIn,
   type TimeTrackingRecord,
 } from "../services/timeTracking.service";
+import {
+  getRecentActivities,
+  type Activity as DatabaseActivity,
+} from "../services/activities.service";
+import userSocketService, {
+  type RealtimeActivity,
+} from "../services/userSocket.service";
 import "../styles/user-dashboard.css";
 import { BottomNavigation } from "../components/BottomNavigation";
 
@@ -36,17 +43,9 @@ interface ActivityItem {
   type: "lead" | "call" | "deal";
 }
 
-interface TimingEntry {
-  id: string;
-  type: "Check" | "Break";
-  startTime: string;
-  endTime: string;
-  date: string;
-}
-
 export const UserDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentStatus, setCurrentStatus] = useState<string>("checked_out");
   const [timeTracking, setTimeTracking] = useState<TimeTrackingRecord | null>(
@@ -55,12 +54,203 @@ export const UserDashboardPage: React.FC = () => {
   const [timingHistory, setTimingHistory] = useState<TimeTrackingRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [activitiesLoading, setActivitiesLoading] = useState(false);
+
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   // Update current time every second
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Convert database activity to dashboard activity format
+  const convertDatabaseActivityToDashboard = (
+    dbActivity: DatabaseActivity
+  ): ActivityItem => {
+    return {
+      id: dbActivity.id,
+      message: dbActivity.message,
+      time: dbActivity.timeAgo,
+      type:
+        dbActivity.type === "deal_closed"
+          ? "deal"
+          : dbActivity.type === "lead_status_changed"
+          ? "lead"
+          : "call",
+    };
+  };
+
+  // Load activities from database
+  useEffect(() => {
+    const loadActivities = async () => {
+      if (!token) return;
+
+      try {
+        setActivitiesLoading(true);
+        const activities = await getRecentActivities(token, 5);
+        const dashboardActivities = activities.map(
+          convertDatabaseActivityToDashboard
+        );
+        setRecentActivity(dashboardActivities);
+        console.log("📚 Loaded activities from database:", dashboardActivities);
+      } catch (error) {
+        console.error("Error loading activities:", error);
+        // Don't show error toast as this is not critical
+      } finally {
+        setActivitiesLoading(false);
+      }
+    };
+
+    loadActivities();
+  }, [token]);
+
+  // Function to refresh activities from database
+  const refreshActivities = async () => {
+    if (!token) return;
+
+    try {
+      setActivitiesLoading(true);
+      const activities = await getRecentActivities(token, 5);
+      const dashboardActivities = activities.map(
+        convertDatabaseActivityToDashboard
+      );
+      setRecentActivity(dashboardActivities);
+      console.log(
+        "🔄 Refreshed activities from database:",
+        dashboardActivities
+      );
+      toast.success("Activities refreshed!");
+    } catch (error) {
+      console.error("Error refreshing activities:", error);
+      toast.error("Failed to refresh activities");
+    } finally {
+      setActivitiesLoading(false);
+    }
+  };
+
+  // Initialize socket connection
+  useEffect(() => {
+    if (user && user._id && user.name) {
+      console.log("Initializing socket for user:", user);
+
+      // Connect to socket (only if not already connected)
+      if (!userSocketService.isConnected()) {
+        userSocketService.connect({
+          userId: user._id,
+          userName: user.name,
+          userType: "employee",
+        });
+        console.log("Connected to socket");
+      } else {
+        console.log("Socket already connected, reusing existing connection");
+      }
+
+      // Subscribe to activity updates
+      const unsubscribeActivity = userSocketService.onActivityUpdate(
+        (newActivity: RealtimeActivity) => {
+          console.log("🚀 Received new activity:", newActivity);
+
+          // Convert socket activity to dashboard activity format
+          const dashboardActivity: ActivityItem = {
+            id: newActivity.id,
+            message: newActivity.message,
+            time: newActivity.timeAgo,
+            type:
+              newActivity.type === "deal_closed"
+                ? "deal"
+                : newActivity.type === "lead_status_changed"
+                ? "lead"
+                : "call",
+          };
+
+          console.log("📊 Converted to dashboard activity:", dashboardActivity);
+
+          // Add to recent activity (limit to 5 items) - ALWAYS add, regardless of who created it
+          setRecentActivity((prev) => {
+            console.log("📝 Previous activities:", prev);
+
+            // Check if this activity already exists (to avoid duplicates)
+            const exists = prev.some(
+              (activity) => activity.id === dashboardActivity.id
+            );
+            if (exists) {
+              console.log("🔄 Activity already exists, skipping duplicate");
+              return prev;
+            }
+
+            const updated = [dashboardActivity, ...prev].slice(0, 5);
+            console.log("✅ Updated activities:", updated);
+            return updated;
+          });
+
+          // Show toast notification ONLY for other employees' activities
+          if (
+            newActivity.metadata?.employeeId &&
+            newActivity.metadata.employeeId !== user._id
+          ) {
+            console.log("🔔 Showing notification for other employee activity");
+            if (newActivity.type === "deal_closed") {
+              toast.success(
+                `🎉 ${newActivity.metadata.employeeName} closed a deal!`
+              );
+            } else if (newActivity.type === "lead_status_changed") {
+              toast.info(
+                `📊 ${newActivity.metadata.employeeName} updated a lead`
+              );
+            }
+          } else {
+            console.log(
+              "🤐 Not showing notification - same employee or no employeeId (but still adding to activity list)"
+            );
+          }
+        }
+      );
+
+      // Subscribe to connection status
+      const unsubscribeConnection = userSocketService.onConnectionChange(
+        (connected: boolean) => {
+          console.log("🔌 Socket connection status changed:", connected);
+          setIsSocketConnected(connected);
+          if (connected) {
+            console.log("✅ Socket connected - UserDashboard");
+          } else {
+            console.log("❌ Socket disconnected - UserDashboard");
+          }
+        }
+      );
+
+      // Set initial connection status
+      const initialStatus = userSocketService.isConnected();
+      console.log("🔍 Initial socket status:", initialStatus);
+      setIsSocketConnected(initialStatus);
+
+      // Add a test activity after 3 seconds to verify the UI works
+      setTimeout(() => {
+        console.log("🧪 Adding test activity");
+        const testActivity: ActivityItem = {
+          id: "test-" + Date.now(),
+          message: "Test activity - Socket connection working!",
+          time: "Just now",
+          type: "lead",
+        };
+        setRecentActivity((prev) => [testActivity, ...prev].slice(0, 5));
+      }, 3000);
+
+      // Cleanup on unmount or user change - ONLY unsubscribe, don't disconnect socket
+      return () => {
+        console.log(
+          "🧹 Cleaning up socket subscriptions (keeping connection alive)"
+        );
+        unsubscribeActivity();
+        unsubscribeConnection();
+        // Removed: userSocketService.disconnect(); - Keep socket connected globally
+      };
+    } else {
+      console.log("❌ No user found, skipping socket initialization");
+    }
+  }, [user]);
 
   // Load time tracking data
   useEffect(() => {
@@ -200,21 +390,6 @@ export const UserDashboardPage: React.FC = () => {
       .slice(0, 4); // Show last 4 break entries
   };
 
-  const recentActivity: ActivityItem[] = [
-    {
-      id: "1",
-      message: "You were assigned 3 more new lead",
-      time: "1 hour ago",
-      type: "lead",
-    },
-    {
-      id: "2",
-      message: "You Closed a deal today",
-      time: "2 hours ago",
-      type: "deal",
-    },
-  ];
-
   if (loading) {
     return (
       <div className="user-dashboard-container">
@@ -241,6 +416,29 @@ export const UserDashboardPage: React.FC = () => {
         </div>
         <div className="greeting">Good Morning</div>
         <div className="user-name">{user?.name || "User"}</div>
+        {/* Socket connection indicator */}
+        <div
+          style={{
+            position: "absolute",
+            top: "20px",
+            right: "20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            fontSize: "12px",
+            color: isSocketConnected ? "#10b981" : "#ef4444",
+          }}
+        >
+          <div
+            style={{
+              width: "8px",
+              height: "8px",
+              borderRadius: "50%",
+              backgroundColor: isSocketConnected ? "#10b981" : "#ef4444",
+            }}
+          ></div>
+          {isSocketConnected ? "Live" : "Offline"}
+        </div>
       </div>
 
       {/* Current Time Display */}
@@ -378,6 +576,229 @@ export const UserDashboardPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Debug Section - Remove this in production */}
+      {import.meta.env.DEV && (
+        <div
+          style={{
+            margin: "20px 25px",
+            padding: "15px",
+            backgroundColor: "#f3f4f6",
+            borderRadius: "8px",
+            fontSize: "14px",
+          }}
+        >
+          <div style={{ fontWeight: "bold", marginBottom: "10px" }}>
+            🐛 Debug Info
+          </div>
+          <div>Socket Connected: {isSocketConnected ? "✅ Yes" : "❌ No"}</div>
+          <div>User ID: {user?._id || "Not found"}</div>
+          <div>Activities Count: {recentActivity.length}</div>
+          <div style={{ marginTop: "10px" }}>
+            <button
+              onClick={() => {
+                console.log("🧪 Manual test activity triggered");
+                const testActivity: ActivityItem = {
+                  id: "manual-test-" + Date.now(),
+                  message: "Manual test - Button clicked!",
+                  time: "Just now",
+                  type: "deal",
+                };
+                setRecentActivity((prev) =>
+                  [testActivity, ...prev].slice(0, 5)
+                );
+              }}
+              style={{
+                padding: "5px 10px",
+                marginRight: "10px",
+                backgroundColor: "#3b82f6",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Add Test Activity
+            </button>
+            <button
+              onClick={() => {
+                console.log("🔄 Reconnecting socket");
+                userSocketService.disconnect();
+                setTimeout(() => {
+                  if (user && user._id && user.name) {
+                    userSocketService.connect({
+                      userId: user._id,
+                      userName: user.name,
+                      userType: "employee",
+                    });
+                  }
+                }, 1000);
+              }}
+              style={{
+                padding: "5px 10px",
+                marginRight: "10px",
+                backgroundColor: "#f59e0b",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Reconnect Socket
+            </button>
+            <button
+              onClick={() => {
+                console.log("🧪 Testing socket emit");
+                userSocketService.emitTestEvent();
+              }}
+              style={{
+                padding: "5px 10px",
+                marginRight: "10px",
+                backgroundColor: "#10b981",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Test Socket Emit
+            </button>
+            <button
+              onClick={async () => {
+                console.log("🚀 Creating test activity via API");
+                try {
+                  const response = await fetch(
+                    "http://localhost:3000/api/v1/activities",
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        message: "Test activity created from frontend",
+                        type: "lead_status_changed",
+                        entityId: "test-lead-123",
+                        entityType: "lead",
+                        userId: user?._id || "test-user",
+                        userName: user?.name || "Test User",
+                        userType: "employee",
+                        metadata: {
+                          leadName: "Test Lead",
+                          newStatus: "Closed",
+                          oldStatus: "Open",
+                        },
+                      }),
+                    }
+                  );
+                  const data = await response.json();
+                  console.log("✅ Test activity created:", data);
+                } catch (error) {
+                  console.error("❌ Error creating test activity:", error);
+                }
+              }}
+              style={{
+                padding: "5px 10px",
+                backgroundColor: "#ef4444",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Test Backend Activity
+            </button>
+            <button
+              onClick={async () => {
+                console.log("🎯 Simulating lead status change...");
+                try {
+                  // First find a lead to update
+                  const leadsResponse = await fetch(
+                    "http://localhost:3000/api/v1/leads?limit=1",
+                    {
+                      method: "GET",
+                      headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                          "token"
+                        )}`,
+                        "Content-Type": "application/json",
+                      },
+                    }
+                  );
+
+                  if (leadsResponse.ok) {
+                    const leadsData = await leadsResponse.json();
+                    if (leadsData.data?.leads?.length > 0) {
+                      const lead = leadsData.data.leads[0];
+                      const newStatus =
+                        lead.status === "Closed" ? "Ongoing" : "Closed";
+
+                      console.log(
+                        `📊 Updating lead "${lead.name}" from ${lead.status} to ${newStatus}`
+                      );
+
+                      // Update the lead status
+                      const updateResponse = await fetch(
+                        `http://localhost:3000/api/v1/leads/${lead._id}/status`,
+                        {
+                          method: "PATCH",
+                          headers: {
+                            Authorization: `Bearer ${localStorage.getItem(
+                              "token"
+                            )}`,
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({ status: newStatus }),
+                        }
+                      );
+
+                      if (updateResponse.ok) {
+                        console.log("✅ Lead status updated successfully");
+                        toast.success(
+                          `Lead "${lead.name}" status changed to ${newStatus}`
+                        );
+                      } else {
+                        console.error("❌ Failed to update lead status");
+                        toast.error("Failed to update lead status");
+                      }
+                    } else {
+                      console.log("❌ No leads found to update");
+                      toast.info("No leads available to test with");
+                    }
+                  }
+                } catch (error) {
+                  console.error("❌ Error testing lead status change:", error);
+                  toast.error("Error testing lead status change");
+                }
+              }}
+              style={{
+                padding: "5px 10px",
+                marginLeft: "10px",
+                backgroundColor: "#8b5cf6",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Test Real Lead Update
+            </button>
+            <button
+              onClick={refreshActivities}
+              style={{
+                padding: "5px 10px",
+                marginLeft: "10px",
+                backgroundColor: "#06b6d4",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Refresh Activities
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Status Indicator */}
       {timeTracking && (
         <div
@@ -406,19 +827,76 @@ export const UserDashboardPage: React.FC = () => {
 
       {/* Recent Activity */}
       <div className="activity-section">
-        <h3>Recent Activity</h3>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "15px",
+          }}
+        >
+          <h3>Recent Activity</h3>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              fontSize: "12px",
+              color: "#6b7280",
+            }}
+          >
+            <div
+              style={{
+                width: "6px",
+                height: "6px",
+                borderRadius: "50%",
+                backgroundColor: isSocketConnected ? "#10b981" : "#ef4444",
+              }}
+            ></div>
+            {isSocketConnected ? "Live Updates" : "Offline"}
+          </div>
+        </div>
         <div className="activity-list">
-          {recentActivity.map((activity) => (
-            <div key={activity.id} className="activity-item">
-              <div className="activity-dot"></div>
-              <div className="activity-content">
-                <p className="activity-message">{activity.message}</p>
-                {activity.time && (
-                  <span className="activity-time">{activity.time}</span>
-                )}
+          {activitiesLoading ? (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "40px 20px",
+                color: "#6b7280",
+                fontSize: "14px",
+              }}
+            >
+              <div style={{ marginBottom: "8px" }}>Loading activities...</div>
+            </div>
+          ) : recentActivity.length > 0 ? (
+            recentActivity.map((activity) => (
+              <div key={activity.id} className="activity-item">
+                <div className="activity-dot"></div>
+                <div className="activity-content">
+                  <p className="activity-message">{activity.message}</p>
+                  {activity.time && (
+                    <span className="activity-time">{activity.time}</span>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "40px 20px",
+                color: "#6b7280",
+                fontSize: "14px",
+              }}
+            >
+              <div style={{ marginBottom: "8px" }}>No recent activity</div>
+              <div style={{ fontSize: "12px" }}>
+                {isSocketConnected
+                  ? "Activity will appear here when actions are performed"
+                  : "Connecting to live updates..."}
               </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
 

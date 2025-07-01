@@ -816,8 +816,10 @@ export const updateLeadStatus = async (
       );
     }
 
-    // Update lead status
+    // Store previous status for activity creation
     const previousStatus = lead.status;
+
+    // Update lead status
     lead.status = status as "Open" | "Closed" | "Ongoing" | "Pending";
 
     // If status is changed to Closed, update employee's closedLeads count
@@ -827,6 +829,51 @@ export const updateLeadStatus = async (
     }
 
     await lead.save();
+
+    // Create and broadcast activity for lead status change
+    await createAndBroadcastActivity(req, {
+      message: `${employee.firstName} ${employee.lastName} changed lead "${lead.name}" status from ${previousStatus} to ${status}`,
+      type: "lead_status_changed",
+      entityId: lead._id?.toString(),
+      entityType: "lead",
+      userId: req.user?._id?.toString(),
+      userName: `${employee.firstName} ${employee.lastName}`,
+      userType: "employee",
+      metadata: {
+        leadName: lead.name,
+        leadId: lead._id?.toString(),
+        newStatus: status,
+        oldStatus: previousStatus,
+        employeeName: `${employee.firstName} ${employee.lastName}`,
+        employeeId: employee._id.toString(),
+      },
+    });
+
+    // Special handling for deal closure
+    if (status === "Closed" && previousStatus !== "Closed") {
+      // Emit deal closed event via Socket.IO
+      const io = req.app.get("io");
+      if (io) {
+        const dealClosedData = {
+          id: `deal_${Date.now()}_${Math.random()}`,
+          message: `${employee.firstName} ${employee.lastName} closed a deal: "${lead.name}"`,
+          timeAgo: "Just now",
+          type: "deal_closed",
+          timestamp: new Date().toISOString(),
+          entityId: lead._id?.toString(),
+          entityType: "lead",
+          metadata: {
+            employeeName: `${employee.firstName} ${employee.lastName}`,
+            leadName: lead.name,
+            leadId: lead._id?.toString(),
+            employeeId: employee._id.toString(),
+          },
+        };
+
+        console.log("Broadcasting deal closed activity:", dealClosedData);
+        io.emit("activity_update", dealClosedData);
+      }
+    }
 
     res.status(200).json({
       status: "success",
@@ -884,9 +931,32 @@ export const updateLeadType = async (
       });
     }
 
+    // Store previous type for activity creation
+    const previousType = lead.type;
+
     // Update lead type
     lead.type = type as "Hot" | "Warm" | "Cold";
     await lead.save();
+
+    // Create and broadcast activity for lead type change
+    await createAndBroadcastActivity(req, {
+      message: `${employee.firstName} ${employee.lastName} changed lead "${lead.name}" type from ${previousType} to ${type}`,
+      type: "lead_status_changed",
+      entityId: lead._id?.toString(),
+      entityType: "lead",
+      userId: req.user?._id?.toString(),
+      userName: `${employee.firstName} ${employee.lastName}`,
+      userType: "employee",
+      metadata: {
+        leadName: lead.name,
+        leadId: lead._id?.toString(),
+        newType: type,
+        oldType: previousType,
+        employeeName: `${employee.firstName} ${employee.lastName}`,
+        employeeId: employee._id.toString(),
+        changeType: "type",
+      },
+    });
 
     res.status(200).json({
       status: "success",
