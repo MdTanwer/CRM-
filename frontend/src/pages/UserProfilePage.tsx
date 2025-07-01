@@ -13,7 +13,7 @@ import { BottomNavigation } from "../components/BottomNavigation";
 
 export const UserProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, token, setUser } = useAuth();
+  const { user, token, setUser, logout } = useAuth();
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState({
     firstName: "",
@@ -118,6 +118,11 @@ export const UserProfilePage: React.FC = () => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <div className="user-profile-container">
       {/* Header */}
@@ -125,11 +130,42 @@ export const UserProfilePage: React.FC = () => {
         <div className="profile-brand-logo">
           Canova<span style={{ color: "#E8E000" }}>CRM</span>
         </div>
-        <div className="profile-header-nav">
-          <button className="profile-back-btn" onClick={() => navigate(-1)}>
-            <FaAngleLeft />
-            Profile
-          </button>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <div className="profile-header-nav">
+            <button className="profile-back-btn" onClick={() => navigate(-1)}>
+              <FaAngleLeft />
+              Profile
+            </button>
+          </div>
+          <div>
+            <button
+              onClick={handleLogout}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#ff4757",
+                fontSize: "14px",
+                fontWeight: "500",
+                cursor: "pointer",
+                padding: "5px 10px",
+                borderRadius: "4px",
+                transition: "background-color 0.2s ease",
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = "#fff5f5";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 

@@ -55,6 +55,25 @@ export const getCurrentUser = async (token: string) => {
   }
 };
 
+// Logout user
+export const logoutUser = async (token: string) => {
+  try {
+    // This is optional - can be used for server-side logging or token blacklisting
+    await axios.post(
+      `${AUTH_API}/logout`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+  } catch (error) {
+    // Don't throw error for logout - frontend cleanup should proceed
+    console.warn("Server logout failed, but proceeding with client logout");
+  }
+};
+
 // Create axios instance with auth header
 export const createAuthenticatedAxiosInstance = (token: string) => {
   return axios.create({

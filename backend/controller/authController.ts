@@ -314,3 +314,50 @@ export const updatePassword = async (
     next(error);
   }
 };
+
+// Logout user
+export const logout = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const user = req.user;
+
+    if (user) {
+      // Get associated employee for logging
+      const employee = await Employee.findOne({ email: user.email });
+
+      // Create and broadcast activity for logout
+      await createAndBroadcastActivity(req, {
+        message: `${employee?.firstName || "User"} ${
+          employee?.lastName || ""
+        } logged out`,
+        type: "user_logout",
+        entityId: user._id.toString(),
+        entityType: "user",
+        userId: user._id.toString(),
+        userName: employee
+          ? `${employee.firstName} ${employee.lastName}`
+          : user.email,
+        userType: user.role === "admin" ? "admin" : "employee",
+        metadata: {
+          logoutTime: new Date().toISOString(),
+          userEmail: user.email,
+          userRole: user.role,
+        },
+      });
+    }
+
+    // Note: With JWT, we can't invalidate tokens server-side without a blacklist
+    // For now, we just respond with success. In the future, you could implement
+    // token blacklisting by storing invalid tokens in Redis or database
+
+    res.status(200).json({
+      status: "success",
+      message: "Logged out successfully",
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};

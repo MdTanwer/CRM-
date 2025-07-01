@@ -12,10 +12,11 @@ export interface IActivity extends Document {
     | "lead_status_changed"
     | "deal_closed"
     | "call_scheduled"
-    | "lead_created";
+    | "lead_created"
+    | "user_logout";
   timestamp: Date;
   entityId?: string;
-  entityType?: "lead" | "employee" | "call" | "profile";
+  entityType?: "lead" | "employee" | "call" | "profile" | "user";
   userId?: string;
   userName?: string;
   userType?: "admin" | "employee";
@@ -30,6 +31,9 @@ export interface IActivity extends Document {
     oldStatus?: string;
     dealValue?: number;
     callDate?: Date;
+    logoutTime?: string;
+    userEmail?: string;
+    userRole?: string;
     [key: string]: any;
   };
   isRead?: boolean;
@@ -57,6 +61,7 @@ const activitySchema = new Schema<IActivity>(
         "deal_closed",
         "call_scheduled",
         "lead_created",
+        "user_logout",
       ],
     },
     timestamp: {
@@ -69,7 +74,7 @@ const activitySchema = new Schema<IActivity>(
     },
     entityType: {
       type: String,
-      enum: ["lead", "employee", "call", "profile"],
+      enum: ["lead", "employee", "call", "profile", "user"],
     },
     userId: {
       type: String,

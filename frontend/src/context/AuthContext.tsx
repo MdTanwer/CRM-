@@ -1,5 +1,9 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import { loginUser, getCurrentUser } from "../services/auth.service";
+import {
+  loginUser,
+  getCurrentUser,
+  logoutUser,
+} from "../services/auth.service";
 import { toast } from "react-toastify";
 
 interface User {
@@ -76,7 +80,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Call backend logout for logging purposes (optional)
+    if (token) {
+      try {
+        await logoutUser(token);
+      } catch (error) {
+        console.warn("Backend logout failed, proceeding with client logout");
+      }
+    }
+
+    // Clear client-side state
     localStorage.removeItem("token");
     setToken(null);
     setUser(null);
