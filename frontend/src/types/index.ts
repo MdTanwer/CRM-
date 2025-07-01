@@ -394,3 +394,21 @@ export interface DashboardEmployee {
   status: "Active" | "Inactive";
   image?: string;
 }
+
+export interface Lead {
+  _id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  status: "ongoing" | "closed" | "unassigned";
+  type: "hot" | "warm" | "cold";
+  language: string;
+  location: string;
+  receivedDate: string;
+  assignedEmployee?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+}

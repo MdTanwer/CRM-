@@ -9,24 +9,7 @@ import { FaUpload } from "react-icons/fa";
 import "../styles/dashboard.css";
 import "../styles/leads.css";
 import "../styles/leadsupload.css";
-
-interface Lead {
-  _id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  status: string;
-  type: string;
-  language: string;
-  location: string;
-  receivedDate: string;
-  assignedEmployee?: {
-    _id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-}
+import type { Lead } from "../types";
 
 const PAGE_SIZE = 10;
 
