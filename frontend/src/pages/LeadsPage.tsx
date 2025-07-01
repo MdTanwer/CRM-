@@ -103,23 +103,17 @@ export const LeadsPage: React.FC = () => {
 
       <div className="main-content">
         {/* Custom Leads Header */}
-        <div className="header">
-          <div className="lead-header-actions">
-            <form
-              className="lead-search-container"
-              onSubmit={handleSearchSubmit}
-            >
+        <div className="emp-header">
+          <div className="emp-header-actions">
+            <div className="emp-search-container">
               <input
                 type="text"
-                placeholder="Search leads by name, email..."
-                className="search-input"
+                placeholder="Search employees by name, ID..."
+                className="emp-search-input"
                 value={searchTerm}
                 onChange={handleSearchChange}
               />
-              <button type="submit" className="search-button">
-                Search
-              </button>
-            </form>
+            </div>
           </div>
         </div>
 
@@ -138,7 +132,7 @@ export const LeadsPage: React.FC = () => {
             </div>
             <div className="leads-action-buttons">
               <button
-                className="add-lead-btn"
+                className="add-leads-btn3"
                 onClick={() => setIsUploadModalOpen(true)}
               >
                 Add Lead

@@ -6,8 +6,7 @@ import {
   flexRender,
 } from "@tanstack/react-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import axios from "axios";
-import { toast } from "react-toastify";
+
 import "../../styles/leads.css";
 
 interface Lead {
@@ -44,36 +43,7 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
   pageCount,
   pageIndex,
   onPageChange,
-  onDataChange,
-  onEditLead,
 }) => {
-  const handleEditLead = (leadId: string) => {
-    if (onEditLead) {
-      onEditLead(leadId);
-    }
-  };
-
-  const handleDeleteLead = async (leadId: string) => {
-    try {
-      // Call the delete API
-      await axios.delete(`http://localhost:3000/api/v1/leads/${leadId}`);
-
-      // Show success message
-      toast.success("Lead deleted successfully");
-
-      // Refresh the data
-      if (onDataChange) {
-        onDataChange();
-      }
-    } catch (error: any) {
-      // Show error message
-      const errorMsg =
-        error?.response?.data?.message || "Failed to delete lead";
-      toast.error(errorMsg);
-      console.error("Error deleting lead:", error);
-    }
-  };
-
   const getStatusBadgeClass = (status: string) => {
     switch (status.toLowerCase()) {
       case "open":
@@ -84,19 +54,6 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
         return "status-ongoing";
       case "pending":
         return "status-pending";
-      default:
-        return "";
-    }
-  };
-
-  const getTypeBadgeClass = (type: string) => {
-    switch (type.toLowerCase()) {
-      case "hot":
-        return "type-hot";
-      case "warm":
-        return "type-warm";
-      case "cold":
-        return "type-cold";
       default:
         return "";
     }
@@ -131,16 +88,7 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
         },
         size: 200,
       },
-      {
-        accessorKey: "type",
-        header: "Type",
-        cell: ({ getValue }) => (
-          <span className={`lead-type-badge ${getTypeBadgeClass(getValue())}`}>
-            {getValue()}
-          </span>
-        ),
-        size: 100,
-      },
+
       {
         accessorKey: "status",
         header: "Status",

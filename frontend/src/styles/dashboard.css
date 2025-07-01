@@ -151,23 +151,6 @@
   border-color: #9ca3af;
 }
 
-.add-leads-btn {
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.add-leads-btn:hover {
-  background-color: #2563eb;
-}
-
 /* Date Picker in Header */
 .date-picker {
   padding: 8px 12px;

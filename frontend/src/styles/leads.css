@@ -1,7 +1,7 @@
 /* Leads Page Styles */
 .leads-content {
   padding: 24px;
-  background-color: #f8f9fa;
+  background-color: #ffffff;
   min-height: calc(100vh - 80px);
 }
 
@@ -19,43 +19,21 @@
   align-items: center;
 }
 
-.add-leads-btn {
-  background-color: #6b7280;
-  color: white;
+.add-leads-btn3 {
+  background-color: #d9d9d9;
+  color: #636060;
   border: none;
   border-radius: 6px;
-  padding: 10px 20px;
+  padding: 12px 20px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.add-leads-btn:hover {
-  background-color: #4b5563;
-}
-
-.import-leads-btn {
-  background-color: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.import-leads-btn:hover {
-  background-color: #4338ca;
-}
-
-.import-leads-btn .upload-icon {
-  font-size: 14px;
+.add-leads-btn3:hover {
+  background-color: #aaaaac;
 }
 
 /* Leads Table Styles */
@@ -74,23 +52,20 @@
 }
 
 .leads-data-table th {
-  background-color: #f9fafb;
-  padding: 16px 20px;
+  background-color: #fafafa;
+  padding: 12px 16px;
   text-align: left;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .leads-data-table td {
-  padding: 20px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
   font-size: 14px;
-  color: #1f2937;
-  background: white;
+  color: #374151;
 }
 
 .leads-data-table tr:hover {
@@ -399,8 +374,8 @@
 }
 
 .lead-name {
-  font-weight: 500;
-  color: #111827;
+  font-size: 14px;
+  color: #374151;
 }
 
 .lead-email {
@@ -588,26 +563,6 @@
 }
 
 .search-button:hover {
-  background-color: #2563eb;
-}
-
-/* Action buttons */
-.add-leads-btn,
-.add-lead-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: #3b82f6;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.add-leads-btn:hover,
-.add-lead-btn:hover {
   background-color: #2563eb;
 }
 

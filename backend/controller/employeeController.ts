@@ -286,7 +286,7 @@ export const getEmployeeStats = catchAsync(
 export const getRecentEmployees = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     // Get query parameters with defaults
-    const limit = parseInt(req.query.limit as string) || 5;
+    const limit = parseInt(req.query.limit as string) || 10;
     const days = parseInt(req.query.days as string) || 7; // Default to last 7 days
 
     // Calculate date range for recent employees
