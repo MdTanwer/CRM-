@@ -29,9 +29,8 @@ export const EmployeesPage: React.FC = () => {
     location.pathname === "/" ? "dashboard" : location.pathname.slice(1);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0); // Used to force refresh the employee list
+  const [refreshKey, setRefreshKey] = useState(0);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [pageIndex, setPageIndex] = useState(0);
@@ -40,20 +39,30 @@ export const EmployeesPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchEmployees = useCallback(async (page: number) => {
+  const fetchEmployees = useCallback(async (page: number, search?: string) => {
     setIsLoading(true);
     setError(null);
     try {
+      const params: any = {
+        page: page + 1,
+        limit: PAGE_SIZE,
+      };
+
+      // Add search parameter if provided
+      if (search && search.trim()) {
+        params.search = search.trim();
+      }
+
       const response = await axios.get(
         "http://localhost:3000/api/v1/employees",
-        {
-          params: { page: page + 1, limit: PAGE_SIZE },
-        }
+        { params }
       );
+
       const apiData = response.data.data?.employees || [];
       const totalEmployees =
         response.data.totalEmployees || response.data.data?.totalEmployees || 0;
       setPageCount(Math.ceil(totalEmployees / PAGE_SIZE));
+
       const formattedEmployees = apiData.map((emp: any) => ({
         _id: emp._id,
         firstName: emp.firstName,
@@ -65,50 +74,25 @@ export const EmployeesPage: React.FC = () => {
         assignedLeads: emp.assignedLeads || 0,
         closedLeads: emp.closedLeads || 0,
         status: emp.status || "",
-        avatarUrl: undefined, // You can add logic for avatar if available
+        avatarUrl: undefined,
       }));
+
       setEmployees(formattedEmployees);
-      setFilteredEmployees(formattedEmployees);
     } catch (err) {
       setError("Failed to fetch employees. Please try again later.");
       setEmployees([]);
-      setFilteredEmployees([]);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchEmployees(pageIndex);
-  }, [fetchEmployees, pageIndex, refreshKey]);
-
-  // Search functionality
-  useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredEmployees(employees);
-      return;
-    }
-
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    const filtered = employees.filter((employee) => {
-      return (
-        employee.firstName.toLowerCase().includes(lowerSearchTerm) ||
-        employee.lastName.toLowerCase().includes(lowerSearchTerm) ||
-        employee.email.toLowerCase().includes(lowerSearchTerm) ||
-        employee.employeeId.toLowerCase().includes(lowerSearchTerm) ||
-        employee.location.toLowerCase().includes(lowerSearchTerm) ||
-        employee.preferredLanguage.toLowerCase().includes(lowerSearchTerm) ||
-        employee.status.toLowerCase().includes(lowerSearchTerm) ||
-        `${employee.assignedLeads}`.includes(lowerSearchTerm) ||
-        `${employee.closedLeads}`.includes(lowerSearchTerm)
-      );
-    });
-
-    setFilteredEmployees(filtered);
-  }, [searchTerm, employees]);
+    fetchEmployees(pageIndex, searchTerm);
+  }, [fetchEmployees, pageIndex, refreshKey, searchTerm]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
     setPageIndex(0); // Reset to first page when searching
   };
 
@@ -213,11 +197,11 @@ export const EmployeesPage: React.FC = () => {
             <div>Loading employees...</div>
           ) : error ? (
             <div>Error: {error}</div>
-          ) : filteredEmployees.length === 0 ? (
+          ) : employees.length === 0 ? (
             <div>No employees found.</div>
           ) : (
             <EmployeesTable
-              data={filteredEmployees}
+              data={employees}
               pageCount={pageCount}
               pageIndex={pageIndex}
               onPageChange={setPageIndex}

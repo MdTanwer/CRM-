@@ -8,35 +8,10 @@ import {
 import axios from "axios";
 import { EMPLOYEE_API } from "../../config/api.config";
 import "../../styles/dashboard.css";
+import type { BackendEmployee, DashboardEmployee } from "../../types";
 
 // Backend Employee interface from the API
-interface BackendEmployee {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  employeeId: string;
-  location: string;
-  preferredLanguage: string;
-  assignedLeads: number;
-  closedLeads: number;
-  status: "active" | "inactive";
-  avatarUrl?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 // Interface for dashboard table display
-interface DashboardEmployee {
-  id: string;
-  name: string;
-  email: string;
-  employeeId: string;
-  assignedLeads: number;
-  closedLeads: number;
-  status: "Active" | "Inactive";
-  image?: string;
-}
 
 interface EmployeesTableProps {
   data?: DashboardEmployee[];

@@ -216,7 +216,7 @@ export const SalesChart: React.FC = () => {
             />
             <Tooltip
               content={<CustomTooltip />}
-              cursor={{ fill: "rgba(59, 130, 246, 0.1)", stroke: "none" }}
+              cursor={{ fill: "rgba(255, 255, 255, 0.1", stroke: "none" }}
               position={{ x: undefined, y: undefined }}
               allowEscapeViewBox={{ x: false, y: true }}
             />
@@ -233,6 +233,8 @@ export const SalesChart: React.FC = () => {
                   fill={hoveredIndex === index ? "#9ca3af" : "#d1d5db"}
                   stroke={hoveredIndex === index ? "#6b7280" : "#9ca3af"}
                   strokeWidth={hoveredIndex === index ? 2 : 1}
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
                 />
               ))}
             </Bar>

@@ -75,11 +75,105 @@ export const BREAK_TYPES = {
 
 // Activity Types
 export const ACTIVITY_TYPES = {
+  // Legacy types (for backward compatibility)
   LEAD_ASSIGNED: "lead_assigned",
   DEAL_CLOSED: "deal_closed",
   CALL_SCHEDULED: "call_scheduled",
   LEAD_CREATED: "lead_created",
   EMPLOYEE_ADDED: "employee_added",
+} as const;
+
+// Employee Activity Types
+export const EMPLOYEE_ACTIVITY_TYPES = {
+  PROFILE_UPDATED: "profile_updated",
+  LEAD_ASSIGNED: "lead_assigned",
+  LEAD_STATUS_CHANGED: "lead_status_changed",
+  DEAL_CLOSED: "deal_closed",
+  CALL_SCHEDULED: "call_scheduled",
+  LEAD_CREATED: "lead_created",
+  USER_LOGOUT: "user_logout",
+  TIME_ENTRY: "time_entry",
+  AUTO_CHECKIN: "auto_checkin",
+  AUTO_CHECKOUT: "auto_checkout",
+} as const;
+
+// Admin Activity Types
+export const ADMIN_ACTIVITY_TYPES = {
+  EMPLOYEE_ADDED: "employee_added",
+  EMPLOYEE_DELETED: "employee_deleted",
+  EMPLOYEE_EDITED: "employee_edited",
+  LEAD_ASSIGNED: "lead_assigned",
+  LEAD_STATUS_CHANGED: "lead_status_changed",
+  DEAL_CLOSED: "deal_closed",
+  CALL_SCHEDULED: "call_scheduled",
+  LEAD_CREATED: "lead_created",
+  USER_LOGOUT: "user_logout",
+  SYSTEM_CONFIG_CHANGED: "system_config_changed",
+  BULK_LEAD_UPLOAD: "bulk_lead_upload",
+  EMPLOYEE_STATUS_CHANGED: "employee_status_changed",
+  ADMIN_LOGIN: "admin_login",
+  DATA_EXPORT: "data_export",
+  SYSTEM_BACKUP: "system_backup",
+} as const;
+
+// Activity Entity Types
+export const EMPLOYEE_ENTITY_TYPES = {
+  LEAD: "lead",
+  CALL: "call",
+  PROFILE: "profile",
+  USER: "user",
+  TIME_TRACKING: "time_tracking",
+} as const;
+
+export const ADMIN_ENTITY_TYPES = {
+  EMPLOYEE: "employee",
+  LEAD: "lead",
+  CALL: "call",
+  PROFILE: "profile",
+  USER: "user",
+  SYSTEM: "system",
+} as const;
+
+// Activity Priority Levels (for admin activities)
+export const ACTIVITY_PRIORITIES = {
+  LOW: "low",
+  MEDIUM: "medium",
+  HIGH: "high",
+  CRITICAL: "critical",
+} as const;
+
+// Activity Colors by Type
+export const ACTIVITY_TYPE_COLORS = {
+  // Employee activities
+  profile_updated: "#3B82F6", // Blue
+  lead_assigned: "#10B981", // Green
+  lead_status_changed: "#F59E0B", // Amber
+  deal_closed: "#059669", // Emerald
+  call_scheduled: "#8B5CF6", // Purple
+  lead_created: "#06B6D4", // Cyan
+  user_logout: "#6B7280", // Gray
+  time_entry: "#84CC16", // Lime
+  auto_checkin: "#22C55E", // Green
+  auto_checkout: "#EF4444", // Red
+
+  // Admin activities
+  employee_added: "#10B981", // Green
+  employee_deleted: "#EF4444", // Red
+  employee_edited: "#F59E0B", // Amber
+  system_config_changed: "#8B5CF6", // Purple
+  bulk_lead_upload: "#06B6D4", // Cyan
+  employee_status_changed: "#F59E0B", // Amber
+  admin_login: "#3B82F6", // Blue
+  data_export: "#6366F1", // Indigo
+  system_backup: "#84CC16", // Lime
+} as const;
+
+// Activity Priority Colors
+export const ACTIVITY_PRIORITY_COLORS = {
+  low: "#6B7280", // Gray
+  medium: "#F59E0B", // Amber
+  high: "#EF4444", // Red
+  critical: "#DC2626", // Dark Red
 } as const;
 
 // Storage Keys

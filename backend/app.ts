@@ -7,6 +7,8 @@ import leadRoutes from "./routes/leadRoutes";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import activityRoutes from "./routes/activityRoutes";
+import employeeActivityRoutes from "./routes/employeeActivityRoutes";
+import adminActivityRoutes from "./routes/adminActivityRoutes";
 import timeTrackingRoutes from "./routes/timeTrackingRoutes";
 import cors from "cors";
 import { globalErrorHandler } from "./utils/errorHandler";
@@ -57,8 +59,14 @@ app.use("/api/v1/employees", employeeRoutes);
 // Lead routes
 app.use("/api/v1/leads", leadRoutes);
 
-// Activity routes
+// Activity routes (legacy - keep for backward compatibility)
 app.use("/api/v1/activities", activityRoutes);
+
+// Employee activity routes (new separated routes)
+app.use("/api/v1/employee-activities", employeeActivityRoutes);
+
+// Admin activity routes (new separated routes)
+app.use("/api/v1/admin-activities", adminActivityRoutes);
 
 // Time tracking routes
 app.use("/api/v1/time-tracking", timeTrackingRoutes);

@@ -9,6 +9,10 @@ interface RealtimeActivity {
   entityId?: string;
   entityType?: string;
   metadata?: any;
+  userType?: "admin" | "employee";
+  userId?: string;
+  userName?: string;
+  priority?: "low" | "medium" | "high" | "critical";
 }
 
 interface SocketUser {
@@ -20,6 +24,11 @@ interface SocketUser {
 class UserSocketService {
   private socket: Socket | null = null;
   private activityCallbacks: Array<(activity: RealtimeActivity) => void> = [];
+  private employeeActivityCallbacks: Array<
+    (activity: RealtimeActivity) => void
+  > = [];
+  private adminActivityCallbacks: Array<(activity: RealtimeActivity) => void> =
+    [];
   private connectionCallbacks: Array<(connected: boolean) => void> = [];
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -125,16 +134,25 @@ class UserSocketService {
       console.error("💥 Failed to reconnect after maximum attempts");
     });
 
-    // Activity updates - This is the key listener!
+    // Legacy activity updates (for backward compatibility)
     this.socket.on("activity_update", (activity: RealtimeActivity) => {
-      console.log("🎯 ACTIVITY_UPDATE RECEIVED:", activity);
-      console.log("📊 Activity details:", {
-        id: activity.id,
-        type: activity.type,
-        message: activity.message,
-        metadata: activity.metadata,
-      });
+      console.log("🎯 LEGACY ACTIVITY_UPDATE RECEIVED:", activity);
       this.notifyActivityCallbacks(activity);
+    });
+
+    // New separated activity events
+    this.socket.on("employee_activity_update", (activity: RealtimeActivity) => {
+      console.log("🎯 EMPLOYEE ACTIVITY_UPDATE RECEIVED:", activity);
+      // Notify both general and employee-specific callbacks
+      this.notifyActivityCallbacks(activity);
+      this.notifyEmployeeActivityCallbacks(activity);
+    });
+
+    this.socket.on("admin_activity_update", (activity: RealtimeActivity) => {
+      console.log("🎯 ADMIN ACTIVITY_UPDATE RECEIVED:", activity);
+      // Notify both general and admin-specific callbacks
+      this.notifyActivityCallbacks(activity);
+      this.notifyAdminActivityCallbacks(activity);
     });
 
     // Test event listener
@@ -155,7 +173,7 @@ class UserSocketService {
     console.log("🎧 Event listeners setup complete");
   }
 
-  // Subscribe to activity updates
+  // Subscribe to activity updates (general)
   onActivityUpdate(callback: (activity: RealtimeActivity) => void): () => void {
     console.log(
       "📝 Subscribing to activity updates. Total callbacks:",
@@ -169,6 +187,46 @@ class UserSocketService {
       if (index > -1) {
         this.activityCallbacks.splice(index, 1);
         console.log("🗑️ Unsubscribed from activity updates");
+      }
+    };
+  }
+
+  // Subscribe to employee activity updates
+  onEmployeeActivityUpdate(
+    callback: (activity: RealtimeActivity) => void
+  ): () => void {
+    console.log(
+      "📝 Subscribing to employee activity updates. Total callbacks:",
+      this.employeeActivityCallbacks.length + 1
+    );
+    this.employeeActivityCallbacks.push(callback);
+
+    // Return unsubscribe function
+    return () => {
+      const index = this.employeeActivityCallbacks.indexOf(callback);
+      if (index > -1) {
+        this.employeeActivityCallbacks.splice(index, 1);
+        console.log("🗑️ Unsubscribed from employee activity updates");
+      }
+    };
+  }
+
+  // Subscribe to admin activity updates
+  onAdminActivityUpdate(
+    callback: (activity: RealtimeActivity) => void
+  ): () => void {
+    console.log(
+      "📝 Subscribing to admin activity updates. Total callbacks:",
+      this.adminActivityCallbacks.length + 1
+    );
+    this.adminActivityCallbacks.push(callback);
+
+    // Return unsubscribe function
+    return () => {
+      const index = this.adminActivityCallbacks.indexOf(callback);
+      if (index > -1) {
+        this.adminActivityCallbacks.splice(index, 1);
+        console.log("🗑️ Unsubscribed from admin activity updates");
       }
     };
   }
@@ -246,14 +304,50 @@ class UserSocketService {
   // Notify activity callbacks
   private notifyActivityCallbacks(activity: RealtimeActivity): void {
     console.log(
-      `🔔 Notifying ${this.activityCallbacks.length} activity callbacks`
+      `📢 Notifying ${this.activityCallbacks.length} activity callbacks...`
     );
     this.activityCallbacks.forEach((callback, index) => {
       try {
-        console.log(`🔔 Calling activity callback ${index + 1}`);
+        console.log(`📤 Calling callback ${index + 1}...`);
         callback(activity);
       } catch (error) {
         console.error(`💥 Error in activity callback ${index + 1}:`, error);
+      }
+    });
+  }
+
+  // Notify employee activity callbacks
+  private notifyEmployeeActivityCallbacks(activity: RealtimeActivity): void {
+    console.log(
+      `📢 Notifying ${this.employeeActivityCallbacks.length} employee activity callbacks...`
+    );
+    this.employeeActivityCallbacks.forEach((callback, index) => {
+      try {
+        console.log(`📤 Calling employee callback ${index + 1}...`);
+        callback(activity);
+      } catch (error) {
+        console.error(
+          `💥 Error in employee activity callback ${index + 1}:`,
+          error
+        );
+      }
+    });
+  }
+
+  // Notify admin activity callbacks
+  private notifyAdminActivityCallbacks(activity: RealtimeActivity): void {
+    console.log(
+      `📢 Notifying ${this.adminActivityCallbacks.length} admin activity callbacks...`
+    );
+    this.adminActivityCallbacks.forEach((callback, index) => {
+      try {
+        console.log(`📤 Calling admin callback ${index + 1}...`);
+        callback(activity);
+      } catch (error) {
+        console.error(
+          `💥 Error in admin activity callback ${index + 1}:`,
+          error
+        );
       }
     });
   }

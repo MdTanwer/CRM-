@@ -119,10 +119,97 @@ export interface ActivityMetadata {
   callId?: string;
   dealValue?: number;
   leadCount?: number;
+  leadName?: string;
+  oldStatus?: string;
+  newStatus?: string;
+  employeeName?: string;
+  totalHours?: number;
+  affectedCount?: number;
+  backupSize?: string;
   [key: string]: string | number | boolean | undefined;
 }
 
-// Activity Types
+// Employee Activity Types
+export type EmployeeActivityType =
+  | "profile_updated"
+  | "lead_assigned"
+  | "lead_status_changed"
+  | "deal_closed"
+  | "call_scheduled"
+  | "lead_created"
+  | "user_logout"
+  | "time_entry"
+  | "auto_checkin"
+  | "auto_checkout";
+
+// Admin Activity Types
+export type AdminActivityType =
+  | "employee_added"
+  | "employee_deleted"
+  | "employee_edited"
+  | "lead_assigned"
+  | "lead_status_changed"
+  | "deal_closed"
+  | "call_scheduled"
+  | "lead_created"
+  | "user_logout"
+  | "system_config_changed"
+  | "bulk_lead_upload"
+  | "employee_status_changed"
+  | "admin_login"
+  | "data_export"
+  | "system_backup";
+
+// Employee Entity Types
+export type EmployeeEntityType =
+  | "lead"
+  | "call"
+  | "profile"
+  | "user"
+  | "time_tracking";
+
+// Admin Entity Types
+export type AdminEntityType =
+  | "employee"
+  | "lead"
+  | "call"
+  | "profile"
+  | "user"
+  | "system";
+
+// Activity Priority Levels
+export type ActivityPriority = "low" | "medium" | "high" | "critical";
+
+// Base Activity Interface
+export interface BaseActivity {
+  id: string;
+  userId?: string;
+  userName?: string;
+  message: string;
+  timestamp: string;
+  entityId?: string;
+  metadata?: ActivityMetadata;
+  isRead?: boolean;
+}
+
+// Employee Activity Interface
+export interface EmployeeActivity extends BaseActivity {
+  type: EmployeeActivityType;
+  entityType?: EmployeeEntityType;
+  userType: "employee";
+  userId: string; // Required for employee activities
+  userName: string; // Required for employee activities
+}
+
+// Admin Activity Interface
+export interface AdminActivity extends BaseActivity {
+  type: AdminActivityType;
+  entityType?: AdminEntityType;
+  userType: "admin";
+  priority: ActivityPriority;
+}
+
+// Legacy Activity Interface (for backward compatibility)
 export interface Activity {
   id: string;
   userId: string;
@@ -139,6 +226,9 @@ export interface Activity {
   timestamp: string;
   metadata?: ActivityMetadata;
 }
+
+// Union type for all activities
+export type AnyActivity = EmployeeActivity | AdminActivity | Activity;
 
 // Dashboard Types
 export interface DashboardStats {
@@ -274,4 +364,33 @@ export interface AlertProps {
   onClose?: () => void;
   autoClose?: boolean;
   duration?: number;
+}
+
+// Backend Employee interface from the API
+export interface BackendEmployee {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  employeeId: string;
+  location: string;
+  preferredLanguage: string;
+  assignedLeads: number;
+  closedLeads: number;
+  status: "active" | "inactive";
+  avatarUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Interface for dashboard table display
+export interface DashboardEmployee {
+  id: string;
+  name: string;
+  email: string;
+  employeeId: string;
+  assignedLeads: number;
+  closedLeads: number;
+  status: "Active" | "Inactive";
+  image?: string;
 }

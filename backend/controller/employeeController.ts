@@ -29,12 +29,27 @@ export const getAllEmployees = catchAsync(
 
     // Search
     if (req.query.search) {
-      const searchRegex = new RegExp(req.query.search as string, "i");
+      const searchTerm = req.query.search as string;
+      const searchRegex = new RegExp(searchTerm, "i");
+
       query.$or = [
         { firstName: searchRegex },
         { lastName: searchRegex },
         { email: searchRegex },
+        { employeeId: searchRegex },
+        { location: searchRegex },
+        { preferredLanguage: searchRegex },
+        { status: searchRegex },
       ];
+
+      // For numeric search (assignedLeads, closedLeads)
+      const numericSearch = parseInt(searchTerm);
+      if (!isNaN(numericSearch)) {
+        query.$or.push(
+          { assignedLeads: numericSearch },
+          { closedLeads: numericSearch }
+        );
+      }
     }
 
     // Execute query with pagination
@@ -271,7 +286,7 @@ export const getEmployeeStats = catchAsync(
 export const getRecentEmployees = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     // Get query parameters with defaults
-    const limit = parseInt(req.query.limit as string) || 10;
+    const limit = parseInt(req.query.limit as string) || 5;
     const days = parseInt(req.query.days as string) || 7; // Default to last 7 days
 
     // Calculate date range for recent employees

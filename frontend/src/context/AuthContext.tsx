@@ -43,9 +43,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           const userData = await getCurrentUser(token);
           setUser(userData);
           setIsAuthenticated(true);
+          // Store user data in localStorage for other services to access
+          localStorage.setItem("user_data", JSON.stringify(userData));
         } catch (error) {
           console.error("Failed to load user:", error);
           localStorage.removeItem("token");
+          localStorage.removeItem("user_data");
           setToken(null);
           setUser(null);
           setIsAuthenticated(false);
@@ -69,6 +72,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setToken(newToken);
       setUser(userData);
       setIsAuthenticated(true);
+      // Store user data in localStorage for other services to access
+      localStorage.setItem("user_data", JSON.stringify(userData));
       toast.success("Login successful!");
       return true;
     } catch (error) {
@@ -92,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Clear client-side state
     localStorage.removeItem("token");
+    localStorage.removeItem("user_data");
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
