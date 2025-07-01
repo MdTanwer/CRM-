@@ -13,10 +13,19 @@ export interface IActivity extends Document {
     | "deal_closed"
     | "call_scheduled"
     | "lead_created"
-    | "user_logout";
+    | "user_logout"
+    | "time_entry"
+    | "auto_checkin"
+    | "auto_checkout";
   timestamp: Date;
   entityId?: string;
-  entityType?: "lead" | "employee" | "call" | "profile" | "user";
+  entityType?:
+    | "lead"
+    | "employee"
+    | "call"
+    | "profile"
+    | "user"
+    | "time_tracking";
   userId?: string;
   userName?: string;
   userType?: "admin" | "employee";
@@ -34,6 +43,10 @@ export interface IActivity extends Document {
     logoutTime?: string;
     userEmail?: string;
     userRole?: string;
+    entryType?: string;
+    timestamp?: string;
+    notes?: string;
+    totalHours?: number;
     [key: string]: any;
   };
   isRead?: boolean;
@@ -62,6 +75,9 @@ const activitySchema = new Schema<IActivity>(
         "call_scheduled",
         "lead_created",
         "user_logout",
+        "time_entry",
+        "auto_checkin",
+        "auto_checkout",
       ],
     },
     timestamp: {
@@ -74,7 +90,7 @@ const activitySchema = new Schema<IActivity>(
     },
     entityType: {
       type: String,
-      enum: ["lead", "employee", "call", "profile", "user"],
+      enum: ["lead", "employee", "call", "profile", "user", "time_tracking"],
     },
     userId: {
       type: String,

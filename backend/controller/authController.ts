@@ -5,6 +5,10 @@ import mongoose from "mongoose";
 import { Employee } from "../models/Employee";
 import { AppError } from "../utils/errorHandler";
 import { createAndBroadcastActivity } from "./activityController";
+import {
+  handleLoginCheckIn,
+  handleLogoutCheckOut,
+} from "./timeTrackingController";
 
 // JWT Secret - should be in env variables in production
 const JWT_SECRET = "your-secret-key";
@@ -71,6 +75,31 @@ export const login = async (
         user.password = employee.lastName;
         await user.save();
       }
+    }
+
+    // Handle time tracking - auto check-in
+    try {
+      await handleLoginCheckIn(user._id.toString(), employee._id.toString());
+
+      // Create and broadcast activity for check-in
+      await createAndBroadcastActivity(req, {
+        message: `${employee.firstName} ${employee.lastName} checked in via login`,
+        type: "auto_checkin",
+        entityId: user._id.toString(),
+        entityType: "time_tracking",
+        userId: user._id.toString(),
+        userName: `${employee.firstName} ${employee.lastName}`,
+        userType: "employee",
+        metadata: {
+          loginTime: new Date().toISOString(),
+          source: "login",
+          employeeName: `${employee.firstName} ${employee.lastName}`,
+          employeeId: employee._id.toString(),
+        },
+      });
+    } catch (timeTrackingError) {
+      // Log error but don't fail login
+      console.error("Time tracking error during login:", timeTrackingError);
     }
 
     // Generate token
@@ -327,6 +356,39 @@ export const logout = async (
     if (user) {
       // Get associated employee for logging
       const employee = await Employee.findOne({ email: user.email });
+
+      if (employee) {
+        // Handle time tracking - auto check-out
+        try {
+          await handleLogoutCheckOut(
+            user._id.toString(),
+            employee._id.toString()
+          );
+
+          // Create and broadcast activity for check-out
+          await createAndBroadcastActivity(req, {
+            message: `${employee.firstName} ${employee.lastName} checked out via logout`,
+            type: "auto_checkout",
+            entityId: user._id.toString(),
+            entityType: "time_tracking",
+            userId: user._id.toString(),
+            userName: `${employee.firstName} ${employee.lastName}`,
+            userType: user.role === "admin" ? "admin" : "employee",
+            metadata: {
+              logoutTime: new Date().toISOString(),
+              source: "logout",
+              employeeName: `${employee.firstName} ${employee.lastName}`,
+              employeeId: employee._id.toString(),
+            },
+          });
+        } catch (timeTrackingError) {
+          // Log error but don't fail logout
+          console.error(
+            "Time tracking error during logout:",
+            timeTrackingError
+          );
+        }
+      }
 
       // Create and broadcast activity for logout
       await createAndBroadcastActivity(req, {

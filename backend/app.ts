@@ -7,6 +7,7 @@ import leadRoutes from "./routes/leadRoutes";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
 import activityRoutes from "./routes/activityRoutes";
+import timeTrackingRoutes from "./routes/timeTrackingRoutes";
 import cors from "cors";
 import { globalErrorHandler } from "./utils/errorHandler";
 import adminRoutes from "./routes/adminRoutes";
@@ -58,6 +59,9 @@ app.use("/api/v1/leads", leadRoutes);
 
 // Activity routes
 app.use("/api/v1/activities", activityRoutes);
+
+// Time tracking routes
+app.use("/api/v1/time-tracking", timeTrackingRoutes);
 
 // Admin routes - no authentication required for demo
 app.use("/api/v1/admin", adminRoutes);

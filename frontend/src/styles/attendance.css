@@ -5,6 +5,15 @@
   min-height: calc(100vh - 80px);
 }
 
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 16px;
+  color: #6b7280;
+}
+
 .attendance-header {
   margin-bottom: 24px;
   padding: 0 4px;
@@ -66,6 +75,16 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 .current-time {
   text-align: center;
   margin-bottom: 32px;
@@ -109,9 +128,17 @@
   gap: 12px;
 }
 
+.timing-action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 .check-in-btn,
 .check-out-btn,
 .break-start-btn,
+.break-end-btn,
+.break-btn,
 .break-end-btn {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -123,23 +150,32 @@
   cursor: pointer;
   transition: all 0.2s;
   backdrop-filter: blur(10px);
+  flex: 1;
 }
 
 .check-in-btn:hover,
-.break-start-btn:hover {
+.break-start-btn:hover,
+.break-btn:hover,
+.break-end-btn:hover {
   background: rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.5);
 }
 
-.check-out-btn,
-.break-end-btn {
+.check-out-btn {
   background: rgba(239, 68, 68, 0.3);
   border-color: rgba(239, 68, 68, 0.5);
 }
 
-.check-out-btn:hover,
-.break-end-btn:hover {
+.check-out-btn:hover {
   background: rgba(239, 68, 68, 0.4);
+}
+
+.check-in-btn:disabled,
+.check-out-btn:disabled,
+.break-btn:disabled,
+.break-end-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .checked-in-info,
@@ -154,11 +190,42 @@
   font-size: 12px;
   color: rgba(255, 255, 255, 0.9);
   text-align: center;
+  margin-bottom: 8px;
 }
 
-/* Attendance Records Card */
-.attendance-records-card,
-.recent-activity-card {
+/* Hours Summary */
+.hours-summary {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.hours-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.hours-item:last-child {
+  margin-bottom: 0;
+}
+
+.hours-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.hours-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+}
+
+/* Attendance Table Card */
+.attendance-table-card,
+.activity-feed-card {
   background: white;
   border-radius: 12px;
   padding: 24px;
@@ -166,111 +233,95 @@
   border: 1px solid #e5e7eb;
 }
 
-.attendance-records-card h3,
-.recent-activity-card h3 {
+.attendance-table-card h3,
+.activity-feed-card h3 {
   font-size: 18px;
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 20px 0;
 }
 
-/* Records Table */
-.records-table {
+.table-header {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
-.table-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.5fr 1fr;
-  gap: 12px;
-  padding: 12px 16px;
-  background: #f9fafb;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
+.week-summary {
+  font-size: 14px;
   color: #6b7280;
+  font-weight: 500;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.attendance-table th {
+  background: #f9fafb;
+  color: #6b7280;
+  font-weight: 600;
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.table-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1.5fr 1fr;
-  gap: 12px;
-  padding: 16px;
-  border: 1px solid #f3f4f6;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #1f2937;
-  transition: background-color 0.2s;
-}
-
-.table-row:hover {
-  background-color: #f9fafb;
-}
-
-.date-cell {
-  font-weight: 500;
-}
-
-.time-cell,
-.total-cell {
-  font-weight: 500;
-  color: #3b82f6;
-}
-
-.break-cell {
   font-size: 12px;
-  color: #6b7280;
 }
 
-/* Recent Activity */
+.attendance-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+}
+
+.attendance-table tr:hover {
+  background: #f9fafb;
+}
+
+.attendance-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Activity Feed */
 .activity-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .activity-item {
   display: flex;
+  justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 6px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 8px;
   transition: background-color 0.2s;
 }
 
 .activity-item:hover {
-  background-color: #f9fafb;
-}
-
-.activity-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #10b981;
-  margin-top: 6px;
-  flex-shrink: 0;
-}
-
-.activity-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  background: #f3f4f6;
 }
 
 .activity-message {
   font-size: 14px;
-  color: #1f2937;
-  margin: 0;
-  line-height: 1.4;
+  color: #374151;
+  flex: 1;
 }
 
 .activity-time {
   font-size: 12px;
   color: #6b7280;
+  white-space: nowrap;
+  margin-left: 12px;
 }
 
 /* Responsive Design */
@@ -284,11 +335,11 @@
     order: 1;
   }
 
-  .attendance-records-card {
+  .attendance-table-card {
     order: 2;
   }
 
-  .recent-activity-card {
+  .activity-feed-card {
     order: 3;
   }
 }
@@ -298,10 +349,14 @@
     padding: 16px;
   }
 
-  .user-profile-card,
-  .attendance-records-card,
-  .recent-activity-card {
-    padding: 20px;
+  .timing-action-buttons {
+    flex-direction: column;
+  }
+
+  .timing-action-buttons .check-out-btn,
+  .timing-action-buttons .break-btn,
+  .timing-action-buttons .break-end-btn {
+    flex: none;
   }
 
   .profile-header {
@@ -314,42 +369,13 @@
     font-size: 28px;
   }
 
-  .table-header,
-  .table-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .table-header span,
-  .table-row span {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .table-header span::before,
-  .table-row span::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: #6b7280;
+  .attendance-table {
     font-size: 12px;
   }
 
-  /* User table labels */
-  .date-cell::before {
-    content: "Date: ";
-  }
-  .time-cell:nth-child(2)::before {
-    content: "Check In: ";
-  }
-  .time-cell:nth-child(3)::before {
-    content: "Check Out: ";
-  }
-  .break-cell::before {
-    content: "Break: ";
-  }
-  .total-cell::before {
-    content: "Total: ";
+  .attendance-table th,
+  .attendance-table td {
+    padding: 8px 12px;
   }
 }
 
@@ -363,12 +389,23 @@
   }
 
   .profile-name {
-    font-size: 20px;
+    font-size: 20px !important;
   }
 
   .avatar-circle-large {
     width: 50px;
     height: 50px;
-    font-size: 16px;
+    font-size: 18px;
+  }
+
+  .attendance-table th,
+  .attendance-table td {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+
+  .status-badge {
+    padding: 2px 6px;
+    font-size: 10px;
   }
 }
