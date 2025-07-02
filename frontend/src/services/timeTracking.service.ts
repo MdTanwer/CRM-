@@ -6,6 +6,8 @@ export interface TimeEntry {
   _id: string;
   employeeId: string;
   date: string;
+  type: "check_in" | "check_out" | "break_start" | "break_end";
+  timestamp: string;
   checkInTime?: string;
   checkOutTime?: string;
   breaks: Break[];

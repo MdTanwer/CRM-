@@ -3,7 +3,7 @@ import { useLocation, Link } from "react-router-dom";
 import { Sidebar } from "../components/layout/Sidebar";
 import { StatsCards } from "../components/dashboard/StatsCards";
 import { SalesChart } from "../components/dashboard/SalesChart";
-import { ActivityFeed } from "../components/dashboard/ActivityFeed";
+
 import { LeadsTable } from "../components/dashboard/LeadsTable";
 import "../styles/dashboard.css";
 import { dashboardStats, employeesData } from "../data/dummyData";
@@ -21,6 +21,7 @@ import {
   getAssignedLeadsCount,
   getUnassignedLeadsCount,
 } from "../services/leads.service";
+import ActivityFeed from "../components/dashboard/ActivityFeed";
 
 interface LeadStats {
   stats: { _id: string | null; count: number }[];
@@ -218,7 +219,7 @@ export const AdminDashboard: React.FC = () => {
             <SalesChart key={`sales-chart-${dataRefreshKey}`} />
 
             {/* Activity Feed - Now handles its own real-time data */}
-            <ActivityFeed limit={5} />
+            <ActivityFeed />
           </div>
 
           {/* Leads Table */}

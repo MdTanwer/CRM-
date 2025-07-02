@@ -11,19 +11,12 @@ import {
   isUserCheckedIn,
   type TimeTrackingRecord,
 } from "../services/timeTracking.service";
-import {
-  getRecentActivities,
-  createActivity,
-  getUserType,
-  type Activity as DatabaseActivity,
-  type EmployeeActivityType,
-} from "../services/activities.service";
+
 import userSocketService, {
   type RealtimeActivity,
 } from "../services/userSocket.service";
 import "../styles/user-dashboard.css";
 import { BottomNavigation } from "../components/BottomNavigation";
-import { useUserType } from "../hooks/useUserType";
 
 interface TimingInfo {
   checkedIn: boolean;
@@ -50,12 +43,7 @@ interface ActivityItem {
 export const UserDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, token } = useAuth();
-  const {
-    userType,
-    isAdmin,
-    isEmployee,
-    isLoading: userTypeLoading,
-  } = useUserType();
+
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentStatus, setCurrentStatus] = useState<string>("checked_out");
   const [timeTracking, setTimeTracking] = useState<TimeTrackingRecord | null>(
@@ -74,200 +62,6 @@ export const UserDashboardPage: React.FC = () => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
-
-  // Convert database activity to dashboard activity format
-  const convertDatabaseActivityToDashboard = (
-    dbActivity: DatabaseActivity
-  ): ActivityItem => {
-    return {
-      id: dbActivity.id,
-      message: dbActivity.message,
-      time: dbActivity.timeAgo,
-      type:
-        dbActivity.type === "deal_closed"
-          ? "deal"
-          : dbActivity.type === "lead_status_changed"
-          ? "lead"
-          : "call",
-    };
-  };
-
-  // Load activities from database using new service
-  useEffect(() => {
-    const loadActivities = async () => {
-      if (!token || userTypeLoading) return;
-
-      try {
-        setActivitiesLoading(true);
-        const activities = await getRecentActivities(token, 5, userType);
-        const dashboardActivities = activities.map(
-          convertDatabaseActivityToDashboard
-        );
-        setRecentActivity(dashboardActivities);
-        console.log(
-          `📚 Loaded ${userType} activities from database:`,
-          dashboardActivities
-        );
-      } catch (error) {
-        console.error("Error loading activities:", error);
-        // Don't show error toast as this is not critical
-      } finally {
-        setActivitiesLoading(false);
-      }
-    };
-
-    loadActivities();
-  }, [token, userType, userTypeLoading]);
-
-  // Function to refresh activities from database
-  const refreshActivities = async () => {
-    if (!token) return;
-
-    try {
-      setActivitiesLoading(true);
-      const activities = await getRecentActivities(token, 5, userType);
-      const dashboardActivities = activities.map(
-        convertDatabaseActivityToDashboard
-      );
-      setRecentActivity(dashboardActivities);
-      console.log(
-        `🔄 Refreshed ${userType} activities from database:`,
-        dashboardActivities
-      );
-      toast.success("Activities refreshed!");
-    } catch (error) {
-      console.error("Error refreshing activities:", error);
-      toast.error("Failed to refresh activities");
-    } finally {
-      setActivitiesLoading(false);
-    }
-  };
-
-  // Initialize socket connection with proper user type
-  useEffect(() => {
-    if (user && user._id && (user.name || user.email) && !userTypeLoading) {
-      console.log(`Initializing socket for ${userType} user:`, user);
-
-      // Connect to socket (only if not already connected)
-      if (!userSocketService.isConnected()) {
-        userSocketService.connect({
-          userId: user._id,
-          userName: user.name || user.email,
-          userType: userType,
-        });
-        console.log(`Connected to socket as ${userType}`);
-      } else {
-        console.log("Socket already connected, reusing existing connection");
-      }
-
-      // Subscribe to appropriate activity updates based on user type
-      let unsubscribeActivity: (() => void) | undefined;
-
-      if (isEmployee) {
-        // Employee users see employee activities
-        unsubscribeActivity = userSocketService.onEmployeeActivityUpdate(
-          (newActivity: RealtimeActivity) => {
-            console.log("🚀 Employee received new activity:", newActivity);
-            handleSocketActivity(newActivity);
-          }
-        );
-      } else if (isAdmin) {
-        // Admin users see all activities
-        unsubscribeActivity = userSocketService.onActivityUpdate(
-          (newActivity: RealtimeActivity) => {
-            console.log("🚀 Admin received new activity:", newActivity);
-            handleSocketActivity(newActivity);
-          }
-        );
-      }
-
-      // Subscribe to connection status
-      const unsubscribeConnection = userSocketService.onConnectionChange(
-        (connected: boolean) => {
-          setIsSocketConnected(connected);
-          console.log(`Socket connection status changed: ${connected}`);
-        }
-      );
-
-      // Initial connection status
-      setIsSocketConnected(userSocketService.isConnected());
-
-      // Cleanup function
-      return () => {
-        if (unsubscribeActivity) unsubscribeActivity();
-        unsubscribeConnection();
-      };
-    }
-  }, [user, userType, userTypeLoading, isAdmin, isEmployee]);
-
-  // Handle new activity from socket
-  const handleSocketActivity = (newActivity: RealtimeActivity) => {
-    // Convert socket activity to dashboard activity format
-    const dashboardActivity: ActivityItem = {
-      id: newActivity.id,
-      message: newActivity.message,
-      time: newActivity.timeAgo,
-      type:
-        newActivity.type === "deal_closed"
-          ? "deal"
-          : newActivity.type === "lead_status_changed"
-          ? "lead"
-          : "call",
-    };
-
-    console.log("📊 Converted to dashboard activity:", dashboardActivity);
-
-    // Add to recent activity (limit to 5 items)
-    setRecentActivity((prev) => {
-      console.log("📝 Previous activities:", prev);
-
-      // Check if this activity already exists (to avoid duplicates)
-      const exists = prev.some(
-        (activity) => activity.id === dashboardActivity.id
-      );
-      if (exists) {
-        console.log("🔄 Activity already exists, skipping duplicate");
-        return prev;
-      }
-
-      const updated = [dashboardActivity, ...prev].slice(0, 5);
-      console.log("✅ Updated activities:", updated);
-      return updated;
-    });
-  };
-
-  // Create test activity using new service
-  const createTestActivity = async () => {
-    if (!token || !user) return;
-
-    console.log("🚀 Creating test activity via new API");
-    console.log("User info:", user);
-
-    try {
-      const activityData = {
-        message: `Test activity created by ${
-          user.name || user.email
-        } using new system`,
-        type: "lead_status_changed" as EmployeeActivityType,
-        entityId: "test-lead-123",
-        entityType: "lead" as const,
-        metadata: {
-          leadName: "Test Lead",
-          newStatus: "Closed",
-          oldStatus: "Open",
-          testCreatedBy: user.name || user.email,
-          testTimestamp: new Date().toISOString(),
-        },
-      };
-
-      const activity = await createActivity(token, activityData, userType);
-      console.log("✅ Test activity created:", activity);
-      toast.success("Test activity created successfully!");
-    } catch (error) {
-      console.error("❌ Error creating test activity:", error);
-      toast.error("Failed to create test activity");
-    }
-  };
 
   // Load time tracking data
   useEffect(() => {
@@ -445,17 +239,7 @@ export const UserDashboardPage: React.FC = () => {
             fontSize: "12px",
             color: isSocketConnected ? "#10b981" : "#ef4444",
           }}
-        >
-          <div
-            style={{
-              width: "8px",
-              height: "8px",
-              borderRadius: "50%",
-              backgroundColor: isSocketConnected ? "#10b981" : "#ef4444",
-            }}
-          ></div>
-          {isSocketConnected ? "Live" : "Offline"}
-        </div>
+        ></div>
       </div>
 
       {/* Current Time Display */}
@@ -594,54 +378,6 @@ export const UserDashboardPage: React.FC = () => {
       </div>
 
       {/* Debug Section - Remove this in production */}
-      {import.meta.env.DEV && (
-        <div
-          style={{
-            margin: "20px 25px",
-            padding: "15px",
-            backgroundColor: "#f3f4f6",
-            borderRadius: "8px",
-            fontSize: "12px",
-          }}
-        >
-          <h4 style={{ margin: "0 0 10px 0", color: "#374151" }}>
-            Debug Info ({userType} mode)
-          </h4>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-            <button
-              onClick={createTestActivity}
-              style={{
-                padding: "5px 10px",
-                backgroundColor: "#ef4444",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-            >
-              Test New Activity System
-            </button>
-            <button
-              onClick={refreshActivities}
-              style={{
-                padding: "5px 10px",
-                marginLeft: "10px",
-                backgroundColor: "#06b6d4",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-            >
-              Refresh Activities
-            </button>
-          </div>
-          <div style={{ marginTop: "10px", color: "#6b7280" }}>
-            Socket: {isSocketConnected ? "Connected" : "Disconnected"} | User
-            Type: {userType} | Activities: {recentActivity.length}
-          </div>
-        </div>
-      )}
 
       {/* Status Indicator */}
       {timeTracking && (
@@ -697,7 +433,6 @@ export const UserDashboardPage: React.FC = () => {
                 backgroundColor: isSocketConnected ? "#10b981" : "#ef4444",
               }}
             ></div>
-            {isSocketConnected ? "Live Updates" : "Offline"}
           </div>
         </div>
         <div className="activity-list">

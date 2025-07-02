@@ -13,7 +13,6 @@ interface RealtimeActivity {
   userType?: "admin" | "employee";
   userId?: string;
   userName?: string;
-  priority?: "low" | "medium" | "high" | "critical";
 }
 
 interface SocketUser {
