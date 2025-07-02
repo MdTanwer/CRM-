@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { FaUpload, FaFileAlt, FaCheck, FaTimes } from "react-icons/fa";
 import "../../styles/csvupload.css";
+import { LEAD_API } from "../../config/api.config";
 
 interface CsvUploadProps {
   onUploadSuccess?: () => void;
@@ -59,21 +60,17 @@ export const CsvUpload: React.FC<CsvUploadProps> = ({
     formData.append("distributionStrategy", distributionStrategy);
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/v1/leads/upload-csv",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: (progressEvent) => {
-            const progress = progressEvent.total
-              ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-              : 0;
-            setUploadProgress(progress);
-          },
-        }
-      );
+      const response = await axios.post(`${LEAD_API}/upload-csv`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (progressEvent) => {
+          const progress = progressEvent.total
+            ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            : 0;
+          setUploadProgress(progress);
+        },
+      });
 
       if (response.data.errors && response.data.errors.length > 0) {
         setUploadErrors(response.data.errors);

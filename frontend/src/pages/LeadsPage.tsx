@@ -9,6 +9,7 @@ import "../styles/dashboard.css";
 import "../styles/leads.css";
 import "../styles/leadsupload.css";
 import type { Lead } from "../types";
+import { LEAD_API } from "../config/api.config";
 
 const PAGE_SIZE = 10;
 
@@ -34,7 +35,7 @@ export const LeadsPage: React.FC = () => {
       setError(null);
 
       try {
-        const response = await axios.get("http://localhost:3000/api/v1/leads", {
+        const response = await axios.get(LEAD_API, {
           params: {
             page: page + 1, // API uses 1-based indexing
             limit: PAGE_SIZE,

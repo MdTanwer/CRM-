@@ -1,32 +1,16 @@
 import axios from "axios";
 import { createAuthenticatedAxiosInstance } from "./auth.service";
+import type { Lead } from "../types";
+import { LEAD_API } from "../config/api.config";
 
-const API_URL = "http://localhost:3000/api/v1/leads";
-
-export interface Lead {
-  _id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  status: "Open" | "Closed" | "Ongoing" | "Pending";
-  type: "Hot" | "Warm" | "Cold";
-  language: string;
-  location: string;
-  receivedDate: string;
-  assignedEmployee?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Get all leads assigned to the logged-in user
-export const getUserLeads = async (token: string) => {
+// Get my assigned leads
+export const getMyLeads = async (token: string) => {
   try {
-    const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.get(`${API_URL}/my-leads`);
-    return response.data.data.leads;
-  } catch (error) {
-    console.error("Error fetching user leads:", error);
-    throw error;
+    const authAxios = createAuthenticatedAxiosInstance(token);
+    const response = await authAxios.get(`${LEAD_API}/my-leads`);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
   }
 };
 
@@ -37,14 +21,13 @@ export const updateLeadStatus = async (
   status: string
 ) => {
   try {
-    const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.patch(`${API_URL}/${leadId}/status`, {
+    const authAxios = createAuthenticatedAxiosInstance(token);
+    const response = await authAxios.put(`${LEAD_API}/${leadId}/status`, {
       status,
     });
-    return response.data.data.lead;
-  } catch (error) {
-    console.error("Error updating lead status:", error);
-    throw error;
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
   }
 };
 
@@ -55,19 +38,18 @@ export const updateLeadType = async (
   type: string
 ) => {
   try {
-    const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.patch(`${API_URL}/${leadId}/type`, {
+    const authAxios = createAuthenticatedAxiosInstance(token);
+    const response = await authAxios.put(`${LEAD_API}/${leadId}/type`, {
       type,
     });
-    return response.data.data.lead;
-  } catch (error) {
-    console.error("Error updating lead type:", error);
-    throw error;
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
   }
 };
 
-// Schedule a call with a lead
-export const scheduleLeadCall = async (
+// Schedule a call with lead
+export const scheduleCall = async (
   token: string,
   leadId: string,
   date: string,
@@ -76,26 +58,44 @@ export const scheduleLeadCall = async (
 ) => {
   try {
     const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.post(`${API_URL}/${leadId}/schedule`, {
-      date,
-      time,
-      notes,
-    });
-    return response.data.data.schedule;
+    const response = await axiosInstance.post(
+      `${LEAD_API}/${leadId}/schedule`,
+      {
+        date,
+        time,
+        notes,
+      }
+    );
+    return response.data;
   } catch (error) {
     console.error("Error scheduling call:", error);
     throw error;
   }
 };
 
-// Get schedules for a specific lead
+// Get lead schedules
 export const getLeadSchedules = async (token: string, leadId: string) => {
   try {
     const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.get(`${API_URL}/${leadId}/schedules`);
+    const response = await axiosInstance.get(`${LEAD_API}/${leadId}/schedules`);
     return response.data.data;
   } catch (error) {
     console.error("Error fetching lead schedules:", error);
+    throw error;
+  }
+};
+
+// Get employee schedule for date
+export const getEmployeeScheduleForDate = async (
+  token: string,
+  date: string
+) => {
+  try {
+    const axiosInstance = createAuthenticatedAxiosInstance(token);
+    const response = await axiosInstance.get(`${LEAD_API}/my-schedule/${date}`);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching employee schedule:", error);
     throw error;
   }
 };
@@ -108,21 +108,6 @@ export const canLeadBeClosed = async (token: string, leadId: string) => {
   } catch (error) {
     console.error("Error checking if lead can be closed:", error);
     return false;
-  }
-};
-
-// Get employee's schedule for a specific date
-export const getEmployeeScheduleForDate = async (
-  token: string,
-  date: string
-) => {
-  try {
-    const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.get(`${API_URL}/my-schedule/${date}`);
-    return response.data.data;
-  } catch (error) {
-    console.error("Error fetching employee schedule for date:", error);
-    throw error;
   }
 };
 
@@ -142,4 +127,67 @@ export const isTimeSlotAvailable = async (
     console.error("Error checking time slot availability:", error);
     return true; // If error, assume available
   }
+};
+
+// API functions for leads (no auth required for some)
+export const leadsAPI = {
+  // Get all leads with query parameters
+  getAllLeads: async (params: any = {}) => {
+    const response = await axios.get(LEAD_API, { params });
+    return response.data;
+  },
+
+  // Get lead by ID
+  getLeadById: async (id: string) => {
+    const response = await axios.get(`${LEAD_API}/${id}`);
+    return response.data;
+  },
+
+  // Create new lead
+  createLead: async (leadData: Partial<Lead>) => {
+    const response = await axios.post(LEAD_API, leadData);
+    return response.data;
+  },
+
+  // Update lead
+  updateLead: async (id: string, leadData: Partial<Lead>) => {
+    const response = await axios.put(`${LEAD_API}/${id}`, leadData);
+    return response.data;
+  },
+
+  // Delete lead
+  deleteLead: async (id: string) => {
+    const response = await axios.delete(`${LEAD_API}/${id}`);
+    return response.data;
+  },
+
+  // Upload CSV
+  uploadCSV: async (formData: FormData) => {
+    const response = await axios.post(`${LEAD_API}/upload-csv`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+
+  // Get lead statistics
+  getLeadStats: async () => {
+    const response = await axios.get(`${LEAD_API}/stats`);
+    return response.data;
+  },
+
+  // Get recent leads
+  getRecentLeads: async (limit = 10) => {
+    const response = await axios.get(`${LEAD_API}/recent`, {
+      params: { limit },
+    });
+    return response.data;
+  },
+
+  // Get unassigned leads count
+  getUnassignedLeadsCount: async () => {
+    const response = await axios.get(`${LEAD_API}/unassigned/count`);
+    return response.data;
+  },
 };

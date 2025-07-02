@@ -22,6 +22,7 @@ import {
 import axios from "axios";
 import { toast } from "react-toastify";
 import "../../styles/employees.css";
+import { EMPLOYEE_API } from "../../config/api.config";
 
 interface Employee {
   _id: string;
@@ -76,9 +77,7 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
     try {
       setIsDeleting(true);
       // Call the delete API
-      await axios.delete(
-        `http://localhost:3000/api/v1/employees/${employeeId}`
-      );
+      const response = await axios.delete(`${EMPLOYEE_API}/${employeeId}`);
 
       // Show success message
       toast.success("Employee deleted successfully");

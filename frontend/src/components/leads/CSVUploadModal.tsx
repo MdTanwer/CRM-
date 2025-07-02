@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import "../../styles/leads.css";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { LEAD_API } from "../../config/api.config";
 
 interface CSVUploadModalProps {
   onClose: () => void;
@@ -65,21 +66,17 @@ export const CSVUploadModal: React.FC<CSVUploadModalProps> = ({ onClose }) => {
     formData.append("distributionStrategy", "smart");
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/v1/leads/upload-csv",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: (progressEvent) => {
-            const progress = progressEvent.total
-              ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-              : 0;
-            setUploadProgress(progress);
-          },
-        }
-      );
+      const response = await axios.post(`${LEAD_API}/upload-csv`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (progressEvent) => {
+          const progress = progressEvent.total
+            ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            : 0;
+          setUploadProgress(progress);
+        },
+      });
 
       if (response.data.errors && response.data.errors.length > 0) {
         toast.warning(
@@ -105,15 +102,17 @@ export const CSVUploadModal: React.FC<CSVUploadModalProps> = ({ onClose }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="csv-upload-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">CSV Upload</h2>
+          <div>
+            {" "}
+            <h2 className="modal-title">CSV Upload</h2>
+            <p className="upload-subtitle">Add your document here</p>
+          </div>
           <button className="close-btn" onClick={onClose}>
             ×
           </button>
         </div>
 
         <div className="modal-content">
-          <p className="upload-subtitle">Add your document here</p>
-
           <div
             className={`upload-area ${isDragOver ? "drag-over" : ""}`}
             onDragOver={handleDragOver}

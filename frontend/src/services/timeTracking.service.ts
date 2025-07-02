@@ -1,10 +1,51 @@
 import axios from "axios";
+import { TIME_TRACKING_API } from "../config/api.config";
 
-const API_BASE_URL = "http://localhost:3000/api/v1";
+// Types
+export interface TimeEntry {
+  _id: string;
+  employeeId: string;
+  date: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  breaks: Break[];
+  totalWorkTime: number;
+  status: "present" | "absent" | "partial";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Break {
+  startTime: string;
+  endTime?: string;
+  duration?: number;
+  type: "lunch" | "tea" | "personal" | "other";
+  reason?: string;
+}
+
+// Auth helper
+const getAuthHeaders = (token: string) => ({
+  Authorization: `Bearer ${token}`,
+});
+
+// Check in
+export const checkIn = async (token: string) => {
+  try {
+    const response = await axios.post(
+      `${TIME_TRACKING_API}/checkin`,
+      {},
+      { headers: getAuthHeaders(token) }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error checking in:", error);
+    throw error;
+  }
+};
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: TIME_TRACKING_API,
   headers: {
     "Content-Type": "application/json",
   },
@@ -18,13 +59,6 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
-
-export interface TimeEntry {
-  type: "check_in" | "check_out" | "break_start" | "break_end";
-  timestamp: Date;
-  source: "manual" | "login" | "logout" | "auto";
-  notes?: string;
-}
 
 export interface TimeTrackingRecord {
   _id: string;

@@ -6,6 +6,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import "../styles/employees.css";
 import { EmployeesTable } from "../components/employees/EmployeesTable";
+import { EMPLOYEE_API } from "../config/api.config";
 
 interface Employee {
   _id: string;
@@ -53,10 +54,7 @@ export const EmployeesPage: React.FC = () => {
         params.search = search.trim();
       }
 
-      const response = await axios.get(
-        "http://localhost:3000/api/v1/employees",
-        { params }
-      );
+      const response = await axios.get(EMPLOYEE_API, { params });
 
       const apiData = response.data.data?.employees || [];
       const totalEmployees =
@@ -122,7 +120,7 @@ export const EmployeesPage: React.FC = () => {
     try {
       if (isEditing && currentEmployee) {
         const response = await axios.patch(
-          `http://localhost:3000/api/v1/employees/${currentEmployee._id}`,
+          `${EMPLOYEE_API}/${currentEmployee._id}`,
           employeeData
         );
 
@@ -130,10 +128,7 @@ export const EmployeesPage: React.FC = () => {
       } else {
         // Create new employee
 
-        const response = await axios.post(
-          "http://localhost:3000/api/v1/employees",
-          employeeData
-        );
+        const response = await axios.post(EMPLOYEE_API, employeeData);
         toast.success("Employee added successfully!");
       }
 

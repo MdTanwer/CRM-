@@ -116,17 +116,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #f3f4f6;
   padding-bottom: 16px;
-  margin-bottom: 24px;
 }
 
 .modal-title {
-  font-size: 45px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
   color: #000000;
-  margin: 0;
-  border: 1px solid red;
+  font-family: "Inter", sans-serif;
 }
 
 .close-btn {

@@ -6,10 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "../styles/dashboard.css";
 import "../styles/settings.css";
 import "../styles/employees.css";
-
-// API URLs
-const API_BASE_URL = "http://localhost:3000/api/v1";
-const ADMIN_API = `${API_BASE_URL}/admin`;
+import { ADMIN_API } from "../config/api.config";
 
 export const SettingsPage: React.FC = () => {
   const location = useLocation();

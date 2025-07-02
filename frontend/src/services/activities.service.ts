@@ -1,4 +1,10 @@
 import { createAuthenticatedAxiosInstance } from "./auth.service";
+import axios from "axios";
+import {
+  ACTIVITY_API,
+  EMPLOYEE_ACTIVITY_API,
+  ADMIN_ACTIVITY_API,
+} from "../config/api.config";
 
 const API_URL = "http://localhost:3000/api/v1/activities";
 const EMPLOYEE_API_URL = "http://localhost:3000/api/v1/employee-activities";
@@ -367,6 +373,36 @@ export const createActivity = async (
     return response.data.data.activity;
   } catch (error) {
     console.error("Error creating activity:", error);
+    throw error;
+  }
+};
+
+export const getActivities = async () => {
+  try {
+    const response = await axios.get(ACTIVITY_API);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching activities:", error);
+    throw error;
+  }
+};
+
+export const getEmployeeActivities = async () => {
+  try {
+    const response = await axios.get(EMPLOYEE_ACTIVITY_API);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching employee activities:", error);
+    throw error;
+  }
+};
+
+export const getAdminActivities = async () => {
+  try {
+    const response = await axios.get(ADMIN_ACTIVITY_API);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching admin activities:", error);
     throw error;
   }
 };

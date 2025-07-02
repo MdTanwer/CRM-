@@ -1,4 +1,5 @@
 import { io, Socket } from "socket.io-client";
+import { SOCKET_BASE_URL } from "../config/api.config";
 
 interface RealtimeActivity {
   id: string;
@@ -40,7 +41,7 @@ class SocketService {
     }
 
     try {
-      this.socket = io("http://localhost:3000", {
+      this.socket = io(SOCKET_BASE_URL, {
         transports: ["websocket", "polling"],
         timeout: 20000,
         forceNew: true,

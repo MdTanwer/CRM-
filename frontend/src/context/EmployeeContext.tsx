@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 import { useService } from "./ServiceContext";
 import type { PaginatedResponse } from "../types";
+import { EMPLOYEE_API } from "../config/api.config";
 
 interface Employee {
   id: string;
@@ -81,7 +82,7 @@ const defaultFilters: EmployeeFilters = {
 };
 
 // API endpoint
-const API_ENDPOINT = "http://localhost:3000/api/v1/employees";
+const API_ENDPOINT = EMPLOYEE_API;
 
 // Provider component
 export const EmployeeProvider: React.FC<EmployeeProviderProps> = ({

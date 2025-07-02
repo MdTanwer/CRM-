@@ -1,6 +1,5 @@
-import { createAuthenticatedAxiosInstance } from "./auth.service";
-
-const API_URL = "http://localhost:3000/api/v1/leads";
+import axios from "axios";
+import { LEAD_API } from "../config/api.config";
 
 export interface ScheduleItem {
   _id: string;
@@ -16,13 +15,16 @@ export interface ScheduleItem {
 }
 
 // Get all scheduled calls for the logged-in user
-export const getUserSchedule = async (token: string) => {
+export const getMySchedule = async (token: string) => {
   try {
-    const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.get(`${API_URL}/my-schedule`);
-    return response.data.data.schedules;
+    const response = await axios.get(`${LEAD_API}/my-schedule`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
   } catch (error) {
-    console.error("Error fetching user schedule:", error);
+    console.error("Error fetching schedule:", error);
     throw error;
   }
 };
@@ -34,14 +36,16 @@ export const updateScheduleStatus = async (
   status: string
 ) => {
   try {
-    const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.patch(
-      `${API_URL}/schedule/${scheduleId}/status`,
+    const response = await axios.patch(
+      `${LEAD_API}/schedule/${scheduleId}/status`,
+      { status },
       {
-        status,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
-    return response.data.data.schedule;
+    return response.data;
   } catch (error) {
     console.error("Error updating schedule status:", error);
     throw error;
@@ -54,14 +58,16 @@ export const cancelScheduledCall = async (
   scheduleId: string
 ) => {
   try {
-    const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.patch(
-      `${API_URL}/schedule/${scheduleId}/status`,
+    const response = await axios.patch(
+      `${LEAD_API}/schedule/${scheduleId}/status`,
+      { status: "cancelled" },
       {
-        status: "cancelled",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
-    return response.data.data.schedule;
+    return response.data;
   } catch (error) {
     console.error("Error cancelling scheduled call:", error);
     throw error;
@@ -74,16 +80,51 @@ export const completeScheduledCall = async (
   scheduleId: string
 ) => {
   try {
-    const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.patch(
-      `${API_URL}/schedule/${scheduleId}/status`,
+    const response = await axios.patch(
+      `${LEAD_API}/schedule/${scheduleId}/status`,
+      { status: "completed" },
       {
-        status: "completed",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
-    return response.data.data.schedule;
+    return response.data;
   } catch (error) {
     console.error("Error marking call as completed:", error);
+    throw error;
+  }
+};
+
+// Check if lead can be closed (no future schedules)
+export const canCloseLeadCheck = async (token: string, leadId: string) => {
+  try {
+    const response = await axios.get(`${LEAD_API}/${leadId}/can-close`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error checking if lead can be closed:", error);
+    throw error;
+  }
+};
+
+// Check if employee has any schedules for a specific date
+export const checkEmployeeScheduleForDate = async (
+  token: string,
+  date: string
+) => {
+  try {
+    const response = await axios.get(`${LEAD_API}/my-schedule/${date}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error checking employee schedule for date:", error);
     throw error;
   }
 };

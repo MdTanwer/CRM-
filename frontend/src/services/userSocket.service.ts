@@ -1,4 +1,5 @@
 import { io, Socket } from "socket.io-client";
+import { SOCKET_BASE_URL } from "../config/api.config";
 
 interface RealtimeActivity {
   id: string;
@@ -36,20 +37,24 @@ class UserSocketService {
   private currentUser: SocketUser | null = null;
 
   // Initialize socket connection
-  connect(user?: SocketUser): void {
+  connect(token?: string): void {
     if (this.socket?.connected) {
       console.log("🔄 Socket already connected");
       return;
     }
 
     // Store user for reconnection
-    if (user) {
-      this.currentUser = user;
+    if (token) {
+      this.currentUser = {
+        userId: token,
+        userName: token,
+        userType: "employee",
+      };
     }
 
     try {
       console.log("🚀 Connecting to socket server...");
-      this.socket = io("http://localhost:3000", {
+      this.socket = io(SOCKET_BASE_URL, {
         transports: ["websocket", "polling"],
         timeout: 20000,
         forceNew: true,
@@ -108,7 +113,7 @@ class UserSocketService {
         this.reconnectAttempts++;
         setTimeout(() => {
           if (this.currentUser && !this.socket?.connected) {
-            this.connect(this.currentUser);
+            this.connect(this.currentUser?.userId);
           }
         }, this.reconnectInterval);
       }

@@ -4,6 +4,7 @@ import { FaTimes, FaUserPlus, FaFileUpload } from "react-icons/fa";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "../../styles/addLeadModal.css";
+import { LEAD_API } from "../../config/api.config";
 
 interface AddLeadModalProps {
   isOpen: boolean;
@@ -137,10 +138,7 @@ export const AddLeadModal: React.FC<AddLeadModalProps> = ({
         autoAssign: !formData.assignedEmployee,
       };
 
-      const response = await axios.post(
-        "http://localhost:3000/api/v1/leads",
-        payload
-      );
+      const response = await axios.post(LEAD_API, payload);
 
       toast.success("Lead created successfully");
 

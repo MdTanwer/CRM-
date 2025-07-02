@@ -1,3 +1,5 @@
+import axios from "axios";
+import { USER_API } from "../config/api.config";
 import { createAuthenticatedAxiosInstance } from "./auth.service";
 
 const API_URL = "http://localhost:3000/api/v1/users";
@@ -13,9 +15,12 @@ export interface UserProfile {
 // Get user profile
 export const getUserProfile = async (token: string) => {
   try {
-    const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.get(`${API_URL}/profile`);
-    return response.data.data.user;
+    const response = await axios.get(USER_API, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
   } catch (error) {
     console.error("Error fetching user profile:", error);
     throw error;
