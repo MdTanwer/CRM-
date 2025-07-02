@@ -10,6 +10,7 @@ import timeTrackingRoutes from "./routes/timeTrackingRoutes";
 import cors from "cors";
 import { globalErrorHandler } from "./utils/errorHandler";
 import adminRoutes from "./routes/adminRoutes";
+import { initializeSocket } from "./sockets/socketHandler";
 
 // import { config } from "./utils/config";
 
@@ -27,7 +28,8 @@ const io = new Server(server, {
   },
 });
 
-// Make io accessible to other modules
+// Initialize Socket.IO handler
+initializeSocket(io);
 
 // Enable CORS for frontend requests
 app.use(cors());

@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { Employee, IEmployee } from "../models/Employee";
 import { AppError, catchAsync } from "../utils/errorHandler";
+import {
+  emitEmployeeEdit,
+  emitEmployeeCreated,
+  emitEmployeeDeleted,
+} from "../sockets/socketHandler";
 
 // Get all employees with pagination, filtering and sorting
 export const getAllEmployees = catchAsync(
@@ -107,6 +112,18 @@ export const createEmployee = catchAsync(
 
     const newEmployee = await Employee.create(data);
 
+    // Emit Socket.IO event for employee creation and save to database
+    try {
+      await emitEmployeeCreated(newEmployee, {
+        adminId: "admin", // You can get this from req.user if authentication is implemented
+        adminName: "Admin User",
+        createdAt: new Date().toISOString(),
+      });
+    } catch (socketError) {
+      console.error("Socket.IO emission/database save failed:", socketError);
+      // Don't fail the request if socket emission or database save fails
+    }
+
     res.status(201).json({
       status: "success",
       data: {
@@ -142,24 +159,18 @@ export const updateEmployee = catchAsync(
       return next(new AppError("No employee found with that ID", 404));
     }
 
-    // // Create and broadcast activity for employee update
-    // await createAndBroadcastActivity(req, {
-    //   message: `You edited employee: ${employee.firstName} ${employee.lastName}`,
-    //   type: "employee_edited",
-    //   entityId: employee._id.toString(),
-    //   entityType: "employee",
-    //   userId: "admin", // You can get this from req.user if authentication is implemented
-    //   userName: "Admin",
-    //   userType: "admin",
-    //   metadata: {
-    //     employeeName: `${employee.firstName} ${employee.lastName}`,
-    //     employeeId: employee._id.toString(),
-    //     employeeEmail: employee.email,
-    //     employeeLocation: employee.location,
-    //     updatedFields: Object.keys(req.body),
-    //     updatedAt: new Date().toISOString(),
-    //   },
-    // });
+    // Emit Socket.IO event for employee edit and save to database
+    try {
+      await emitEmployeeEdit(employee, {
+        adminId: "admin", // You can get this from req.user if authentication is implemented
+        adminName: "Admin User",
+        updatedFields: Object.keys(req.body),
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (socketError) {
+      console.error("Socket.IO emission/database save failed:", socketError);
+      // Don't fail the request if socket emission or database save fails
+    }
 
     res.status(200).json({
       status: "success",
@@ -179,14 +190,28 @@ export const deleteEmployee = catchAsync(
       return next(new AppError("No employee found with that ID", 404));
     }
 
-    // Store employee details before deletion for the activity
-    const employeeName = `${employee.firstName} ${employee.lastName}`;
-    const employeeEmail = employee.email;
-    const employeeLocation = employee.location;
-    const employeeId = employee._id.toString();
+    // Store employee details before deletion for the activity and socket emission
+    const employeeData = {
+      id: employee._id.toString(),
+      name: `${employee.firstName} ${employee.lastName}`,
+      email: employee.email,
+      location: employee.location,
+    };
 
     // Delete the employee
     await Employee.findByIdAndDelete(req.params.id);
+
+    // Emit Socket.IO event for employee deletion and save to database
+    try {
+      await emitEmployeeDeleted(employeeData, {
+        adminId: "admin", // You can get this from req.user if authentication is implemented
+        adminName: "Admin User",
+        deletedAt: new Date().toISOString(),
+      });
+    } catch (socketError) {
+      console.error("Socket.IO emission/database save failed:", socketError);
+      // Don't fail the request if socket emission or database save fails
+    }
 
     res.status(204).json({
       status: "success",
