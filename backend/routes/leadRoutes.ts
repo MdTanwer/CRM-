@@ -19,6 +19,9 @@ import {
   getSalesAnalytics,
   getRecentLeads,
   getUnassignedLeadsCount,
+  getAssignedLeadsCount,
+  getTotalLeadsCount,
+  getClosedLeadsCount,
 } from "../controller/leadController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -55,7 +58,9 @@ router.get("/recent", getRecentLeads);
 
 // Get count of unassigned leads - MOVED UP to avoid conflict with /:id route
 router.get("/unassigned/count", getUnassignedLeadsCount);
-
+router.get("/assigned/count", getAssignedLeadsCount);
+router.get("/total/count", getTotalLeadsCount);
+router.get("/closed/count", getClosedLeadsCount);
 // CSV upload route
 router.post("/upload-csv", upload.single("file"), uploadCSV);
 

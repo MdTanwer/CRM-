@@ -6,7 +6,6 @@ import csv from "csv-parser";
 import { Readable } from "stream";
 import { IUser } from "../models/User";
 import { Schedule } from "../models/Schedule";
-import { createAndBroadcastActivity } from "./activityController";
 
 // Get all leads with pagination, filtering and sorting
 export const getAllLeads = catchAsync(
@@ -192,17 +191,10 @@ const distributeLeadToEmployee = async (
   leadData: any
 ): Promise<string | null> => {
   try {
-    console.log("🔍 Distributing lead:", {
-      name: leadData.name,
-      language: leadData.language,
-      location: leadData.location,
-    });
-
     // Get all active employees
     const activeEmployees = await Employee.find({ status: "active" });
 
     if (activeEmployees.length === 0) {
-      console.log("❌ No active employees found");
       return null; // No active employees to assign
     }
 
@@ -238,15 +230,6 @@ const distributeLeadToEmployee = async (
           matchScore = 1; // Lowest priority
         }
 
-        console.log(`👤 Employee: ${employee.firstName} ${employee.lastName}`, {
-          empLanguage,
-          empLocation,
-          leadLanguage,
-          leadLocation,
-          matchScore,
-          assignedLeads: assignedLeadsCount,
-        });
-
         return {
           employeeId: employee._id,
           assignedLeadsCount,
@@ -267,14 +250,7 @@ const distributeLeadToEmployee = async (
     // Assign to the best match ONLY if matchScore >= 2 (language OR location match)
     const bestMatch = employeesWithLeadCounts[0];
 
-    console.log("🎯 Best match:", {
-      employee: `${bestMatch.employee.firstName} ${bestMatch.employee.lastName}`,
-      matchScore: bestMatch.matchScore,
-      assignedLeads: bestMatch.assignedLeadsCount,
-    });
-
     if (bestMatch.matchScore < 2) {
-      console.log("❌ No suitable match found (score < 2), leaving unassigned");
       return null; // No suitable match - leave unassigned
     }
 
@@ -283,13 +259,8 @@ const distributeLeadToEmployee = async (
       $inc: { assignedLeads: 1 },
     });
 
-    console.log(
-      "✅ Lead assigned successfully to:",
-      `${bestMatch.employee.firstName} ${bestMatch.employee.lastName}`
-    );
     return bestMatch.employeeId;
   } catch (error) {
-    console.error("❌ Error distributing lead:", error);
     return null;
   }
 };
@@ -431,26 +402,26 @@ export const uploadCSV = catchAsync(
         }
 
         // Create a single summary activity for the CSV upload
-        if (successCount > 0) {
-          await createAndBroadcastActivity(req, {
-            message: `CSV upload completed: ${successCount} new leads added (${assignedCount} assigned, ${unassignedCount} unassigned)`,
-            type: "lead_created",
-            entityId: "bulk_upload",
-            entityType: "lead",
-            userId: "admin",
-            userName: "Admin User",
-            userType: "admin",
-            metadata: {
-              totalLeadsCreated: successCount,
-              assignedLeads: assignedCount,
-              unassignedLeads: unassignedCount,
-              totalErrors: errors.length,
-              uploadTimestamp: new Date().toISOString(),
-              uploadType: "csv_bulk_upload",
-              distributionStrategy,
-            },
-          });
-        }
+        // if (successCount > 0) {
+        //   await createAndBroadcastActivity(req, {
+        //     message: `CSV upload completed: ${successCount} new leads added (${assignedCount} assigned, ${unassignedCount} unassigned)`,
+        //     type: "lead_created",
+        //     entityId: "bulk_upload",
+        //     entityType: "lead",
+        //     userId: "admin",
+        //     userName: "Admin User",
+        //     userType: "admin",
+        //     metadata: {
+        //       totalLeadsCreated: successCount,
+        //       assignedLeads: assignedCount,
+        //       unassignedLeads: unassignedCount,
+        //       totalErrors: errors.length,
+        //       uploadTimestamp: new Date().toISOString(),
+        //       uploadType: "csv_bulk_upload",
+        //       distributionStrategy,
+        //     },
+        //   });
+        // }
 
         // Send response with detailed breakdown
         res.status(200).json({
@@ -736,26 +707,6 @@ export const createLead = catchAsync(
 
     const newLead = await Lead.create(req.body);
 
-    // Create and broadcast activity for new lead
-    await createAndBroadcastActivity(req, {
-      message: `New lead "${newLead.name}" has been created`,
-      type: "lead_created",
-      entityId: (newLead._id as any).toString(),
-      entityType: "lead",
-      userId: "admin", // You can get this from req.user if authentication is implemented
-      userName: "Admin User",
-      userType: "admin",
-      metadata: {
-        leadName: newLead.name,
-        leadEmail: newLead.email,
-        leadPhone: newLead.phone,
-        leadLocation: newLead.location,
-        leadLanguage: newLead.language,
-        leadType: newLead.type,
-        assignedEmployee: newLead.assignedEmployee,
-      },
-    });
-
     // If lead was assigned to an employee, update their assigned leads count
     if (newLead.assignedEmployee) {
       await Employee.findByIdAndUpdate(newLead.assignedEmployee, {
@@ -953,25 +904,6 @@ export const updateLeadStatus = async (
 
     await lead.save();
 
-    // Create and broadcast activity for lead status change
-    await createAndBroadcastActivity(req, {
-      message: `${employee.firstName} ${employee.lastName} changed lead "${lead.name}" status from ${previousStatus} to ${status}`,
-      type: "lead_status_changed",
-      entityId: lead._id?.toString(),
-      entityType: "lead",
-      userId: req.user?._id?.toString(),
-      userName: `${employee.firstName} ${employee.lastName}`,
-      userType: "employee",
-      metadata: {
-        leadName: lead.name,
-        leadId: lead._id?.toString(),
-        newStatus: status,
-        oldStatus: previousStatus,
-        employeeName: `${employee.firstName} ${employee.lastName}`,
-        employeeId: employee._id.toString(),
-      },
-    });
-
     // Special handling for deal closure
     if (status === "Closed" && previousStatus !== "Closed") {
       // Emit deal closed event via Socket.IO
@@ -1060,26 +992,6 @@ export const updateLeadType = async (
     // Update lead type
     lead.type = type as "Hot" | "Warm" | "Cold";
     await lead.save();
-
-    // Create and broadcast activity for lead type change
-    await createAndBroadcastActivity(req, {
-      message: `${employee.firstName} ${employee.lastName} changed lead "${lead.name}" type from ${previousType} to ${type}`,
-      type: "lead_status_changed",
-      entityId: lead._id?.toString(),
-      entityType: "lead",
-      userId: req.user?._id?.toString(),
-      userName: `${employee.firstName} ${employee.lastName}`,
-      userType: "employee",
-      metadata: {
-        leadName: lead.name,
-        leadId: lead._id?.toString(),
-        newType: type,
-        oldType: previousType,
-        employeeName: `${employee.firstName} ${employee.lastName}`,
-        employeeId: employee._id.toString(),
-        changeType: "type",
-      },
-    });
 
     res.status(200).json({
       status: "success",
@@ -1441,6 +1353,48 @@ export const getUnassignedLeadsCount = catchAsync(
       status: "success",
       data: {
         unassignedLeadsCount: unassignedCount,
+      },
+    });
+  }
+);
+
+export const getAssignedLeadsCount = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Count leads where assignedEmployee exists and is not null
+    const assignedCount = await Lead.countDocuments({
+      assignedEmployee: { $ne: null, $exists: true },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        assignedLeadsCount: assignedCount,
+      },
+    });
+  }
+);
+
+export const getTotalLeadsCount = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const totalCount = await Lead.countDocuments({});
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        totalLeadsCount: totalCount,
+      },
+    });
+  }
+);
+
+export const getClosedLeadsCount = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const closedLeadsCount = await Lead.countDocuments({ status: "closed" });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        closedLeadsCount,
       },
     });
   }

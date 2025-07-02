@@ -6,7 +6,6 @@ import {
 } from "../models/TimeTracking";
 import { User, IUser } from "../models/User";
 import { Employee } from "../models/Employee";
-import { createAndBroadcastActivity } from "./activityController";
 
 // Handle user login - auto check-in
 export const handleLoginCheckIn = async (
@@ -288,22 +287,6 @@ export const manualTimeEntry = async (
 
     record.calculateHours();
     await record.save();
-
-    // Broadcast activity
-    await createAndBroadcastActivity(req, {
-      message: `Manual ${type.replace("_", " ")} entry recorded`,
-      type: "time_entry",
-      entityId: record._id,
-      entityType: "time_tracking",
-      userId: user._id.toString(),
-      userName: `${employee.firstName} ${employee.lastName}`,
-      userType: "employee",
-      metadata: {
-        entryType: type,
-        timestamp: timestamp || new Date().toISOString(),
-        notes,
-      },
-    });
 
     res.status(200).json({
       status: "success",

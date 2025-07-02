@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from "express";
-import { createAndBroadcastActivity } from "./activityController";
 
 // Superadmin user data
 let superAdmin = {
@@ -47,24 +46,6 @@ export const updateSuperAdmin = async (
     if (email) superAdmin.email = email;
 
     // Create and broadcast activity for profile update
-    await createAndBroadcastActivity(req, {
-      message: `You updated your admin profile`,
-      type: "profile_updated",
-      entityId: "superadmin",
-      entityType: "profile",
-      userId: "superadmin",
-      userName: "Super Admin",
-      userType: "admin",
-      metadata: {
-        profileType: "superadmin",
-        originalName: `${originalFirstName} ${originalLastName}`,
-        newName: `${superAdmin.firstName} ${superAdmin.lastName}`,
-        originalEmail: originalEmail,
-        newEmail: superAdmin.email,
-        updatedFields: Object.keys(req.body),
-        updatedAt: new Date().toISOString(),
-      },
-    });
 
     // Return updated user
     res.status(200).json({

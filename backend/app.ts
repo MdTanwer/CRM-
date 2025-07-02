@@ -6,14 +6,11 @@ import employeeRoutes from "./routes/employeeRoutes";
 import leadRoutes from "./routes/leadRoutes";
 import authRoutes from "./routes/authRoutes";
 import userRoutes from "./routes/userRoutes";
-import activityRoutes from "./routes/activityRoutes";
-import employeeActivityRoutes from "./routes/employeeActivityRoutes";
-import adminActivityRoutes from "./routes/adminActivityRoutes";
 import timeTrackingRoutes from "./routes/timeTrackingRoutes";
 import cors from "cors";
 import { globalErrorHandler } from "./utils/errorHandler";
 import adminRoutes from "./routes/adminRoutes";
-import { setupSocketHandlers } from "./sockets/socketHandlers";
+
 // import { config } from "./utils/config";
 
 // Create Express app
@@ -31,10 +28,6 @@ const io = new Server(server, {
 });
 
 // Make io accessible to other modules
-app.set("io", io);
-
-// Setup Socket.IO handlers
-setupSocketHandlers(io);
 
 // Enable CORS for frontend requests
 app.use(cors());
@@ -60,13 +53,9 @@ app.use("/api/v1/employees", employeeRoutes);
 app.use("/api/v1/leads", leadRoutes);
 
 // Activity routes (legacy - keep for backward compatibility)
-app.use("/api/v1/activities", activityRoutes);
 
 // Employee activity routes (new separated routes)
-app.use("/api/v1/employee-activities", employeeActivityRoutes);
-
-// Admin activity routes (new separated routes)
-app.use("/api/v1/admin-activities", adminActivityRoutes);
+// app.use("/api/v1/employee-activities", employeeActivityRoutes);
 
 // Time tracking routes
 app.use("/api/v1/time-tracking", timeTrackingRoutes);

@@ -4,7 +4,7 @@ import { User, IUser } from "../models/User";
 import mongoose from "mongoose";
 import { Employee } from "../models/Employee";
 import { AppError } from "../utils/errorHandler";
-import { createAndBroadcastActivity } from "./activityController";
+
 import {
   handleLoginCheckIn,
   handleLogoutCheckOut,
@@ -82,21 +82,6 @@ export const login = async (
       await handleLoginCheckIn(user._id.toString(), employee._id.toString());
 
       // Create and broadcast activity for check-in
-      await createAndBroadcastActivity(req, {
-        message: `${employee.firstName} ${employee.lastName} checked in via login`,
-        type: "auto_checkin",
-        entityId: user._id.toString(),
-        entityType: "time_tracking",
-        userId: user._id.toString(),
-        userName: `${employee.firstName} ${employee.lastName}`,
-        userType: "employee",
-        metadata: {
-          loginTime: new Date().toISOString(),
-          source: "login",
-          employeeName: `${employee.firstName} ${employee.lastName}`,
-          employeeId: employee._id.toString(),
-        },
-      });
     } catch (timeTrackingError) {
       // Log error but don't fail login
       console.error("Time tracking error during login:", timeTrackingError);
@@ -255,26 +240,6 @@ export const updateUserProfile = async (
       await user.save();
     }
 
-    // Create and broadcast activity for profile update
-    await createAndBroadcastActivity(req, {
-      message: `You updated your profile`,
-      type: "profile_updated",
-      entityId: user._id.toString(),
-      entityType: "profile",
-      userId: user._id.toString(),
-      userName: `${employee.firstName} ${employee.lastName}`,
-      userType: user.role === "admin" ? "admin" : "employee",
-      metadata: {
-        profileType: "user",
-        originalName: `${originalFirstName} ${originalLastName}`,
-        newName: `${employee.firstName} ${employee.lastName}`,
-        email: user.email,
-        updatedFields: Object.keys(req.body),
-        passwordUpdated: !!password,
-        updatedAt: new Date().toISOString(),
-      },
-    });
-
     const responseData = {
       _id: user._id,
       email: user.email,
@@ -364,23 +329,6 @@ export const logout = async (
             user._id.toString(),
             employee._id.toString()
           );
-
-          // Create and broadcast activity for check-out
-          await createAndBroadcastActivity(req, {
-            message: `${employee.firstName} ${employee.lastName} checked out via logout`,
-            type: "auto_checkout",
-            entityId: user._id.toString(),
-            entityType: "time_tracking",
-            userId: user._id.toString(),
-            userName: `${employee.firstName} ${employee.lastName}`,
-            userType: user.role === "admin" ? "admin" : "employee",
-            metadata: {
-              logoutTime: new Date().toISOString(),
-              source: "logout",
-              employeeName: `${employee.firstName} ${employee.lastName}`,
-              employeeId: employee._id.toString(),
-            },
-          });
         } catch (timeTrackingError) {
           // Log error but don't fail logout
           console.error(
@@ -389,26 +337,6 @@ export const logout = async (
           );
         }
       }
-
-      // Create and broadcast activity for logout
-      await createAndBroadcastActivity(req, {
-        message: `${employee?.firstName || "User"} ${
-          employee?.lastName || ""
-        } logged out`,
-        type: "user_logout",
-        entityId: user._id.toString(),
-        entityType: "user",
-        userId: user._id.toString(),
-        userName: employee
-          ? `${employee.firstName} ${employee.lastName}`
-          : user.email,
-        userType: user.role === "admin" ? "admin" : "employee",
-        metadata: {
-          logoutTime: new Date().toISOString(),
-          userEmail: user.email,
-          userRole: user.role,
-        },
-      });
     }
 
     // Note: With JWT, we can't invalidate tokens server-side without a blacklist
