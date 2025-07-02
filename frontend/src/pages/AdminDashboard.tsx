@@ -15,8 +15,12 @@ import {
   FaHandshake,
   FaGaugeHigh,
 } from "react-icons/fa6";
-import axios from "axios";
-import { LEAD_API } from "../config/api.config";
+import {
+  getTotalLeadsCount,
+  getClosedLeadsCount,
+  getAssignedLeadsCount,
+  getUnassignedLeadsCount,
+} from "../services/leads.service";
 
 interface LeadStats {
   stats: { _id: string | null; count: number }[];
@@ -31,45 +35,56 @@ export const AdminDashboard: React.FC = () => {
 
   const [stats, setStats] = useState<DashboardStats[]>([]);
   const [unassignedLeadsCount, setUnassignedLeadsCount] = useState<number>(0);
+  const [assignedLeadsCount, setAssignedLeadsCount] = useState<number>(0);
+  const [totalLeadsCount, setTotalLeadsCount] = useState<number>(0);
+  const [closedLeadsCount, setClosedLeadsCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dataRefreshKey, setDataRefreshKey] = useState<number>(0);
 
-  // Fetch unassigned leads count from the backend
-  const fetchUnassignedLeads = async () => {
+  // Fetch all lead counts using service functions
+  const fetchAllCounts = async () => {
     try {
-      // Use the new dedicated endpoint for unassigned leads count
-      const response = await axios.get(`${LEAD_API}/unassigned/count`);
+      const [unassignedRes, assignedRes, totalRes, closedRes] =
+        await Promise.all([
+          getUnassignedLeadsCount(),
+          getAssignedLeadsCount(),
+          getTotalLeadsCount(),
+          getClosedLeadsCount(),
+        ]);
 
-      if (
-        response.data &&
-        response.data.data &&
-        response.data.data.unassignedLeadsCount !== undefined
-      ) {
-        setUnassignedLeadsCount(response.data.data.unassignedLeadsCount);
+      // Handle unassigned leads count
+      if (unassignedRes?.data?.unassignedLeadsCount !== undefined) {
+        setUnassignedLeadsCount(unassignedRes.data.unassignedLeadsCount);
       } else {
         setUnassignedLeadsCount(0);
       }
-    } catch (error) {
-      console.error("Failed to fetch unassigned leads count:", error);
-      setUnassignedLeadsCount(0);
-    }
-  };
 
-  // Fetch lead statistics from the backend
-  const fetchLeadStats = async () => {
-    try {
-      const response = await axios.get<{ status: string; data: LeadStats }>(
-        `${LEAD_API}/stats`
-      );
+      // Handle assigned leads count
+      if (assignedRes?.data?.assignedLeadsCount !== undefined) {
+        setAssignedLeadsCount(assignedRes.data.assignedLeadsCount);
+      } else {
+        setAssignedLeadsCount(0);
+      }
 
-      if (response.data && response.data.data) {
-        // Stats fetched successfully, but we still need unassigned count from dedicated endpoint
-        await fetchUnassignedLeads();
+      // Handle total leads count
+      if (totalRes?.data?.totalLeadsCount !== undefined) {
+        setTotalLeadsCount(totalRes.data.totalLeadsCount);
+      } else {
+        setTotalLeadsCount(0);
+      }
+
+      // Handle closed leads count
+      if (closedRes?.data?.closedLeadsCount !== undefined) {
+        setClosedLeadsCount(closedRes.data.closedLeadsCount);
+      } else {
+        setClosedLeadsCount(0);
       }
     } catch (error) {
-      console.error("Failed to fetch lead statistics:", error);
-      // If stats fail, still try to get unassigned count
-      await fetchUnassignedLeads();
+      console.error("Failed to fetch lead counts:", error);
+      setUnassignedLeadsCount(0);
+      setAssignedLeadsCount(0);
+      setTotalLeadsCount(0);
+      setClosedLeadsCount(0);
     }
   };
 
@@ -77,20 +92,13 @@ export const AdminDashboard: React.FC = () => {
   const refreshDashboardData = () => {
     setIsLoading(true);
 
-    // Fetch data from backend
     const fetchData = async () => {
       try {
-        // Fetch both stats and unassigned leads count
-        await Promise.all([
-          fetchLeadStats().catch(console.error),
-          fetchUnassignedLeads().catch(console.error),
-        ]);
+        await fetchAllCounts();
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
-        setUnassignedLeadsCount(0);
       } finally {
         setIsLoading(false);
-        // Increment refresh key to trigger child component refreshes
         setDataRefreshKey((prevKey) => prevKey + 1);
       }
     };
@@ -99,26 +107,18 @@ export const AdminDashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    // Set loading state
     setIsLoading(true);
 
-    // Fetch data from backend
     const fetchData = async () => {
       try {
-        // Fetch both stats and unassigned leads count
-        await Promise.all([
-          fetchLeadStats().catch(console.error),
-          fetchUnassignedLeads().catch(console.error),
-        ]);
+        await fetchAllCounts();
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
-        setUnassignedLeadsCount(0);
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Fetch data from backend
     fetchData();
 
     // Set up auto-refresh every 5 minutes
@@ -126,32 +126,23 @@ export const AdminDashboard: React.FC = () => {
       refreshDashboardData();
     }, 5 * 60 * 1000);
 
-    // Clean up interval on component unmount
     return () => clearInterval(refreshInterval);
   }, []);
 
-  // Update stats whenever unassignedLeadsCount or other values change
+  // Update stats whenever counts change
   useEffect(() => {
-    // Calculate total leads and closed leads
-    const totalLeads = employeesData.reduce(
-      (sum, employee) => sum + employee.assignedLeads,
-      0
-    );
-    const closedLeads = employeesData.reduce(
-      (sum, employee) => sum + employee.closedLeads,
-      0
-    );
-
-    // Calculate conversion rate
+    // Calculate conversion rate using real API data
     const conversionRate =
-      totalLeads > 0 ? Math.round((closedLeads / totalLeads) * 100) : 0;
+      assignedLeadsCount > 0
+        ? Math.round((closedLeadsCount / assignedLeadsCount) * 100)
+        : 0;
 
     // Count active salespeople
     const activeSalespeople = employeesData.filter(
       (emp) => emp.status === "Active"
     ).length;
 
-    // Create dynamic stats
+    // Create dynamic stats using API data
     const dynamicStats: DashboardStats[] = [
       {
         id: "1",
@@ -161,8 +152,8 @@ export const AdminDashboard: React.FC = () => {
       },
       {
         id: "2",
-        title: "Assigned This Week",
-        value: `${totalLeads}`,
+        title: "Assigned Leads",
+        value: isLoading ? "Loading..." : `${assignedLeadsCount}`,
         icon: <FaUser size={25} />,
       },
       {
@@ -180,7 +171,13 @@ export const AdminDashboard: React.FC = () => {
     ];
 
     setStats(dynamicStats);
-  }, [unassignedLeadsCount, isLoading]);
+  }, [
+    unassignedLeadsCount,
+    assignedLeadsCount,
+    totalLeadsCount,
+    closedLeadsCount,
+    isLoading,
+  ]);
 
   return (
     <div className="dashboard-container">

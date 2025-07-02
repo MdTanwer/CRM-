@@ -5,7 +5,7 @@ import { FaAngleLeft } from "react-icons/fa";
 import { MdLocationOn } from "react-icons/md";
 import { useAuth } from "../context/AuthContext";
 import {
-  getUserSchedule,
+  getMySchedule,
   updateScheduleStatus,
 } from "../services/schedule.service";
 import type { ScheduleItem } from "../services/schedule.service";
@@ -48,7 +48,7 @@ export const UserSchedulePage: React.FC = () => {
 
       try {
         setLoading(true);
-        const data = await getUserSchedule(token);
+        const data = await getMySchedule(token);
         setScheduleItems(data);
         setError(null);
       } catch (err) {

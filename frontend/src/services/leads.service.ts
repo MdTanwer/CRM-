@@ -13,6 +13,41 @@ export const getMyLeads = async (token: string) => {
     throw error.response?.data || error;
   }
 };
+export const getTotalLeadsCount = async () => {
+  try {
+    const response = await axios.get(`${LEAD_API}/total/count`);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getClosedLeadsCount = async () => {
+  try {
+    const response = await axios.get(`${LEAD_API}/closed/count`);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getAssignedLeadsCount = async () => {
+  try {
+    const response = await axios.get(`${LEAD_API}/assigned/count`);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getUnassignedLeadsCount = async () => {
+  try {
+    const response = await axios.get(`${LEAD_API}/unassigned/count`);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error;
+  }
+};
 
 // Update lead status
 export const updateLeadStatus = async (

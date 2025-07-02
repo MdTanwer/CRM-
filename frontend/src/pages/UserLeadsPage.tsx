@@ -8,16 +8,16 @@ import { useAuth } from "../context/AuthContext";
 import "../styles/user-leads.css";
 
 import {
-  getUserLeads,
+  getMyLeads,
   updateLeadStatus,
   updateLeadType,
-  scheduleLeadCall,
+  scheduleCall as scheduleLeadCall,
   canLeadBeClosed,
   getLeadSchedules,
   getEmployeeScheduleForDate,
   isTimeSlotAvailable,
 } from "../services/leads.service";
-import type { Lead as LeadType } from "../services/leads.service";
+import type { Lead as LeadType } from "../types";
 import { toast } from "react-toastify";
 import { format } from "date-fns";
 import { BottomNavigation } from "../components/BottomNavigation";
@@ -64,8 +64,8 @@ export const UserLeadsPage: React.FC = () => {
   const [showStatusTooltip, setShowStatusTooltip] = useState(false);
   const [activeStatusLead, setActiveStatusLead] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<
-    "Open" | "Closed" | "Ongoing" | "Pending"
-  >("Ongoing");
+    "ongoing" | "closed" | "unassigned"
+  >("ongoing");
   const statusTooltipRef = useRef<HTMLDivElement>(null);
   const statusButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -91,7 +91,7 @@ export const UserLeadsPage: React.FC = () => {
 
       try {
         setLoading(true);
-        const data = await getUserLeads(token);
+        const data = await getMyLeads(token);
         setLeads(data);
 
         // Check for scheduled calls for each lead
@@ -114,7 +114,7 @@ export const UserLeadsPage: React.FC = () => {
         const scheduleResults = await Promise.all(schedulePromises);
         const newLeadsWithSchedules = new Set<string>();
 
-        scheduleResults.forEach((result) => {
+        scheduleResults.forEach((result: any) => {
           if (result.hasFutureSchedules) {
             newLeadsWithSchedules.add(result.leadId);
           }
@@ -162,7 +162,7 @@ export const UserLeadsPage: React.FC = () => {
           if (newActivity.type === "lead_status_changed") {
             // Refresh leads data to show the updated status
             if (token) {
-              getUserLeads(token)
+              getMyLeads(token)
                 .then((data) => {
                   setLeads(data);
                   console.log(
@@ -522,7 +522,7 @@ export const UserLeadsPage: React.FC = () => {
 
   const handleTypeChange = async (
     leadId: string,
-    type: "Hot" | "Warm" | "Cold"
+    type: "hot" | "warm" | "cold"
   ) => {
     if (!token) return;
 
@@ -662,7 +662,7 @@ export const UserLeadsPage: React.FC = () => {
   const toggleStatusTooltip = (
     e: React.MouseEvent,
     leadId: string,
-    currentStatus: "Open" | "Closed" | "Ongoing" | "Pending"
+    currentStatus: "ongoing" | "closed" | "unassigned"
   ) => {
     e.preventDefault();
     e.stopPropagation();
@@ -683,7 +683,7 @@ export const UserLeadsPage: React.FC = () => {
     if (!token) return;
 
     // If trying to close the lead, check for future schedules first
-    if (selectedStatus === "Closed") {
+    if (selectedStatus === "closed") {
       try {
         const canClose = await canLeadBeClosed(token, leadId);
 
@@ -728,7 +728,7 @@ export const UserLeadsPage: React.FC = () => {
       );
 
       // If lead was closed, remove it from scheduled leads
-      if (selectedStatus === "Closed") {
+      if (selectedStatus === "closed") {
         const newLeadsWithSchedules = new Set(leadsWithSchedules);
         newLeadsWithSchedules.delete(leadId);
         setLeadsWithSchedules(newLeadsWithSchedules);
@@ -859,9 +859,9 @@ export const UserLeadsPage: React.FC = () => {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <option value="All">All Types</option>
-                    <option value="Hot">Hot</option>
-                    <option value="Warm">Warm</option>
-                    <option value="Cold">Cold</option>
+                    <option value="hot">Hot</option>
+                    <option value="warm">Warm</option>
+                    <option value="cold">Cold</option>
                   </select>
                 </div>
               </div>
@@ -878,10 +878,9 @@ export const UserLeadsPage: React.FC = () => {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <option value="All">All Status</option>
-                    <option value="Open">Open</option>
-                    <option value="Ongoing">Ongoing</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Closed">Closed</option>
+                    <option value="ongoing">Ongoing</option>
+                    <option value="pending">Pending</option>
+                    <option value="closed">Closed</option>
                   </select>
                 </div>
               </div>
@@ -980,19 +979,19 @@ export const UserLeadsPage: React.FC = () => {
                       <div className="type-options">
                         <button
                           className="type-option hot-option"
-                          onClick={() => handleTypeChange(lead._id, "Hot")}
+                          onClick={() => handleTypeChange(lead._id, "hot")}
                         >
                           Hot
                         </button>
                         <button
                           className="type-option warm-option"
-                          onClick={() => handleTypeChange(lead._id, "Warm")}
+                          onClick={() => handleTypeChange(lead._id, "warm")}
                         >
                           Warm
                         </button>
                         <button
                           className="type-option cold-option"
-                          onClick={() => handleTypeChange(lead._id, "Cold")}
+                          onClick={() => handleTypeChange(lead._id, "cold")}
                         >
                           Cold
                         </button>
@@ -1083,18 +1082,16 @@ export const UserLeadsPage: React.FC = () => {
                           onChange={(e) =>
                             setSelectedStatus(
                               e.target.value as
-                                | "Open"
-                                | "Closed"
-                                | "Ongoing"
-                                | "Pending"
+                                | "ongoing"
+                                | "closed"
+                                | "unassigned"
                             )
                           }
                           className="status-select"
                         >
-                          <option value="Open">Open</option>
-                          <option value="Ongoing">Ongoing</option>
-                          <option value="Pending">Pending</option>
-                          <option value="Closed">Closed</option>
+                          <option value="ongoing">Ongoing</option>
+                          <option value="unassigned">Unassigned</option>
+                          <option value="closed">Closed</option>
                         </select>
                       </div>
                       <button
