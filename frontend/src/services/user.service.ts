@@ -2,8 +2,6 @@ import axios from "axios";
 import { USER_API } from "../config/api.config";
 import { createAuthenticatedAxiosInstance } from "./auth.service";
 
-const API_URL = "http://localhost:3000/api/v1/users";
-
 export interface UserProfile {
   firstName: string;
   lastName: string;
@@ -15,12 +13,12 @@ export interface UserProfile {
 // Get user profile
 export const getUserProfile = async (token: string) => {
   try {
-    const response = await axios.get(USER_API, {
+    const response = await axios.get(`${USER_API}/profile`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    return response.data;
+    return response.data.data.user;
   } catch (error) {
     console.error("Error fetching user profile:", error);
     throw error;
@@ -35,7 +33,7 @@ export const updateUserProfile = async (
   try {
     const axiosInstance = createAuthenticatedAxiosInstance(token);
     const response = await axiosInstance.patch(
-      `${API_URL}/profile`,
+      `${USER_API}/profile`,
       profileData
     );
     return response.data.data.user;
@@ -53,7 +51,7 @@ export const updateUserPassword = async (
 ) => {
   try {
     const axiosInstance = createAuthenticatedAxiosInstance(token);
-    const response = await axiosInstance.patch(`${API_URL}/update-password`, {
+    const response = await axiosInstance.patch(`${USER_API}/update-password`, {
       currentPassword,
       newPassword,
     });

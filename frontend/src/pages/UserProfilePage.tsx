@@ -134,6 +134,7 @@ export const UserProfilePage: React.FC = () => {
           style={{
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
           <div className="profile-header-nav">
@@ -146,21 +147,32 @@ export const UserProfilePage: React.FC = () => {
             <button
               onClick={handleLogout}
               style={{
-                background: "none",
+                background: "linear-gradient(135deg, #ff4757 0%, #ff3742 100%)",
                 border: "none",
-                color: "#ff4757",
-                fontSize: "14px",
-                fontWeight: "500",
+                color: "white",
+                fontSize: "13px",
+                fontWeight: "600",
                 cursor: "pointer",
-                padding: "5px 10px",
-                borderRadius: "4px",
-                transition: "background-color 0.2s ease",
+                padding: "8px 16px",
+                borderRadius: "8px",
+                transition: "all 0.3s ease",
+                boxShadow: "0 2px 4px rgba(255, 71, 87, 0.2)",
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
               }}
               onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "#fff5f5";
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 12px rgba(255, 71, 87, 0.3)";
+                e.currentTarget.style.background =
+                  "linear-gradient(135deg, #ff3742 0%, #ff2833 100%)";
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 2px 4px rgba(255, 71, 87, 0.2)";
+                e.currentTarget.style.background =
+                  "linear-gradient(135deg, #ff4757 0%, #ff3742 100%)";
               }}
             >
               Logout
