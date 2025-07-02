@@ -11,10 +11,6 @@ import {
   isUserCheckedIn,
   type TimeTrackingRecord,
 } from "../services/timeTracking.service";
-
-import userSocketService, {
-  type RealtimeActivity,
-} from "../services/userSocket.service";
 import "../styles/user-dashboard.css";
 import { BottomNavigation } from "../components/BottomNavigation";
 
@@ -84,7 +80,6 @@ export const UserDashboardPage: React.FC = () => {
         setTimingHistory(historyData.records);
       } catch (error: any) {
         console.error("Error loading time tracking data:", error);
-        toast.error("Failed to load time tracking data");
       } finally {
         setLoading(false);
       }
@@ -119,7 +114,6 @@ export const UserDashboardPage: React.FC = () => {
       toast.success(`${type.replace("_", " ")} recorded successfully`);
     } catch (error: any) {
       console.error("Error creating manual entry:", error);
-      toast.error("Failed to record entry");
     } finally {
       setActionLoading(false);
     }
@@ -175,30 +169,42 @@ export const UserDashboardPage: React.FC = () => {
   };
 
   const getBreakEntries = () => {
-    if (!timingHistory || timingHistory.length === 0) return [];
+    if (!timeTracking?.entries) return [];
 
-    return timingHistory
-      .flatMap((record) =>
-        record.entries
-          .filter((entry) => entry.type === "break_start")
-          .map((entry) => {
-            // Find corresponding break_end
-            const breakEnd = record.entries.find(
-              (endEntry) =>
-                endEntry.type === "break_end" &&
-                new Date(endEntry.timestamp) > new Date(entry.timestamp)
-            );
-
-            return {
-              id: `${record._id}-${entry.timestamp}`,
-              type: "Break" as const,
-              startTime: formatTime(entry.timestamp),
-              endTime: breakEnd ? formatTime(breakEnd.timestamp) : "Ongoing",
-              date: formatDate(record.date),
-            };
-          })
+    return timeTracking.entries
+      .filter(
+        (entry) => entry.type === "break_start" || entry.type === "break_end"
       )
-      .slice(0, 4); // Show last 4 break entries
+      .reduce((acc, entry) => {
+        if (entry.type === "break_start") {
+          const breakEnd = timeTracking.entries.find(
+            (e) =>
+              e.type === "break_end" &&
+              new Date(e.timestamp) > new Date(entry.timestamp)
+          );
+
+          acc.push({
+            id: entry._id,
+            startTime: formatTime(entry.timestamp),
+            endTime: breakEnd ? formatTime(breakEnd.timestamp) : "Ongoing",
+            date: formatDate(entry.timestamp),
+          });
+        }
+        return acc;
+      }, [] as Array<{ id: string; startTime: string; endTime: string; date: string }>);
+  };
+
+  // Get dynamic greeting based on time of day
+  const getDynamicGreeting = (): string => {
+    const hour = new Date().getHours();
+
+    if (hour < 12) {
+      return "Good Morning";
+    } else if (hour < 17) {
+      return "Good Afternoon";
+    } else {
+      return "Good Evening";
+    }
   };
 
   if (loading) {
@@ -225,8 +231,9 @@ export const UserDashboardPage: React.FC = () => {
         <div className="brand-logo">
           Canova<span style={{ color: "#E8E000" }}>CRM</span>
         </div>
-        <div className="greeting">Good Morning</div>
-        <div className="user-name">{user?.name || user?.email || "User"}</div>
+        <div className="greeting">{getDynamicGreeting()}</div>
+
+        <div className="user-name">{user?.name?.toUpperCase() || ""}</div>
         {/* Socket connection indicator */}
         <div
           style={{
