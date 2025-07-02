@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Sidebar } from "../components/layout/Sidebar";
 import { CSVUploadModal } from "../components/leads/CSVUploadModal";
 import { LeadsTable } from "../components/leads/LeadsTable";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { FaUpload } from "react-icons/fa";
 import "../styles/dashboard.css";
 import "../styles/leads.css";
 import "../styles/leadsupload.css";
@@ -15,7 +14,6 @@ const PAGE_SIZE = 10;
 
 export const LeadsPage: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const currentPage =
     location.pathname === "/" ? "dashboard" : location.pathname.slice(1);
 

@@ -37,32 +37,20 @@ export const AdminDashboard: React.FC = () => {
   // Fetch unassigned leads count from the backend
   const fetchUnassignedLeads = async () => {
     try {
-      // Get all leads with no assigned employee
-      const response = await axios.get(`${LEAD_API}`, {
-        params: {
-          assignedEmployee: "null", // Query for leads with null assignedEmployee
-        },
-      });
+      // Use the new dedicated endpoint for unassigned leads count
+      const response = await axios.get(`${LEAD_API}/unassigned/count`);
 
-      // Check the response structure and extract the total count
-      if (response.data && response.data.totalLeads) {
-        setUnassignedLeadsCount(response.data.totalLeads);
-      } else if (
+      if (
         response.data &&
         response.data.data &&
-        response.data.data.leads
+        response.data.data.unassignedLeadsCount !== undefined
       ) {
-        // Count the leads that have null assignedEmployee
-        const unassignedLeads = response.data.data.leads.filter(
-          (lead: any) =>
-            lead.assignedEmployee === null ||
-            lead.assignedEmployee === undefined
-        );
-        setUnassignedLeadsCount(unassignedLeads.length);
+        setUnassignedLeadsCount(response.data.data.unassignedLeadsCount);
+      } else {
+        setUnassignedLeadsCount(0);
       }
     } catch (error) {
-      console.error("Failed to fetch unassigned leads:", error);
-      // Use a fallback value if the API call fails
+      console.error("Failed to fetch unassigned leads count:", error);
       setUnassignedLeadsCount(0);
     }
   };
@@ -75,19 +63,13 @@ export const AdminDashboard: React.FC = () => {
       );
 
       if (response.data && response.data.data) {
-        const statsData = response.data.data;
-
-        // Find unassigned leads count from stats
-        // In MongoDB aggregation, null _id represents documents where assignedEmployee is null
-        const unassignedStat = statsData.stats.find(
-          (stat) => stat._id === null
-        );
-        if (unassignedStat) {
-          setUnassignedLeadsCount(unassignedStat.count);
-        }
+        // Stats fetched successfully, but we still need unassigned count from dedicated endpoint
+        await fetchUnassignedLeads();
       }
     } catch (error) {
       console.error("Failed to fetch lead statistics:", error);
+      // If stats fail, still try to get unassigned count
+      await fetchUnassignedLeads();
     }
   };
 
@@ -98,13 +80,13 @@ export const AdminDashboard: React.FC = () => {
     // Fetch data from backend
     const fetchData = async () => {
       try {
-        // Try to get stats first, fall back to counting unassigned leads
-        await fetchLeadStats().catch(async () => {
-          await fetchUnassignedLeads();
-        });
+        // Fetch both stats and unassigned leads count
+        await Promise.all([
+          fetchLeadStats().catch(console.error),
+          fetchUnassignedLeads().catch(console.error),
+        ]);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
-        // Fall back to dummy data if both API calls fail
         setUnassignedLeadsCount(0);
       } finally {
         setIsLoading(false);
@@ -123,13 +105,13 @@ export const AdminDashboard: React.FC = () => {
     // Fetch data from backend
     const fetchData = async () => {
       try {
-        // Try to get stats first, fall back to counting unassigned leads
-        await fetchLeadStats().catch(async () => {
-          await fetchUnassignedLeads();
-        });
+        // Fetch both stats and unassigned leads count
+        await Promise.all([
+          fetchLeadStats().catch(console.error),
+          fetchUnassignedLeads().catch(console.error),
+        ]);
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
-        // Fall back to dummy data if both API calls fail
         setUnassignedLeadsCount(0);
       } finally {
         setIsLoading(false);

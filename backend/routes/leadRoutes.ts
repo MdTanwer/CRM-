@@ -18,6 +18,7 @@ import {
   getEmployeeScheduleForDate,
   getSalesAnalytics,
   getRecentLeads,
+  getUnassignedLeadsCount,
 } from "../controller/leadController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -51,6 +52,9 @@ router.get("/sales-analytics", getSalesAnalytics);
 
 // Recent leads route for dashboard
 router.get("/recent", getRecentLeads);
+
+// Get count of unassigned leads - MOVED UP to avoid conflict with /:id route
+router.get("/unassigned/count", getUnassignedLeadsCount);
 
 // CSV upload route
 router.post("/upload-csv", upload.single("file"), uploadCSV);

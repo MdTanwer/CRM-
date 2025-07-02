@@ -239,16 +239,17 @@ const distributeLeadToEmployee = async (
 
     // Sort employees by match score (descending) and then by lead count (ascending)
     employeesWithLeadCounts.sort((a, b) => {
-      // First sort by match score (higher is better)
       if (b.matchScore !== a.matchScore) {
         return b.matchScore - a.matchScore;
       }
-      // Then sort by lead count (lower is better)
       return a.assignedLeadsCount - b.assignedLeadsCount;
     });
 
-    // Assign to the best match
+    // Assign to the best match ONLY if matchScore >= 2
     const bestMatch = employeesWithLeadCounts[0];
+    if (bestMatch.matchScore < 2) {
+      return null; // No suitable match
+    }
 
     // Update employee's lead count
     await Employee.findByIdAndUpdate(bestMatch.employeeId, {
@@ -300,55 +301,17 @@ export const uploadCSV = catchAsync(
             const language = normalizedRow.language || row.Language;
             const location = normalizedRow.location || row.Location;
 
-            // Validate location is in allowed list
-            const validLocations = ["Pune", "Hyderabad", "Delhi"];
-            if (!validLocations.includes(location)) {
-              errors.push(
-                `Invalid location "${location}" for lead: ${name}. Valid locations are: ${validLocations.join(
-                  ", "
-                )}`
-              );
-              continue;
-            }
-
-            // Validate language is in allowed list
-            const validLanguages = ["Hindi", "English", "Bengali", "Tamil"];
-            if (!validLanguages.includes(language)) {
-              errors.push(
-                `Invalid language "${language}" for lead: ${name}. Valid languages are: ${validLanguages.join(
-                  ", "
-                )}`
-              );
-              continue;
-            }
-
+            // Only skip if name is missing
             if (!name) {
               errors.push(`Row missing name: ${JSON.stringify(row)}`);
-              continue;
-            }
-
-            if (!email && !phone) {
-              errors.push(
-                `Row missing both email and phone: ${JSON.stringify(row)}`
-              );
-              continue;
-            }
-
-            if (!language) {
-              errors.push(`Row missing language: ${JSON.stringify(row)}`);
-              continue;
-            }
-
-            if (!location) {
-              errors.push(`Row missing location: ${JSON.stringify(row)}`);
               continue;
             }
 
             // Create lead object
             const leadData: any = {
               name: name,
-              language: language,
-              location: location,
+              language: language || "",
+              location: location || "",
               status: normalizedRow.status || row.Status || "Open",
               type: normalizedRow.type || row.Type || "Warm",
               receivedDate:
@@ -368,6 +331,7 @@ export const uploadCSV = catchAsync(
             }
 
             // Handle lead assignment based on strategy
+            let assignedEmployeeId: string | null = null;
             const assignedEmployee =
               normalizedRow.assignedemployee || row["Assigned Employee"];
 
@@ -378,27 +342,33 @@ export const uploadCSV = catchAsync(
               });
 
               if (employee) {
-                leadData.assignedEmployee = employee._id;
+                assignedEmployeeId = employee._id;
                 // Increment assigned leads count for the employee
                 await Employee.findByIdAndUpdate(employee._id, {
                   $inc: { assignedLeads: 1 },
                 });
               } else {
                 errors.push(
-                  `Employee not found with email: ${assignedEmployee}`
+                  `Employee not found with email: ${assignedEmployee} (lead: ${name})`
                 );
               }
             } else if (distributionStrategy !== "none") {
               // Auto-assign based on distribution strategy
               const employeeId = await distributeLeadToEmployee(leadData);
               if (employeeId) {
-                leadData.assignedEmployee = employeeId;
+                assignedEmployeeId = employeeId;
               }
             }
 
-            // Create lead
-            const newLead = await Lead.create(leadData);
+            // Always add assignedEmployee (null if not found)
+            if (assignedEmployeeId) {
+              leadData.assignedEmployee = assignedEmployeeId;
+            } else {
+              leadData.assignedEmployee = null;
+            }
 
+            // Save the lead
+            const newLead = await Lead.create(leadData);
             successCount++;
           } catch (error: any) {
             errors.push(
@@ -1395,3 +1365,23 @@ export const getEmployeeScheduleForDate = async (
     next(error);
   }
 };
+
+// Get count of unassigned leads
+export const getUnassignedLeadsCount = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Count leads where assignedEmployee is null or doesn't exist
+    const unassignedCount = await Lead.countDocuments({
+      $or: [
+        { assignedEmployee: { $exists: false } },
+        { assignedEmployee: null },
+      ],
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        unassignedLeadsCount: unassignedCount,
+      },
+    });
+  }
+);
