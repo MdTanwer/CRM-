@@ -3,6 +3,7 @@ import "../../styles/leads.css";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { LEAD_API } from "../../config/api.config";
+import { FaFileCsv } from "react-icons/fa";
 
 interface CSVUploadModalProps {
   onClose: () => void;
@@ -119,7 +120,12 @@ export const CSVUploadModal: React.FC<CSVUploadModalProps> = ({ onClose }) => {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <div className="upload-icon">📁</div>
+            <div
+              className="upload-icon"
+              style={{ fontSize: "40px", color: "#000000" }}
+            >
+              <FaFileCsv />
+            </div>
             <p className="upload-text">
               Drag your CSV file here to start uploading
             </p>
