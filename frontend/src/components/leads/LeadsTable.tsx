@@ -319,104 +319,89 @@ export const LeadsTable: React.FC<LeadsTableProps> = ({
           &lt; Previous
         </button>
         <span className="leads-pagination-pages">
-          {/* First page */}
-          <button
-            className={`leads-pagination-page${
-              pageIndex === 0 ? " active" : ""
-            }`}
-            onClick={() => onPageChange(0)}
-          >
-            1
-          </button>
+          {(() => {
+            const pages = [];
+            const currentPage = pageIndex + 1; // Convert to 1-based
+            const totalPages = pageCount;
 
-          {/* Page 2 */}
-          {pageCount > 1 && (
-            <button
-              className={`leads-pagination-page${
-                pageIndex === 1 ? " active" : ""
-              }`}
-              onClick={() => onPageChange(1)}
-            >
-              2
-            </button>
-          )}
-
-          {/* Page 3 */}
-          {pageCount > 2 && (
-            <button
-              className={`leads-pagination-page${
-                pageIndex === 2 ? " active" : ""
-              }`}
-              onClick={() => onPageChange(2)}
-            >
-              3
-            </button>
-          )}
-
-          {/* Ellipsis */}
-          {pageCount > 6 && (
-            <span className="leads-pagination-ellipsis">...</span>
-          )}
-
-          {/* Last three pages if there are more than 6 pages */}
-          {pageCount > 6 && (
-            <>
-              {/* Page totalPages-2 */}
-              {pageCount > 5 && (
+            // Always show first page if not in current view
+            if (currentPage > 3) {
+              pages.push(
                 <button
+                  key={0}
                   className={`leads-pagination-page${
-                    pageIndex === pageCount - 3 ? " active" : ""
+                    pageIndex === 0 ? " active" : ""
                   }`}
-                  onClick={() => onPageChange(pageCount - 3)}
+                  onClick={() => onPageChange(0)}
                 >
-                  {pageCount - 2}
+                  1
                 </button>
-              )}
+              );
 
-              {/* Page totalPages-1 */}
-              {pageCount > 4 && (
-                <button
-                  className={`leads-pagination-page${
-                    pageIndex === pageCount - 2 ? " active" : ""
-                  }`}
-                  onClick={() => onPageChange(pageCount - 2)}
-                >
-                  {pageCount - 1}
-                </button>
-              )}
-
-              {/* Last page */}
-              {pageCount > 3 && (
-                <button
-                  className={`leads-pagination-page${
-                    pageIndex === pageCount - 1 ? " active" : ""
-                  }`}
-                  onClick={() => onPageChange(pageCount - 1)}
-                >
-                  {pageCount}
-                </button>
-              )}
-            </>
-          )}
-
-          {/* Show pages 4, 5, 6 if total pages is 6 or less */}
-          {pageCount <= 6 && pageCount > 3 && (
-            <>
-              {Array.from({ length: pageCount - 3 }, (_, i) => i + 3).map(
-                (pageNumber) => (
-                  <button
-                    key={pageNumber}
-                    className={`leads-pagination-page${
-                      pageIndex === pageNumber - 1 ? " active" : ""
-                    }`}
-                    onClick={() => onPageChange(pageNumber - 1)}
+              // Show ellipsis if there's a gap
+              if (currentPage > 4) {
+                pages.push(
+                  <span
+                    key="ellipsis-start"
+                    className="leads-pagination-ellipsis"
                   >
-                    {pageNumber}
-                  </button>
-                )
-              )}
-            </>
-          )}
+                    ...
+                  </span>
+                );
+              }
+            }
+
+            // Show current page and surrounding pages (3 pages total)
+            const startPage = Math.max(
+              0,
+              Math.min(pageIndex - 1, totalPages - 3)
+            );
+            const endPage = Math.min(startPage + 3, totalPages);
+
+            for (let i = startPage; i < endPage; i++) {
+              pages.push(
+                <button
+                  key={i}
+                  className={`leads-pagination-page${
+                    pageIndex === i ? " active" : ""
+                  }`}
+                  onClick={() => onPageChange(i)}
+                >
+                  {i + 1}
+                </button>
+              );
+            }
+
+            // Show ellipsis and last page if not in current view
+            if (currentPage < totalPages - 2) {
+              // Show ellipsis if there's a gap
+              if (currentPage < totalPages - 3) {
+                pages.push(
+                  <span
+                    key="ellipsis-end"
+                    className="leads-pagination-ellipsis"
+                  >
+                    ...
+                  </span>
+                );
+              }
+
+              // Always show last page
+              pages.push(
+                <button
+                  key={totalPages - 1}
+                  className={`leads-pagination-page${
+                    pageIndex === totalPages - 1 ? " active" : ""
+                  }`}
+                  onClick={() => onPageChange(totalPages - 1)}
+                >
+                  {totalPages}
+                </button>
+              );
+            }
+
+            return pages;
+          })()}
         </span>
         <button
           className="leads-pagination-btn"

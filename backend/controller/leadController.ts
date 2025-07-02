@@ -192,12 +192,21 @@ const distributeLeadToEmployee = async (
   leadData: any
 ): Promise<string | null> => {
   try {
+    console.log("🔍 Distributing lead:", {
+      name: leadData.name,
+      language: leadData.language,
+      location: leadData.location,
+    });
+
     // Get all active employees
     const activeEmployees = await Employee.find({ status: "active" });
 
     if (activeEmployees.length === 0) {
+      console.log("❌ No active employees found");
       return null; // No active employees to assign
     }
+
+    console.log(`👥 Found ${activeEmployees.length} active employees`);
 
     // Get employees with lead counts
     const employeesWithLeadCounts = await Promise.all(
@@ -206,27 +215,37 @@ const distributeLeadToEmployee = async (
           assignedEmployee: employee._id,
         });
 
+        // Normalize strings for comparison (case-insensitive, trimmed)
+        const empLanguage =
+          employee.preferredLanguage?.trim().toLowerCase() || "";
+        const empLocation = employee.location?.trim().toLowerCase() || "";
+        const leadLanguage = leadData.language?.trim().toLowerCase() || "";
+        const leadLocation = leadData.location?.trim().toLowerCase() || "";
+
         // Calculate match score based on language and location
         let matchScore = 0;
 
         // Perfect match - both language and location match
-        if (
-          employee.preferredLanguage === leadData.language &&
-          employee.location === leadData.location
-        ) {
+        if (empLanguage === leadLanguage && empLocation === leadLocation) {
           matchScore = 3; // Highest priority
         }
         // Partial match - either language or location matches
-        else if (
-          employee.preferredLanguage === leadData.language ||
-          employee.location === leadData.location
-        ) {
+        else if (empLanguage === leadLanguage || empLocation === leadLocation) {
           matchScore = 2; // Medium priority
         }
         // No match
         else {
           matchScore = 1; // Lowest priority
         }
+
+        console.log(`👤 Employee: ${employee.firstName} ${employee.lastName}`, {
+          empLanguage,
+          empLocation,
+          leadLanguage,
+          leadLocation,
+          matchScore,
+          assignedLeads: assignedLeadsCount,
+        });
 
         return {
           employeeId: employee._id,
@@ -245,10 +264,18 @@ const distributeLeadToEmployee = async (
       return a.assignedLeadsCount - b.assignedLeadsCount;
     });
 
-    // Assign to the best match ONLY if matchScore >= 2
+    // Assign to the best match ONLY if matchScore >= 2 (language OR location match)
     const bestMatch = employeesWithLeadCounts[0];
+
+    console.log("🎯 Best match:", {
+      employee: `${bestMatch.employee.firstName} ${bestMatch.employee.lastName}`,
+      matchScore: bestMatch.matchScore,
+      assignedLeads: bestMatch.assignedLeadsCount,
+    });
+
     if (bestMatch.matchScore < 2) {
-      return null; // No suitable match
+      console.log("❌ No suitable match found (score < 2), leaving unassigned");
+      return null; // No suitable match - leave unassigned
     }
 
     // Update employee's lead count
@@ -256,9 +283,13 @@ const distributeLeadToEmployee = async (
       $inc: { assignedLeads: 1 },
     });
 
+    console.log(
+      "✅ Lead assigned successfully to:",
+      `${bestMatch.employee.firstName} ${bestMatch.employee.lastName}`
+    );
     return bestMatch.employeeId;
   } catch (error) {
-    console.error("Error distributing lead:", error);
+    console.error("❌ Error distributing lead:", error);
     return null;
   }
 };
@@ -271,11 +302,13 @@ export const uploadCSV = catchAsync(
     }
 
     // Get distribution strategy from request
-    const distributionStrategy = req.body.distributionStrategy || "smart"; // Options: "equal", "location", "language", "smart"
+    const distributionStrategy = req.body.distributionStrategy || "smart"; // Options: "equal", "location", "language", "smart", "none"
 
     const results: any[] = [];
     const errors: string[] = [];
     let successCount = 0;
+    let assignedCount = 0;
+    let unassignedCount = 0;
 
     // Create a readable stream from the buffer
     const stream = Readable.from(req.file.buffer.toString());
@@ -347,28 +380,46 @@ export const uploadCSV = catchAsync(
                 await Employee.findByIdAndUpdate(employee._id, {
                   $inc: { assignedLeads: 1 },
                 });
+                assignedCount++;
               } else {
                 errors.push(
                   `Employee not found with email: ${assignedEmployee} (lead: ${name})`
                 );
+                unassignedCount++;
               }
             } else if (distributionStrategy !== "none") {
               // Auto-assign based on distribution strategy
+              console.log(
+                `🔄 Auto-assigning lead: ${name} (${language}, ${location})`
+              );
               const employeeId = await distributeLeadToEmployee(leadData);
               if (employeeId) {
                 assignedEmployeeId = employeeId;
+                assignedCount++;
+                console.log(`✅ Assigned to employee ID: ${employeeId}`);
+              } else {
+                // No suitable match found - lead remains unassigned
+                console.log(`❌ No suitable employee found for lead: ${name}`);
+                unassignedCount++;
               }
+            } else {
+              // Strategy is "none" - don't assign
+              console.log(
+                `⏭️ Distribution strategy is "none", skipping assignment for: ${name}`
+              );
+              unassignedCount++;
             }
 
-            // Always add assignedEmployee (null if not found)
-            if (assignedEmployeeId) {
-              leadData.assignedEmployee = assignedEmployeeId;
-            } else {
-              leadData.assignedEmployee = null;
-            }
+            // Set assignedEmployee (null if not assigned)
+            leadData.assignedEmployee = assignedEmployeeId;
 
             // Save the lead
             const newLead = await Lead.create(leadData);
+            console.log(
+              `💾 Lead saved: ${newLead.name}, Assigned: ${
+                assignedEmployeeId ? "Yes" : "No"
+              }`
+            );
             successCount++;
           } catch (error: any) {
             errors.push(
@@ -382,7 +433,7 @@ export const uploadCSV = catchAsync(
         // Create a single summary activity for the CSV upload
         if (successCount > 0) {
           await createAndBroadcastActivity(req, {
-            message: `CSV upload completed: ${successCount} new leads have been added to the system`,
+            message: `CSV upload completed: ${successCount} new leads added (${assignedCount} assigned, ${unassignedCount} unassigned)`,
             type: "lead_created",
             entityId: "bulk_upload",
             entityType: "lead",
@@ -391,17 +442,26 @@ export const uploadCSV = catchAsync(
             userType: "admin",
             metadata: {
               totalLeadsCreated: successCount,
+              assignedLeads: assignedCount,
+              unassignedLeads: unassignedCount,
               totalErrors: errors.length,
               uploadTimestamp: new Date().toISOString(),
               uploadType: "csv_bulk_upload",
+              distributionStrategy,
             },
           });
         }
 
-        // Send response
+        // Send response with detailed breakdown
         res.status(200).json({
           status: "success",
           message: `CSV processed successfully. ${successCount} leads created.`,
+          data: {
+            totalLeads: successCount,
+            assignedLeads: assignedCount,
+            unassignedLeads: unassignedCount,
+            distributionStrategy,
+          },
           errors: errors.length > 0 ? errors : undefined,
         });
       });
