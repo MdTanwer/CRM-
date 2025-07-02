@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { AdminActivity } from "../models/AdminActivity";
 
 // Superadmin user data
 let superAdmin = {
@@ -56,6 +57,36 @@ export const updateSuperAdmin = async (
       },
     });
   } catch (error: any) {
+    next(error);
+  }
+};
+
+// Get latest 10 admin activities
+export const getLatest10Activities = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Find latest 10 admin activities, sorted by newest first
+    const activities = await AdminActivity.find({})
+      .sort({ timestamp: -1 })
+      .limit(10)
+      .select(
+        "type message userId userName entityType entityId priority timestamp metadata userType createdAt"
+      );
+
+    res.status(200).json({
+      status: "success",
+      message: `Found ${activities.length} latest admin activities`,
+      data: {
+        activities,
+        count: activities.length,
+        lastUpdated: new Date().toISOString(),
+      },
+    });
+  } catch (error: any) {
+    console.error("Error fetching latest 10 admin activities:", error);
     next(error);
   }
 };
