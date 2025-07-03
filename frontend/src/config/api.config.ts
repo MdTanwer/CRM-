@@ -7,7 +7,7 @@ const getApiBaseUrl = () => {
 
   // Check if we're in development or production
   if (import.meta.env.DEV) {
-    return "http://localhost:3000/api/v1";
+    return "https://crm-7l6v.onrender.com/api/v1";
   }
 
   // Production fallback - you can customize this
