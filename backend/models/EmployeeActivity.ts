@@ -3,17 +3,7 @@ import mongoose, { Document, Schema } from "mongoose";
 export interface IEmployeeActivity extends Document {
   _id: string;
   message: string;
-  type:
-    | "profile_updated"
-    | "lead_assigned"
-    | "lead_status_changed"
-    | "deal_closed"
-    | "call_scheduled"
-    | "lead_created"
-    | "user_logout"
-    | "time_entry"
-    | "auto_checkin"
-    | "auto_checkout";
+  type: "deal_closed" | "lead_assigned";
   timestamp: Date;
   entityId?: string;
   entityType?: "lead" | "call" | "profile" | "user" | "time_tracking";
@@ -36,6 +26,10 @@ export interface IEmployeeActivity extends Document {
     timestamp?: string;
     notes?: string;
     totalHours?: number;
+    leadsCount?: number;
+    assignmentType?: "manual" | "automatic" | "csv_upload";
+    assignedBy?: string;
+    assignedByName?: string;
     [key: string]: any;
   };
   isRead?: boolean;
@@ -53,18 +47,7 @@ const employeeActivitySchema = new Schema<IEmployeeActivity>(
     type: {
       type: String,
       required: [true, "Activity type is required"],
-      enum: [
-        "profile_updated",
-        "lead_assigned",
-        "lead_status_changed",
-        "deal_closed",
-        "call_scheduled",
-        "lead_created",
-        "user_logout",
-        "time_entry",
-        "auto_checkin",
-        "auto_checkout",
-      ],
+      enum: ["deal_closed", "lead_assigned"],
     },
     timestamp: {
       type: Date,

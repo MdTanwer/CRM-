@@ -47,7 +47,7 @@ export const emitEmployeeEdit = async (employeeData: any, adminInfo: any) => {
   // Emit Socket.IO notification
   if (io) {
     const notification = {
-      type: "employee_edit",
+      type: "employee_edited",
       message: socketMessage,
       employee: {
         id: employeeData._id,
@@ -285,5 +285,79 @@ export const emitDealClosed = async (dealData: any, employeeInfo: any) => {
     console.log(`💾 Deal closed activity saved to EmployeeActivity collection`);
   } catch (dbError) {
     console.error("Failed to save employee activity to MongoDB:", dbError);
+  }
+};
+
+// Emit lead assignment notification and save to EmployeeActivity collection
+export const emitLeadAssigned = async (
+  assignmentData: any,
+  employeeInfo: any,
+  adminInfo?: any
+) => {
+  const leadsCount = assignmentData.leadsCount || 1;
+  const socketMessage = `You have been assigned ${leadsCount} lead${
+    leadsCount > 1 ? "s" : ""
+  }`;
+
+  // Emit Socket.IO notification
+  if (io) {
+    const notification = {
+      type: "lead_assigned",
+      message: socketMessage,
+      employee: {
+        id: employeeInfo.employeeId,
+        name: employeeInfo.employeeName,
+        email: employeeInfo.employeeEmail,
+      },
+      leads: {
+        count: leadsCount,
+        leadIds: assignmentData.leadIds || [],
+        leadNames: assignmentData.leadNames || [],
+      },
+      assignedBy: adminInfo || null,
+      timestamp: new Date().toISOString(),
+    };
+
+    // Emit to specific employee if possible (room-based)
+    io.emit("lead_assigned", notification);
+    console.log(`📡 Lead assignment notification sent:`, notification.message);
+  } else {
+    console.warn("Socket.IO not initialized, skipping emission");
+  }
+
+  // Save to MongoDB employeeactivity collection
+  try {
+    await EmployeeActivity.create({
+      message: socketMessage,
+      type: "lead_assigned",
+      timestamp: new Date(),
+      entityId:
+        assignmentData.leadIds?.[0] || assignmentData.leadId || "multiple",
+      entityType: "lead",
+      userId: employeeInfo.employeeId,
+      userName: employeeInfo.employeeName,
+      userType: "employee",
+      metadata: {
+        employeeName: employeeInfo.employeeName,
+        employeeId: employeeInfo.employeeId,
+        leadsCount: leadsCount,
+        leadIds: assignmentData.leadIds || [],
+        leadNames: assignmentData.leadNames || [],
+        assignmentType: assignmentData.assignmentType || "manual",
+        assignedBy: adminInfo?.adminId || "system",
+        assignedByName: adminInfo?.adminName || "System",
+        socketMessage,
+        timestamp: new Date().toISOString(),
+      },
+      isRead: false,
+    });
+    console.log(
+      `💾 Lead assignment activity saved to EmployeeActivity collection`
+    );
+  } catch (dbError) {
+    console.error(
+      "Failed to save lead assignment activity to MongoDB:",
+      dbError
+    );
   }
 };

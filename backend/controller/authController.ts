@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { User, IUser } from "../models/User";
-import mongoose from "mongoose";
 import { Employee } from "../models/Employee";
-import { AppError } from "../utils/errorHandler";
 import EmployeeActivity from "../models/EmployeeActivity";
 
 import {

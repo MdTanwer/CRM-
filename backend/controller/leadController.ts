@@ -6,7 +6,7 @@ import csv from "csv-parser";
 import { Readable } from "stream";
 import { IUser } from "../models/User";
 import { Schedule } from "../models/Schedule";
-import { emitDealClosed } from "../sockets/socketHandler";
+import { emitDealClosed, emitLeadAssigned } from "../sockets/socketHandler";
 
 // Get all leads with pagination, filtering and sorting
 export const getAllLeads = catchAsync(
@@ -282,6 +282,19 @@ export const uploadCSV = catchAsync(
     let assignedCount = 0;
     let unassignedCount = 0;
 
+    // Track assignments per employee for notifications
+    const employeeAssignments: Map<
+      string,
+      {
+        employeeId: string;
+        employeeName: string;
+        employeeEmail: string;
+        leadIds: string[];
+        leadNames: string[];
+        count: number;
+      }
+    > = new Map();
+
     // Create a readable stream from the buffer
     const stream = Readable.from(req.file.buffer.toString());
 
@@ -337,6 +350,7 @@ export const uploadCSV = catchAsync(
 
             // Handle lead assignment based on strategy
             let assignedEmployeeId: string | null = null;
+            let assignedEmployeeData: any = null;
             const assignedEmployee =
               normalizedRow.assignedemployee || row["Assigned Employee"];
 
@@ -348,6 +362,7 @@ export const uploadCSV = catchAsync(
 
               if (employee) {
                 assignedEmployeeId = employee._id;
+                assignedEmployeeData = employee;
                 // Increment assigned leads count for the employee
                 await Employee.findByIdAndUpdate(employee._id, {
                   $inc: { assignedLeads: 1 },
@@ -367,6 +382,8 @@ export const uploadCSV = catchAsync(
               const employeeId = await distributeLeadToEmployee(leadData);
               if (employeeId) {
                 assignedEmployeeId = employeeId;
+                // Get employee data for notifications
+                assignedEmployeeData = await Employee.findById(employeeId);
                 assignedCount++;
                 console.log(`✅ Assigned to employee ID: ${employeeId}`);
               } else {
@@ -386,12 +403,33 @@ export const uploadCSV = catchAsync(
             leadData.assignedEmployee = assignedEmployeeId;
 
             // Save the lead
-            const newLead = await Lead.create(leadData);
+            const newLead = (await Lead.create(leadData)) as ILead;
             console.log(
               `💾 Lead saved: ${newLead.name}, Assigned: ${
                 assignedEmployeeId ? "Yes" : "No"
               }`
             );
+
+            // Track assignments for notifications
+            if (assignedEmployeeId && assignedEmployeeData) {
+              const employeeKey = assignedEmployeeId.toString();
+              if (!employeeAssignments.has(employeeKey)) {
+                employeeAssignments.set(employeeKey, {
+                  employeeId: assignedEmployeeData._id.toString(),
+                  employeeName: `${assignedEmployeeData.firstName} ${assignedEmployeeData.lastName}`,
+                  employeeEmail: assignedEmployeeData.email,
+                  leadIds: [],
+                  leadNames: [],
+                  count: 0,
+                });
+              }
+
+              const assignment = employeeAssignments.get(employeeKey)!;
+              assignment.leadIds.push(String(newLead._id));
+              assignment.leadNames.push(newLead.name);
+              assignment.count++;
+            }
+
             successCount++;
           } catch (error: any) {
             errors.push(
@@ -402,27 +440,36 @@ export const uploadCSV = catchAsync(
           }
         }
 
-        // Create a single summary activity for the CSV upload
-        // if (successCount > 0) {
-        //   await createAndBroadcastActivity(req, {
-        //     message: `CSV upload completed: ${successCount} new leads added (${assignedCount} assigned, ${unassignedCount} unassigned)`,
-        //     type: "lead_created",
-        //     entityId: "bulk_upload",
-        //     entityType: "lead",
-        //     userId: "admin",
-        //     userName: "Admin User",
-        //     userType: "admin",
-        //     metadata: {
-        //       totalLeadsCreated: successCount,
-        //       assignedLeads: assignedCount,
-        //       unassignedLeads: unassignedCount,
-        //       totalErrors: errors.length,
-        //       uploadTimestamp: new Date().toISOString(),
-        //       uploadType: "csv_bulk_upload",
-        //       distributionStrategy,
-        //     },
-        //   });
-        // }
+        // Send lead assignment notifications to employees
+        for (const [_, assignment] of employeeAssignments) {
+          try {
+            await emitLeadAssigned(
+              {
+                leadsCount: assignment.count,
+                leadIds: assignment.leadIds,
+                leadNames: assignment.leadNames,
+                assignmentType: "csv_upload",
+              },
+              {
+                employeeId: assignment.employeeId,
+                employeeName: assignment.employeeName,
+                employeeEmail: assignment.employeeEmail,
+              },
+              {
+                adminId: "admin", // You might want to get this from req.user if available
+                adminName: "Admin User",
+              }
+            );
+            console.log(
+              `🔔 Notification sent to ${assignment.employeeName} for ${assignment.count} leads`
+            );
+          } catch (notificationError) {
+            console.error(
+              `Failed to send notification to employee ${assignment.employeeId}:`,
+              notificationError
+            );
+          }
+        }
 
         // Send response with detailed breakdown
         res.status(200).json({
@@ -433,6 +480,7 @@ export const uploadCSV = catchAsync(
             assignedLeads: assignedCount,
             unassignedLeads: unassignedCount,
             distributionStrategy,
+            employeeNotifications: employeeAssignments.size,
           },
           errors: errors.length > 0 ? errors : undefined,
         });
@@ -727,13 +775,61 @@ export const createLead = catchAsync(
 // Update lead
 export const updateLead = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const lead = await Lead.findByIdAndUpdate(req.params.id, req.body, {
+    // Get the current lead to check for assignment changes
+    const currentLead = await Lead.findById(req.params.id);
+
+    if (!currentLead) {
+      return next(new AppError("No lead found with that ID", 404));
+    }
+
+    const lead = (await Lead.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
-    }).populate("assignedEmployee", "firstName lastName email");
+    }).populate("assignedEmployee", "firstName lastName email")) as ILead;
 
     if (!lead) {
       return next(new AppError("No lead found with that ID", 404));
+    }
+
+    // Check if assignedEmployee was changed
+    const oldAssignedId = currentLead.assignedEmployee?.toString();
+    const newAssignedId = lead.assignedEmployee?._id?.toString();
+
+    // If assignment changed and there's a new employee assigned
+    if (oldAssignedId !== newAssignedId && newAssignedId) {
+      try {
+        // Get employee details
+        const assignedEmployee = await Employee.findById(newAssignedId);
+
+        if (assignedEmployee) {
+          // Emit lead assignment notification
+          await emitLeadAssigned(
+            {
+              leadsCount: 1,
+              leadIds: [String(lead._id)],
+              leadNames: [lead.name],
+              assignmentType: "manual",
+            },
+            {
+              employeeId: assignedEmployee._id.toString(),
+              employeeName: `${assignedEmployee.firstName} ${assignedEmployee.lastName}`,
+              employeeEmail: assignedEmployee.email,
+            },
+            {
+              adminId: "admin", // You might want to get this from req.user if available
+              adminName: "Admin User",
+            }
+          );
+          console.log(
+            `🔔 Manual assignment notification sent to ${assignedEmployee.firstName} ${assignedEmployee.lastName}`
+          );
+        }
+      } catch (notificationError) {
+        console.error(
+          `Failed to send manual assignment notification:`,
+          notificationError
+        );
+      }
     }
 
     res.status(200).json({
