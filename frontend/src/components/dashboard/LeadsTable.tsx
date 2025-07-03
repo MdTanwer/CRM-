@@ -192,23 +192,7 @@ export const EmployeesTable: React.FC<EmployeesTableProps> = ({
   return (
     <div className="table-section">
       <div className="table-header">
-        <h3 className="table-title">
-          Latest 10 Employees
-          {!isLoading && employees.length > 0 && (
-            <span
-              style={{
-                fontWeight: "normal",
-                color: "#6b7280",
-                fontSize: "14px",
-              }}
-            >
-              {" "}
-              •{" "}
-              {totalRecentEmployees > 0 &&
-                `${totalRecentEmployees} from last 7 days`}
-            </span>
-          )}
-        </h3>
+        <h3 className="table-title">Recent Employees</h3>
         {isLoading && <span className="loading-indicator">Loading...</span>}
         {error && <span className="error-indicator">{error}</span>}
       </div>
