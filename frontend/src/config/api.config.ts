@@ -11,7 +11,7 @@ const getApiBaseUrl = () => {
   }
 
   // Production fallback - you can customize this
-  return "/api/v1";
+  return "https://crm-7l6v.onrender.com/api/v1";
 };
 
 export const API_BASE_URL = getApiBaseUrl();
