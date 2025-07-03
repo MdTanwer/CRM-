@@ -4,6 +4,10 @@ import {
   getTimeTrackingHistory,
   manualTimeEntry,
   getTimeSummary,
+  getCurrentSession,
+  completeCurrentSession,
+  startNewSession,
+  getSessionStats,
 } from "../controller/timeTrackingController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -36,6 +40,36 @@ router.post(
   "/entry",
   protect as RequestHandler,
   manualTimeEntry as RequestHandler
+);
+
+// === NEW SESSION-BASED ROUTES ===
+
+// Get current session details
+router.get(
+  "/session/current",
+  protect as RequestHandler,
+  getCurrentSession as RequestHandler
+);
+
+// Force complete current session
+router.post(
+  "/session/complete",
+  protect as RequestHandler,
+  completeCurrentSession as RequestHandler
+);
+
+// Start new session manually
+router.post(
+  "/session/start",
+  protect as RequestHandler,
+  startNewSession as RequestHandler
+);
+
+// Get session statistics
+router.get(
+  "/session/stats",
+  protect as RequestHandler,
+  getSessionStats as RequestHandler
 );
 
 export default router;
