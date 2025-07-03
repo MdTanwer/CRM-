@@ -4,6 +4,7 @@ import { User, IUser } from "../models/User";
 import mongoose from "mongoose";
 import { Employee } from "../models/Employee";
 import { AppError } from "../utils/errorHandler";
+import EmployeeActivity from "../models/EmployeeActivity";
 
 import {
   handleLoginCheckIn,
@@ -346,6 +347,67 @@ export const logout = async (
     res.status(200).json({
       status: "success",
       message: "Logged out successfully",
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+// Get user's deal closure activities
+export const getUserDealActivities = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        status: "fail",
+        message: "You are not logged in. Please log in to get access.",
+      });
+    }
+
+    // Find employee associated with this user
+    const employee = await Employee.findOne({ email: req.user.email });
+
+    if (!employee) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Employee record not found for this user",
+      });
+    }
+
+    // Get query parameters
+    const limit = parseInt(req.query.limit as string) || 10;
+    const page = parseInt(req.query.page as string) || 1;
+    const skip = (page - 1) * limit;
+
+    // Find deal closure activities for this employee
+    const activities = await EmployeeActivity.find({
+      userId: employee._id.toString(),
+      type: "deal_closed",
+    })
+      .sort({ timestamp: -1 }) // Most recent first
+      .skip(skip)
+      .limit(limit);
+
+    // Get total count for pagination
+    const totalActivities = await EmployeeActivity.countDocuments({
+      userId: employee._id.toString(),
+      type: "deal_closed",
+    });
+
+    res.status(200).json({
+      status: "success",
+      results: activities.length,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalActivities / limit),
+        totalActivities,
+      },
+      data: {
+        activities,
+      },
     });
   } catch (error: any) {
     next(error);

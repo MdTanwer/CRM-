@@ -6,6 +6,7 @@ import csv from "csv-parser";
 import { Readable } from "stream";
 import { IUser } from "../models/User";
 import { Schedule } from "../models/Schedule";
+import { emitDealClosed } from "../sockets/socketHandler";
 
 // Get all leads with pagination, filtering and sorting
 export const getAllLeads = catchAsync(
@@ -927,6 +928,24 @@ export const updateLeadStatus = async (
 
         console.log("Broadcasting deal closed activity:", dealClosedData);
         io.emit("activity_update", dealClosedData);
+      }
+
+      // Save deal closure to EmployeeActivity collection
+      try {
+        await emitDealClosed(
+          {
+            leadId: lead._id?.toString(),
+            leadName: lead.name,
+            dealValue: 0,
+            oldStatus: previousStatus,
+          },
+          {
+            employeeId: employee._id.toString(),
+            employeeName: `${employee.firstName} ${employee.lastName}`,
+          }
+        );
+      } catch (activityError) {
+        console.error("Error saving deal closed activity:", activityError);
       }
     }
 

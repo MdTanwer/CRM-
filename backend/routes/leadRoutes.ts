@@ -72,7 +72,7 @@ router.get(
 );
 
 // Update lead status and type
-router.patch(
+router.put(
   "/:id/status",
   protect as RequestHandler,
   updateLeadStatus as RequestHandler

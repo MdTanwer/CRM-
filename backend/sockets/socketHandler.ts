@@ -1,5 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { AdminActivity } from "../models/AdminActivity";
+import EmployeeActivity from "../models/EmployeeActivity";
 
 let io: Server;
 
@@ -230,4 +231,59 @@ export const emitNotification = (type: string, message: string, data?: any) => {
 
   io.emit("notification", notification);
   console.log(`📡 Notification sent: ${message}`);
+};
+
+// Emit deal closed notification and save to EmployeeActivity collection
+export const emitDealClosed = async (dealData: any, employeeInfo: any) => {
+  const socketMessage = ` you closed a deal: "${dealData.leadName}"`;
+
+  // Emit Socket.IO notification
+  if (io) {
+    const notification = {
+      type: "deal_closed",
+      message: socketMessage,
+      employee: {
+        id: employeeInfo.employeeId,
+        name: employeeInfo.employeeName,
+      },
+      lead: {
+        id: dealData.leadId,
+        name: dealData.leadName,
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    io.emit("deal_closed", notification);
+    console.log(`📡 Deal closed notification sent:`, notification.message);
+  } else {
+    console.warn("Socket.IO not initialized, skipping emission");
+  }
+
+  // Save to MongoDB employeeactivity collection
+  try {
+    await EmployeeActivity.create({
+      message: socketMessage,
+      type: "deal_closed",
+      timestamp: new Date(),
+      entityId: dealData.leadId,
+      entityType: "lead",
+      userId: employeeInfo.employeeId,
+      userName: employeeInfo.employeeName,
+      userType: "employee",
+      metadata: {
+        employeeName: employeeInfo.employeeName,
+        employeeId: employeeInfo.employeeId,
+        leadName: dealData.leadName,
+        leadId: dealData.leadId,
+        dealValue: dealData.dealValue || 0,
+        oldStatus: dealData.oldStatus || "",
+        newStatus: "Closed",
+        socketMessage,
+      },
+      isRead: false,
+    });
+    console.log(`💾 Deal closed activity saved to EmployeeActivity collection`);
+  } catch (dbError) {
+    console.error("Failed to save employee activity to MongoDB:", dbError);
+  }
 };

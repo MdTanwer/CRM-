@@ -59,8 +59,9 @@ export const UserLeadsPage: React.FC = () => {
   const [showStatusTooltip, setShowStatusTooltip] = useState(false);
   const [activeStatusLead, setActiveStatusLead] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<
-    "ongoing" | "closed" | "unassigned"
-  >("ongoing");
+    "Open" | "Closed" | "Ongoing" | "Pending"
+  >("Ongoing");
+
   const statusTooltipRef = useRef<HTMLDivElement>(null);
   const statusButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -435,12 +436,17 @@ export const UserLeadsPage: React.FC = () => {
     if (!token) return;
 
     try {
+      // Convert to capitalized format for backend
+      const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
+
       // Update lead type in the backend
-      await updateLeadType(token, leadId, type);
+      await updateLeadType(token, leadId, capitalizedType);
 
       // Update local state
       setLeads(
-        leads.map((lead) => (lead._id === leadId ? { ...lead, type } : lead))
+        leads.map((lead) =>
+          lead._id === leadId ? { ...lead, type } : lead
+        ) as LeadType[]
       );
 
       toast.success(`Lead type updated to ${type}`);
@@ -570,7 +576,7 @@ export const UserLeadsPage: React.FC = () => {
   const toggleStatusTooltip = (
     e: React.MouseEvent,
     leadId: string,
-    currentStatus: "ongoing" | "closed" | "unassigned"
+    currentStatus: string
   ) => {
     e.preventDefault();
     e.stopPropagation();
@@ -581,7 +587,22 @@ export const UserLeadsPage: React.FC = () => {
     } else {
       setShowStatusTooltip(true);
       setActiveStatusLead(leadId);
-      setSelectedStatus(currentStatus);
+      // Convert backend status to the format expected by the UI
+      let uiStatus: "Open" | "Closed" | "Ongoing" | "Pending";
+      switch (currentStatus.toLowerCase()) {
+        case "ongoing":
+          uiStatus = "Ongoing";
+          break;
+        case "closed":
+          uiStatus = "Closed";
+          break;
+        case "unassigned":
+          uiStatus = "Pending";
+          break;
+        default:
+          uiStatus = "Open";
+      }
+      setSelectedStatus(uiStatus);
       // Store the current button as reference
       statusButtonRef.current = e.currentTarget as HTMLButtonElement;
     }
@@ -591,7 +612,7 @@ export const UserLeadsPage: React.FC = () => {
     if (!token) return;
 
     // If trying to close the lead, check for future schedules first
-    if (selectedStatus === "closed") {
+    if (selectedStatus === "Closed") {
       try {
         const canClose = await canLeadBeClosed(token, leadId);
 
@@ -628,15 +649,15 @@ export const UserLeadsPage: React.FC = () => {
       // Update lead status in the backend
       await updateLeadStatus(token, leadId, selectedStatus);
 
-      // Update local state
+      // Update local state with proper type handling
       setLeads(
         leads.map((lead) =>
           lead._id === leadId ? { ...lead, status: selectedStatus } : lead
-        )
+        ) as LeadType[]
       );
 
       // If lead was closed, remove it from scheduled leads
-      if (selectedStatus === "closed") {
+      if (selectedStatus === "Closed") {
         const newLeadsWithSchedules = new Set(leadsWithSchedules);
         newLeadsWithSchedules.delete(leadId);
         setLeadsWithSchedules(newLeadsWithSchedules);
@@ -765,9 +786,9 @@ export const UserLeadsPage: React.FC = () => {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <option value="All">All Status</option>
-                    <option value="ongoing">Ongoing</option>
-                    <option value="pending">Pending</option>
-                    <option value="closed">Closed</option>
+                    <option value="Ongoing">Ongoing</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Closed">Closed</option>
                   </select>
                 </div>
               </div>
@@ -969,16 +990,17 @@ export const UserLeadsPage: React.FC = () => {
                           onChange={(e) =>
                             setSelectedStatus(
                               e.target.value as
-                                | "ongoing"
-                                | "closed"
-                                | "unassigned"
+                                | "Open"
+                                | "Closed"
+                                | "Ongoing"
+                                | "Pending"
                             )
                           }
                           className="status-select"
                         >
-                          <option value="ongoing">Ongoing</option>
-                          <option value="unassigned">Unassigned</option>
-                          <option value="closed">Closed</option>
+                          <option value="Ongoing">Ongoing</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Closed">Closed</option>
                         </select>
                       </div>
                       <button
