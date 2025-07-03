@@ -38,7 +38,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // API routes
-app.get("/api/v1", (req: Request, res: Response) => {
+app.get("/", (req: Request, res: Response) => {
   res.json({ message: "CRM API v1 is running" });
 });
 
