@@ -21,7 +21,7 @@ const server = http.createServer(app);
 // Setup Socket.IO with CORS
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // Frontend URL
+    origin: "https://crm-67nt.vercel.app", // Frontend URL
     methods: ["GET", "POST"],
     allowedHeaders: ["my-custom-header"],
     credentials: true,
@@ -53,11 +53,6 @@ app.use("/api/v1/employees", employeeRoutes);
 
 // Lead routes
 app.use("/api/v1/leads", leadRoutes);
-
-// Activity routes (legacy - keep for backward compatibility)
-
-// Employee activity routes (new separated routes)
-// app.use("/api/v1/employee-activities", employeeActivityRoutes);
 
 // Time tracking routes
 app.use("/api/v1/time-tracking", timeTrackingRoutes);
