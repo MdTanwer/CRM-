@@ -4,15 +4,25 @@ import type { Lead } from "../types";
 import { LEAD_API } from "../config/api.config";
 
 // Get my assigned leads
-export const getMyLeads = async (token: string) => {
+export const getMyLeads = async (
+  token: string,
+  searchParams?: {
+    query?: string;
+    type?: string;
+    status?: string;
+  }
+) => {
   try {
     const authAxios = createAuthenticatedAxiosInstance(token);
-    const response = await authAxios.get(`${LEAD_API}/my-leads`);
+    const response = await authAxios.get(`${LEAD_API}/my-leads`, {
+      params: searchParams,
+    });
     return response.data;
   } catch (error: any) {
     throw error.response?.data || error;
   }
 };
+
 export const getTotalLeadsCount = async () => {
   try {
     const response = await axios.get(`${LEAD_API}/total/count`);

@@ -21,6 +21,7 @@ import { toast } from "react-toastify";
 import { format } from "date-fns";
 import { BottomNavigation } from "../components/BottomNavigation";
 import { FaAngleLeft } from "react-icons/fa";
+import { CiLocationOn } from "react-icons/ci";
 
 export const UserLeadsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -67,7 +68,7 @@ export const UserLeadsPage: React.FC = () => {
 
   // Get dynamic greeting based on time of day
 
-  // Format date function - moved before it's used in filteredLeads
+  // Format date function
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -78,247 +79,87 @@ export const UserLeadsPage: React.FC = () => {
   };
 
   // Fetch leads for the logged-in user
+  const fetchLeads = async () => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Prepare search parameters
+      const searchParams: {
+        query?: string;
+        type?: string;
+        status?: string;
+      } = {};
+
+      if (searchQuery) {
+        searchParams.query = searchQuery;
+      }
+
+      if (filterValue !== "All") {
+        searchParams.type = filterValue;
+      }
+
+      if (statusFilterValue !== "All") {
+        searchParams.status = statusFilterValue;
+      }
+
+      const data = await getMyLeads(token, searchParams);
+      setLeads(data.data.leads);
+
+      // Check for scheduled calls for each lead
+      const schedulePromises = data.data.leads.map(async (lead: LeadType) => {
+        try {
+          const scheduleData = await getLeadSchedules(token, lead._id);
+          return {
+            leadId: lead._id,
+            hasFutureSchedules: scheduleData.hasFutureSchedules,
+          };
+        } catch (error) {
+          // If there's an error getting schedules, assume no schedules
+          return {
+            leadId: lead._id,
+            hasFutureSchedules: false,
+          };
+        }
+      });
+
+      const scheduleResults = await Promise.all(schedulePromises);
+      const newLeadsWithSchedules = new Set<string>();
+
+      scheduleResults.forEach((result: any) => {
+        if (result.hasFutureSchedules) {
+          newLeadsWithSchedules.add(result.leadId);
+        }
+      });
+
+      setLeadsWithSchedules(newLeadsWithSchedules);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching leads:", err);
+      setError("Failed to load leads. Please try again.");
+      toast.error("Failed to load leads. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchLeads = async () => {
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const data = await getMyLeads(token);
-        // console.log("data", data);
-        setLeads(data.data.leads);
-
-        // Check for scheduled calls for each lead
-        const schedulePromises = data.data.leads.map(async (lead: LeadType) => {
-          try {
-            const scheduleData = await getLeadSchedules(token, lead._id);
-            return {
-              leadId: lead._id,
-              hasFutureSchedules: scheduleData.hasFutureSchedules,
-            };
-          } catch (error) {
-            // If there's an error getting schedules, assume no schedules
-            return {
-              leadId: lead._id,
-              hasFutureSchedules: false,
-            };
-          }
-        });
-
-        const scheduleResults = await Promise.all(schedulePromises);
-        const newLeadsWithSchedules = new Set<string>();
-
-        scheduleResults.forEach((result: any) => {
-          if (result.hasFutureSchedules) {
-            newLeadsWithSchedules.add(result.leadId);
-          }
-        });
-
-        setLeadsWithSchedules(newLeadsWithSchedules);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching leads:", err);
-        setError("Failed to load leads. Please try again.");
-        toast.error("Failed to load leads. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchLeads();
   }, [token, navigate]);
 
-  const filteredLeads = leads.filter((lead) => {
-    // If no search query, just filter by type and status
-    if (!searchQuery) {
-      const matchesType = filterValue === "All" || lead.type === filterValue;
-      const matchesStatus =
-        statusFilterValue === "All" || lead.status === statusFilterValue;
-      return matchesType && matchesStatus;
-    }
-
-    const query = searchQuery.toLowerCase().trim();
-
-    // Simple text matching for basic fields (names, emails, etc.)
-    const simpleTextMatches = (
-      text: string | undefined | null,
-      searchQuery: string
-    ) => {
-      if (!text) return false;
-      const normalizedText = text.toLowerCase().trim();
-
-      // Exact match
-      if (normalizedText === searchQuery) return true;
-
-      // Contains match
-      if (normalizedText.includes(searchQuery)) return true;
-
-      // Word starts with query (for partial matches)
-      const words = normalizedText.split(/\s+/);
-      return words.some((word) => word.startsWith(searchQuery));
-    };
-
-    // Advanced text matching with abbreviations for specific fields
-    const advancedTextMatches = (
-      text: string | undefined | null,
-      searchQuery: string,
-      fieldType: "status" | "type" | "location" | "language"
-    ) => {
-      if (!text) return false;
-      const normalizedText = text.toLowerCase().trim();
-
-      // First try simple matching
-      if (simpleTextMatches(text, searchQuery)) return true;
-
-      // Then try abbreviations/synonyms
-      const getSearchVariations = (searchQuery: string, fieldType: string) => {
-        const variations = [searchQuery];
-
-        if (fieldType === "status") {
-          const statusMap: { [key: string]: string[] } = {
-            open: ["open", "new", "fresh"],
-            closed: ["closed", "done", "completed", "finished", "won"],
-            ongoing: ["ongoing", "active", "in progress", "working", "current"],
-            pending: ["pending", "waiting", "hold", "paused", "review"],
-          };
-
-          Object.entries(statusMap).forEach(([key, values]) => {
-            if (values.includes(searchQuery) && normalizedText.includes(key)) {
-              variations.push(key);
-            }
-          });
-        } else if (fieldType === "type") {
-          const typeMap: { [key: string]: string[] } = {
-            hot: ["hot", "urgent", "priority", "important", "high"],
-            warm: ["warm", "medium", "normal", "regular"],
-            cold: ["cold", "low", "future", "potential"],
-          };
-
-          Object.entries(typeMap).forEach(([key, values]) => {
-            if (values.includes(searchQuery) && normalizedText.includes(key)) {
-              variations.push(key);
-            }
-          });
-        } else if (fieldType === "location") {
-          const locationMap: { [key: string]: string[] } = {
-            pune: ["pune", "pn"],
-            hyderabad: ["hyderabad", "hyd", "hyb"],
-            delhi: ["delhi", "del", "ncr"],
-          };
-
-          Object.entries(locationMap).forEach(([key, values]) => {
-            if (values.includes(searchQuery) && normalizedText.includes(key)) {
-              variations.push(key);
-            }
-          });
-        } else if (fieldType === "language") {
-          const languageMap: { [key: string]: string[] } = {
-            english: ["english", "eng", "en"],
-            hindi: ["hindi", "hi", "hin"],
-            bengali: ["bengali", "ben", "bn"],
-            tamil: ["tamil", "tam", "ta"],
-          };
-
-          Object.entries(languageMap).forEach(([key, values]) => {
-            if (values.includes(searchQuery) && normalizedText.includes(key)) {
-              variations.push(key);
-            }
-          });
-        }
-
-        return [...new Set(variations)];
-      };
-
-      const searchVariations = getSearchVariations(searchQuery, fieldType);
-      return searchVariations.some((variation) =>
-        normalizedText.includes(variation)
-      );
-    };
-
-    // Helper function for date matching with multiple formats
-    const dateMatches = (dateString: string, searchQuery: string) => {
-      try {
-        const date = new Date(dateString);
-
-        // Different date formats to check against
-        const formats = [
-          formatDate(dateString).toLowerCase(), // "January 15, 2024"
-          date.toLocaleDateString().toLowerCase(), // "1/15/2024"
-          date
-            .toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })
-            .toLowerCase(), // "Jan 15, 2024"
-          date
-            .toLocaleDateString("en-US", { month: "long", day: "numeric" })
-            .toLowerCase(), // "January 15"
-          date
-            .toLocaleDateString("en-US", { month: "short", day: "numeric" })
-            .toLowerCase(), // "Jan 15"
-          date.toLocaleDateString("en-US", { month: "long" }).toLowerCase(), // "January"
-          date.toLocaleDateString("en-US", { month: "short" }).toLowerCase(), // "Jan"
-          date.getFullYear().toString(), // "2024"
-          dateString.split("T")[0], // "2024-01-15" (ISO format)
-        ];
-
-        return formats.some((format) => format.includes(searchQuery));
-      } catch (error) {
-        return false;
-      }
-    };
-
-    // Comprehensive search across all lead fields
-    const matchesSearch =
-      // Basic contact information (simple text matching)
-      simpleTextMatches(lead.name, query) ||
-      simpleTextMatches(lead.email, query) ||
-      simpleTextMatches(lead.phone, query) ||
-      // Lead classification (advanced matching with synonyms)
-      advancedTextMatches(lead.status, query, "status") ||
-      advancedTextMatches(lead.type, query, "type") ||
-      // Geographic and language information (advanced matching with abbreviations)
-      advancedTextMatches(lead.location, query, "location") ||
-      advancedTextMatches(lead.language, query, "language") ||
-      // Date searches with multiple formats
-      dateMatches(lead.receivedDate, query) ||
-      dateMatches(lead.createdAt, query) ||
-      dateMatches(lead.updatedAt, query) ||
-      // ID search (for technical users)
-      lead._id.toLowerCase().includes(query) ||
-      // Partial phone number matching (without formatting)
-      (lead.phone &&
-        lead.phone.replace(/\D/g, "").includes(query.replace(/\D/g, ""))) ||
-      // Email domain search
-      (lead.email &&
-        lead.email.split("@")[1] &&
-        simpleTextMatches(lead.email.split("@")[1], query)) ||
-      // Combined field searches
-      `${lead.name} ${lead.email || ""}`.toLowerCase().includes(query) ||
-      `${lead.type} ${lead.status}`.toLowerCase().includes(query) ||
-      `${lead.location} ${lead.language}`.toLowerCase().includes(query);
-
-    // Filter by lead type and status
-    const matchesType = filterValue === "All" || lead.type === filterValue;
-    const matchesStatus =
-      statusFilterValue === "All" || lead.status === statusFilterValue;
-
-    return matchesSearch && matchesType && matchesStatus;
-  });
-
   const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case "Open":
-        return "status-open";
-      case "Ongoing":
+    switch (status.toLowerCase()) {
+      case "open":
+      case "ongoing":
         return "status-ongoing";
-      case "Closed":
+      case "closed":
         return "status-closed";
-      case "Pending":
+      case "unassigned":
+      case "pending":
         return "status-pending";
       default:
         return "status-ongoing";
@@ -346,7 +187,7 @@ export const UserLeadsPage: React.FC = () => {
   const handleSaveFilter = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Apply filter logic here
+    fetchLeads();
     setShowFilterTooltip(false);
   };
 
@@ -355,6 +196,8 @@ export const UserLeadsPage: React.FC = () => {
     e.stopPropagation();
     setFilterValue("All");
     setStatusFilterValue("All");
+    // Trigger search if there was a previous filter applied
+    fetchLeads();
   };
 
   // Add a click handler to close the tooltips when clicking outside
@@ -699,36 +542,20 @@ export const UserLeadsPage: React.FC = () => {
       {/* Search Bar */}
       <div className="leads-search-container">
         <div className="leads-search-input-wrapper">
-          <svg
-            className="leads-search-icon"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
+          <div
+            style={{
+              backgroundColor: "#f2f2f2",
+              borderRadius: "12px",
+              width: "80%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "5px 16px",
+            }}
           >
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="leads-search-input"
-          />
-          <button
-            className={`leads-filter-btn-inline ${
-              filterValue !== "All" || statusFilterValue !== "All"
-                ? "leads-filter-active"
-                : ""
-            }`}
-            onClick={toggleFilterTooltip}
-            type="button"
-            ref={filterButtonRef}
-          >
+            {/* background-color: #f2f2f2; */}
             <svg
+              className="leads-search-icon"
               width="16"
               height="16"
               viewBox="0 0 24 24"
@@ -736,20 +563,59 @@ export const UserLeadsPage: React.FC = () => {
               stroke="currentColor"
               strokeWidth="2"
             >
-              <line x1="4" y1="21" x2="4" y2="14"></line>
-              <line x1="4" y1="10" x2="4" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12" y2="3"></line>
-              <line x1="20" y1="21" x2="20" y2="16"></line>
-              <line x1="20" y1="12" x2="20" y2="3"></line>
-              <line x1="1" y1="14" x2="7" y2="14"></line>
-              <line x1="9" y1="8" x2="15" y2="8"></line>
-              <line x1="17" y1="16" x2="23" y2="16"></line>
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
             </svg>
-            {(filterValue !== "All" || statusFilterValue !== "All") && (
-              <div className="filter-active-indicator"></div>
-            )}
-          </button>
+            <input
+              type="text"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="leads-search-input"
+            />
+          </div>
+          <div
+            style={{
+              width: "14%",
+              backgroundColor: "#f2f2f2",
+              borderRadius: "12px",
+              padding: "5px 5px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "10px",
+            }}
+          >
+            <button
+              className={`leads-filter-btn-inline ${
+                filterValue !== "All" || statusFilterValue !== "All"
+                  ? "leads-filter-active"
+                  : ""
+              }`}
+              onClick={toggleFilterTooltip}
+              type="button"
+              ref={filterButtonRef}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <line x1="4" y1="21" x2="4" y2="14"></line>
+                <line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line>
+                <line x1="20" y1="12" x2="20" y2="3"></line>
+                <line x1="1" y1="14" x2="7" y2="14"></line>
+                <line x1="9" y1="8" x2="15" y2="8"></line>
+                <line x1="17" y1="16" x2="23" y2="16"></line>
+              </svg>
+            </button>
+          </div>
         </div>
 
         {showFilterTooltip && (
@@ -775,40 +641,12 @@ export const UserLeadsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="leads-filter-section">
-              <div className="leads-filter-label">Status</div>
-              <div className="leads-filter-dropdown">
-                <div className="leads-filter-select-wrapper">
-                  <select
-                    value={statusFilterValue}
-                    onChange={handleStatusFilterChange}
-                    className="leads-filter-select"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <option value="All">All Status</option>
-                    <option value="Ongoing">Ongoing</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Closed">Closed</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
             <button
               className="leads-filter-save-btn"
               onClick={handleSaveFilter}
             >
-              Apply Filters
+              Apply
             </button>
-
-            {(filterValue !== "All" || statusFilterValue !== "All") && (
-              <button
-                className="leads-filter-clear-btn"
-                onClick={handleClearFilters}
-              >
-                Clear Filters
-              </button>
-            )}
           </div>
         )}
       </div>
@@ -819,14 +657,14 @@ export const UserLeadsPage: React.FC = () => {
           <div className="leads-loading">Loading leads...</div>
         ) : error ? (
           <div className="leads-error">{error}</div>
-        ) : filteredLeads.length === 0 ? (
+        ) : leads.length === 0 ? (
           <div className="leads-empty">
             {searchQuery || filterValue !== "All" || statusFilterValue !== "All"
               ? "No leads match your search criteria"
               : "No leads assigned to you yet"}
           </div>
         ) : (
-          filteredLeads.map((lead) => (
+          leads.map((lead) => (
             <div key={lead._id} className="lead-card">
               <div className="lead-header">
                 <div className="lead-info">
@@ -969,21 +807,24 @@ export const UserLeadsPage: React.FC = () => {
                   )}
 
                   <button
-                    className="action-btn status-btn"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      outline: "none",
+                      padding: "2px",
+                      color: "#4534dd",
+                    }}
                     onClick={(e) =>
                       toggleStatusTooltip(e, lead._id, lead.status)
                     }
-                    title="Change Status"
                     ref={activeStatusLead === lead._id ? statusButtonRef : null}
                   >
-                    <MdLocationOn />
+                    <CiLocationOn size={20} />
                   </button>
 
                   {showStatusTooltip && activeStatusLead === lead._id && (
                     <div className="status-tooltip" ref={statusTooltipRef}>
-                      <div className="status-tooltip-header">
-                        Lead Status <span className="status-info-icon">i</span>
-                      </div>
+                      <div className="status-tooltip-header">Lead Status</div>
                       <div className="status-dropdown">
                         <select
                           value={selectedStatus}

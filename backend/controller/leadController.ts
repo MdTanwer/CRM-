@@ -778,8 +778,38 @@ export const getMyLeads = async (
       });
     }
 
-    // Find leads assigned to this employee
-    const leads = await Lead.find({ assignedEmployee: employee._id }).sort({
+    // Get search parameters from query
+    const { query, type, status } = req.query;
+
+    // Build the filter object
+    const filter: any = { assignedEmployee: employee._id };
+
+    // Add type filter if provided
+    if (type && type !== "All") {
+      filter.type = type;
+    }
+
+    // Add status filter if provided
+    if (status && status !== "All") {
+      filter.status = status;
+    }
+
+    // Add text search if query is provided
+    if (query) {
+      const searchRegex = new RegExp(String(query), "i");
+      filter.$or = [
+        { name: searchRegex },
+        { email: searchRegex },
+        { phone: searchRegex },
+        { location: searchRegex },
+        { language: searchRegex },
+        { notes: searchRegex },
+        { company: searchRegex },
+      ];
+    }
+
+    // Find leads assigned to this employee with filters
+    const leads = await Lead.find(filter).sort({
       createdAt: -1,
     });
 
