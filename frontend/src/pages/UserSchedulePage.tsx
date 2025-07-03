@@ -49,7 +49,8 @@ export const UserSchedulePage: React.FC = () => {
       try {
         setLoading(true);
         const data = await getMySchedule(token);
-        setScheduleItems(data);
+        console.log("data", data);
+        setScheduleItems(data.data.schedules);
         setError(null);
       } catch (err) {
         console.error("Error fetching schedule:", err);
