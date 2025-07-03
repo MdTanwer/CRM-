@@ -10,6 +10,22 @@ export interface UserProfile {
   confirmPassword?: string;
 }
 
+export interface UserActivity {
+  _id: string;
+  message: string;
+  timestamp: string;
+  type: "deal_closed" | "lead_assigned";
+  timeAgo: string;
+  isRead: boolean;
+  metadata?: {
+    leadsCount?: number;
+    leadNames?: string[];
+    employeeName?: string;
+    leadName?: string;
+    [key: string]: any;
+  };
+}
+
 // Get user profile
 export const getUserProfile = async (token: string) => {
   try {
@@ -21,6 +37,20 @@ export const getUserProfile = async (token: string) => {
     return response.data.data.user;
   } catch (error) {
     console.error("Error fetching user profile:", error);
+    throw error;
+  }
+};
+
+// Get user recent activities (last 10)
+export const getUserRecentActivities = async (
+  token: string
+): Promise<UserActivity[]> => {
+  try {
+    const axiosInstance = createAuthenticatedAxiosInstance(token);
+    const response = await axiosInstance.get(`${USER_API}/recent-activities`);
+    return response.data.data.activities;
+  } catch (error) {
+    console.error("Error fetching user recent activities:", error);
     throw error;
   }
 };

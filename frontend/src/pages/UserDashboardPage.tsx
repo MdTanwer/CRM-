@@ -10,15 +10,12 @@ import {
   type TimeTrackingRecord,
   type TimeEntry,
 } from "../services/timeTracking.service";
+import {
+  getUserRecentActivities,
+  type UserActivity,
+} from "../services/user.service";
 import "../styles/user-dashboard.css";
 import { BottomNavigation } from "../components/BottomNavigation";
-
-interface ActivityItem {
-  id: string;
-  message: string;
-  time: string;
-  type: "lead" | "call" | "deal";
-}
 
 export const UserDashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -31,7 +28,7 @@ export const UserDashboardPage: React.FC = () => {
   );
   const [timingHistory, setTimingHistory] = useState<TimeTrackingRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [recentActivities, setRecentActivities] = useState<UserActivity[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
 
   // New state variables for session entries
@@ -46,6 +43,26 @@ export const UserDashboardPage: React.FC = () => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Load recent activities
+  useEffect(() => {
+    const loadRecentActivities = async () => {
+      if (!token) return;
+
+      try {
+        setActivitiesLoading(true);
+        const activities = await getUserRecentActivities(token);
+        setRecentActivities(activities);
+      } catch (error: any) {
+        console.error("Error loading recent activities:", error);
+        toast.error("Failed to load recent activities");
+      } finally {
+        setActivitiesLoading(false);
+      }
+    };
+
+    loadRecentActivities();
+  }, [token]);
 
   // Load time tracking data
   useEffect(() => {
@@ -206,6 +223,18 @@ export const UserDashboardPage: React.FC = () => {
     }
   };
 
+  // Get activity icon based on type
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "deal_closed":
+        return "🎉";
+      case "lead_assigned":
+        return "📋";
+      default:
+        return "📌";
+    }
+  };
+
   if (loading) {
     return (
       <div className="user-dashboard-container">
@@ -359,7 +388,16 @@ export const UserDashboardPage: React.FC = () => {
         >
           <h3>Recent Activity</h3>
         </div>
-        <div className="activity-list">
+        <div
+          className="activity-list"
+          style={{
+            maxHeight: "300px",
+            overflowY: "auto",
+            paddingRight: "5px",
+            scrollbarWidth: "thin",
+            scrollbarColor: "#cbd5e0 #f7fafc",
+          }}
+        >
           {activitiesLoading ? (
             <div
               style={{
@@ -371,15 +409,12 @@ export const UserDashboardPage: React.FC = () => {
             >
               <div style={{ marginBottom: "8px" }}>Loading activities...</div>
             </div>
-          ) : recentActivity.length > 0 ? (
-            recentActivity.map((activity) => (
-              <div key={activity.id} className="activity-item">
-                <div className="activity-dot"></div>
+          ) : recentActivities.length > 0 ? (
+            recentActivities.map((activity) => (
+              <div key={activity._id} className="activity-item">
                 <div className="activity-content">
                   <p className="activity-message">{activity.message}</p>
-                  {activity.time && (
-                    <span className="activity-time">{activity.time}</span>
-                  )}
+                  <span className="activity-time">{activity.timeAgo}</span>
                 </div>
               </div>
             ))

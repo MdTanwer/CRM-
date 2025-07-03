@@ -5,6 +5,7 @@ import {
   getUserProfile,
   updateUserProfile,
   updatePassword,
+  getUserRecentActivities,
 } from "../controller/authController";
 import { protect } from "../middleware/authMiddleware";
 
@@ -29,6 +30,13 @@ router.patch(
   "/update-password",
   protect as RequestHandler,
   updatePassword as RequestHandler
+);
+
+// Activity routes
+router.get(
+  "/recent-activities",
+  protect as RequestHandler,
+  getUserRecentActivities as RequestHandler
 );
 
 export default router;

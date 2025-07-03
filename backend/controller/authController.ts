@@ -411,3 +411,76 @@ export const getUserDealActivities = async (
     next(error);
   }
 };
+
+// Get user's recent activities for dashboard (last 10)
+export const getUserRecentActivities = async (
+  req: Request & { user?: IUser },
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        status: "fail",
+        message: "You are not logged in. Please log in to get access.",
+      });
+    }
+
+    // Find employee associated with this user
+    const employee = await Employee.findOne({ email: req.user.email });
+
+    if (!employee) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Employee record not found for this user",
+      });
+    }
+
+    // Get the most recent 10 activities for this employee
+    const activities = await EmployeeActivity.find({
+      userId: employee._id.toString(),
+    })
+      .sort({ timestamp: -1 }) // Most recent first
+      .limit(10) // Only last 10 activities
+      .select("message timestamp type metadata isRead"); // Select only needed fields
+
+    // Format activities for frontend with timeAgo
+    const formattedActivities = activities.map((activity) => {
+      // Calculate timeAgo manually
+      const now = new Date();
+      const diff = now.getTime() - new Date(activity.timestamp).getTime();
+      const minutes = Math.floor(diff / (1000 * 60));
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      let timeAgo = "Just now";
+      if (minutes >= 1 && minutes < 60) {
+        timeAgo = `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+      } else if (hours >= 1 && hours < 24) {
+        timeAgo = `${hours} hour${hours === 1 ? "" : "s"} ago`;
+      } else if (days >= 1) {
+        timeAgo = `${days} day${days === 1 ? "" : "s"} ago`;
+      }
+
+      return {
+        _id: activity._id,
+        message: activity.message,
+        timestamp: activity.timestamp,
+        type: activity.type,
+        timeAgo,
+        isRead: activity.isRead,
+        metadata: activity.metadata,
+      };
+    });
+
+    res.status(200).json({
+      status: "success",
+      results: formattedActivities.length,
+      data: {
+        activities: formattedActivities,
+      },
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
