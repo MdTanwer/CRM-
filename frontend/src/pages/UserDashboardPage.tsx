@@ -296,7 +296,7 @@ export const UserDashboardPage: React.FC = () => {
           <div className="status-time">{checkOutTime || "--:--"}</div>
         </div>
 
-        <div className="toggle-switch-container"></div>
+        <div className="toggle-switch-container1"></div>
       </div>
 
       <div className="timings-section">
@@ -304,15 +304,23 @@ export const UserDashboardPage: React.FC = () => {
         <div>
           <div className="timing-status-cards" style={{ margin: "0px" }}>
             <div>
-              <div className="status-label">Break Start</div>
+              <div className="status-label">Break </div>
               <div className="status-time">{breakStartTime || "--:--"}</div>
             </div>
             <div>
-              <div className="status-label">Break End</div>
+              <div className="status-label">Ended</div>
               <div className="status-time">{breakEndTime || "--:--"}</div>
             </div>
 
-            <div className="toggle-switch-container"></div>
+            <div
+              className="toggle-switch-container2"
+              style={{
+                backgroundColor: breakEndTime ? "#ef4444" : "#10b981",
+                width: "20px",
+                height: "40px",
+                borderRadius: "20px",
+              }}
+            ></div>
           </div>
 
           {/* Break History Table */}
