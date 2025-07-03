@@ -40,7 +40,6 @@ export const UserDashboardPage: React.FC = () => {
   const [breakEndTime, setBreakEndTime] = useState<string | null>(null);
   const [checkOutTime, setCheckOutTime] = useState<string | null>(null);
   const [currentSessionNumber, setCurrentSessionNumber] = useState<number>(1);
-  const [sessionProgress, setSessionProgress] = useState<number>(0);
 
   // Update current time every second
   useEffect(() => {
@@ -58,7 +57,6 @@ export const UserDashboardPage: React.FC = () => {
 
         // Load current status
         const statusData = await getCurrentTimeStatus();
-        console.log("statusData", statusData);
         setCurrentStatus(statusData.currentStatus);
         setTimeTracking(statusData.timeTracking);
 
@@ -90,16 +88,6 @@ export const UserDashboardPage: React.FC = () => {
           );
           setBreakEndTime(breakEnd ? formatTime(breakEnd.timestamp) : null);
           setCheckOutTime(checkOut ? formatTime(checkOut.timestamp) : null);
-
-          // Calculate session progress (0-4)
-          let progress = 0;
-          if (checkIn) progress++;
-          if (breakStart) progress++;
-          if (breakEnd) progress++;
-          if (checkOut) progress++;
-          setSessionProgress(progress);
-
-          console.log("Session progress:", progress, "of 4 steps");
         }
 
         // Load recent history (last 5 days)
@@ -173,19 +161,6 @@ export const UserDashboardPage: React.FC = () => {
       minute: "2-digit",
       hour12: true,
     });
-  };
-
-  const getCurrentBreakTime = (): string => {
-    if (!timeTracking || currentStatus !== "on_break") return "--:--";
-
-    // Find the latest break_start entry
-    const breakEntries = timeTracking.entries.filter(
-      (e) => e.type === "break_start"
-    );
-    if (breakEntries.length === 0) return "--:--";
-
-    const latestBreak = breakEntries[breakEntries.length - 1];
-    return formatTime(latestBreak.timestamp);
   };
 
   const getBreakEntries = () => {
