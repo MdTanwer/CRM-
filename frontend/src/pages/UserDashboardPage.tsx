@@ -8,24 +8,10 @@ import {
   formatHours,
   getStatusDisplayText,
   type TimeTrackingRecord,
+  type TimeEntry,
 } from "../services/timeTracking.service";
 import "../styles/user-dashboard.css";
 import { BottomNavigation } from "../components/BottomNavigation";
-
-interface TimingInfo {
-  checkedIn: boolean;
-  checkInTime: string | null;
-  onBreak: boolean;
-  breakStartTime: string | null;
-}
-
-interface DashboardStat {
-  id: string;
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  color: string;
-}
 
 interface ActivityItem {
   id: string;
@@ -48,7 +34,13 @@ export const UserDashboardPage: React.FC = () => {
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
 
-  const [isSocketConnected, setIsSocketConnected] = useState(false);
+  // New state variables for session entries
+  const [checkInTime, setCheckInTime] = useState<string | null>(null);
+  const [breakStartTime, setBreakStartTime] = useState<string | null>(null);
+  const [breakEndTime, setBreakEndTime] = useState<string | null>(null);
+  const [checkOutTime, setCheckOutTime] = useState<string | null>(null);
+  const [currentSessionNumber, setCurrentSessionNumber] = useState<number>(1);
+  const [sessionProgress, setSessionProgress] = useState<number>(0);
 
   // Update current time every second
   useEffect(() => {
@@ -70,6 +62,46 @@ export const UserDashboardPage: React.FC = () => {
         setCurrentStatus(statusData.currentStatus);
         setTimeTracking(statusData.timeTracking);
 
+        // Extract session entries and times
+        if (statusData.timeTracking && statusData.timeTracking.entries) {
+          const entries = statusData.timeTracking.entries;
+          const currentSession =
+            statusData.timeTracking.currentSessionNumber || 1;
+          setCurrentSessionNumber(currentSession);
+
+          // Filter entries for current session
+          const sessionEntries = entries.filter(
+            (entry) => entry.sessionNumber === currentSession
+          );
+
+          // Find the latest entry of each type
+          const checkIn = findLatestEntryByType(sessionEntries, "check_in");
+          const breakStart = findLatestEntryByType(
+            sessionEntries,
+            "break_start"
+          );
+          const breakEnd = findLatestEntryByType(sessionEntries, "break_end");
+          const checkOut = findLatestEntryByType(sessionEntries, "check_out");
+
+          // Set times in state
+          setCheckInTime(checkIn ? formatTime(checkIn.timestamp) : null);
+          setBreakStartTime(
+            breakStart ? formatTime(breakStart.timestamp) : null
+          );
+          setBreakEndTime(breakEnd ? formatTime(breakEnd.timestamp) : null);
+          setCheckOutTime(checkOut ? formatTime(checkOut.timestamp) : null);
+
+          // Calculate session progress (0-4)
+          let progress = 0;
+          if (checkIn) progress++;
+          if (breakStart) progress++;
+          if (breakEnd) progress++;
+          if (checkOut) progress++;
+          setSessionProgress(progress);
+
+          console.log("Session progress:", progress, "of 4 steps");
+        }
+
         // Load recent history (last 5 days)
         const historyData = await getTimeTrackingHistory({
           limit: 5,
@@ -86,14 +118,35 @@ export const UserDashboardPage: React.FC = () => {
     loadTimeTrackingData();
   }, [user]);
 
+  // Helper function to find the latest entry of a specific type
+  const findLatestEntryByType = (
+    entries: TimeEntry[],
+    type: "check_in" | "check_out" | "break_start" | "break_end"
+  ): TimeEntry | null => {
+    const typeEntries = entries.filter((entry) => entry.type === type);
+    if (typeEntries.length === 0) return null;
+
+    // Sort by timestamp (descending) and return the first one
+    return typeEntries.sort((a, b) => {
+      const dateA = new Date(b.timestamp).getTime();
+      const dateB = new Date(a.timestamp).getTime();
+      return dateA - dateB;
+    })[0];
+  };
+
   const formatTime = (date: Date | string | undefined): string => {
     if (!date) return "--:--";
-    const timeDate = new Date(date);
-    return timeDate.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    try {
+      const timeDate = new Date(date);
+      return timeDate.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return "--:--";
+    }
   };
 
   const formatDate = (date: Date | string): string => {
@@ -151,7 +204,11 @@ export const UserDashboardPage: React.FC = () => {
           );
 
           acc.push({
-            id: entry._id,
+            id:
+              entry._id ||
+              `break-${entry.sessionNumber}-${new Date(
+                entry.timestamp
+              ).getTime()}`,
             startTime: formatTime(entry.timestamp),
             endTime: breakEnd ? formatTime(breakEnd.timestamp) : "Ongoing",
             date: formatDate(entry.timestamp),
@@ -202,18 +259,6 @@ export const UserDashboardPage: React.FC = () => {
 
         <div className="user-name">{user?.name?.toUpperCase() || ""}</div>
         {/* Socket connection indicator */}
-        <div
-          style={{
-            position: "absolute",
-            top: "20px",
-            right: "20px",
-            display: "flex",
-            alignItems: "center",
-            gap: "5px",
-            fontSize: "12px",
-            color: isSocketConnected ? "#10b981" : "#ef4444",
-          }}
-        ></div>
       </div>
 
       {/* Current Time Display */}
@@ -243,18 +288,12 @@ export const UserDashboardPage: React.FC = () => {
         <div>
           <div className="status-label">Check-in</div>
           <div className="status-time">
-            {timeTracking?.checkInTime
-              ? formatTime(timeTracking.checkInTime)
-              : "--:--"}
+            {breakStartTime ? breakStartTime : checkInTime || "--:--"}
           </div>
         </div>
         <div>
           <div className="status-label">Check Out</div>
-          <div className="status-time">
-            {timeTracking?.checkOutTime
-              ? formatTime(timeTracking.checkOutTime)
-              : "--:--"}
-          </div>
+          <div className="status-time">{checkOutTime || "--:--"}</div>
         </div>
 
         <div className="toggle-switch-container"></div>
@@ -265,10 +304,12 @@ export const UserDashboardPage: React.FC = () => {
         <div>
           <div className="timing-status-cards" style={{ margin: "0px" }}>
             <div>
-              <div className="status-label">Break</div>
-              <div className="status-time">
-                {currentStatus === "on_break" ? getCurrentBreakTime() : "--:--"}
-              </div>
+              <div className="status-label">Break Start</div>
+              <div className="status-time">{breakStartTime || "--:--"}</div>
+            </div>
+            <div>
+              <div className="status-label">Break End</div>
+              <div className="status-time">{breakEndTime || "--:--"}</div>
             </div>
 
             <div className="toggle-switch-container"></div>
@@ -309,8 +350,6 @@ export const UserDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Debug Section - Remove this in production */}
-
       {/* Status Indicator */}
       {timeTracking && (
         <div
@@ -322,19 +361,7 @@ export const UserDashboardPage: React.FC = () => {
             fontSize: "14px",
             color: "#374151",
           }}
-        >
-          <strong>Status:</strong> {getStatusDisplayText(currentStatus)}
-          {timeTracking.totalWorkHours > 0 && (
-            <span style={{ marginLeft: "10px" }}>
-              | Work: {formatHours(timeTracking.totalWorkHours)}
-            </span>
-          )}
-          {timeTracking.totalBreakHours > 0 && (
-            <span style={{ marginLeft: "10px" }}>
-              | Break: {formatHours(timeTracking.totalBreakHours)}
-            </span>
-          )}
-        </div>
+        ></div>
       )}
 
       {/* Recent Activity */}
@@ -348,24 +375,6 @@ export const UserDashboardPage: React.FC = () => {
           }}
         >
           <h3>Recent Activity</h3>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "5px",
-              fontSize: "12px",
-              color: "#6b7280",
-            }}
-          >
-            <div
-              style={{
-                width: "6px",
-                height: "6px",
-                borderRadius: "50%",
-                backgroundColor: isSocketConnected ? "#10b981" : "#ef4444",
-              }}
-            ></div>
-          </div>
         </div>
         <div className="activity-list">
           {activitiesLoading ? (
@@ -401,11 +410,6 @@ export const UserDashboardPage: React.FC = () => {
               }}
             >
               <div style={{ marginBottom: "8px" }}>No recent activity</div>
-              <div style={{ fontSize: "12px" }}>
-                {isSocketConnected
-                  ? "Activity will appear here when actions are performed"
-                  : "Connecting to live updates..."}
-              </div>
             </div>
           )}
         </div>
