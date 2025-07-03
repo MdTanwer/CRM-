@@ -44,9 +44,16 @@ router.post(
 
 // === NEW SESSION-BASED ROUTES ===
 
-// Get current session details
+// Get current session details - original path
 router.get(
   "/session/current",
+  protect as RequestHandler,
+  getCurrentSession as RequestHandler
+);
+
+// Get current session details - simplified path
+router.get(
+  "/current",
   protect as RequestHandler,
   getCurrentSession as RequestHandler
 );

@@ -1,20 +1,50 @@
 import axios from "axios";
 import { TIME_TRACKING_API } from "../config/api.config";
 
-// Types
+// Types for session-based tracking
 export interface TimeEntry {
-  _id: string;
-  employeeId: string;
-  date: string;
+  _id?: string;
   type: "check_in" | "check_out" | "break_start" | "break_end";
-  timestamp: string;
-  checkInTime?: string;
-  checkOutTime?: string;
-  breaks: Break[];
-  totalWorkTime: number;
-  status: "present" | "absent" | "partial";
-  createdAt: string;
-  updatedAt: string;
+  timestamp: string | Date;
+  source: "login" | "logout" | "manual";
+  notes?: string;
+  sessionNumber: number;
+}
+
+export interface TimeTrackingRecord {
+  _id: string;
+  userId: string;
+  employeeId: string;
+  date: Date | string;
+  entries: TimeEntry[];
+  checkInTime?: Date | string;
+  checkOutTime?: Date | string;
+  totalWorkHours: number;
+  totalBreakHours: number;
+  status: "checked_in" | "checked_out" | "on_break" | "session_complete";
+  currentSessionNumber: number;
+  totalSessions: number;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+export interface SessionInfo {
+  sessionNumber: number;
+  entries: TimeEntry[];
+  status: "in_progress" | "completed";
+  workDuration?: number;
+  breakDuration?: number;
+}
+
+export interface SessionState {
+  currentSession: SessionInfo;
+  sessionState: "new_session" | "checked_in" | "on_break" | "back_from_break";
+  sessionProgress: {
+    completedSteps: string[];
+    nextStep: string;
+    totalSteps: number;
+  };
+  nextAction: string;
 }
 
 export interface Break {
@@ -62,27 +92,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export interface TimeTrackingRecord {
-  _id: string;
-  userId: string;
-  employeeId: string;
-  date: Date;
-  entries: TimeEntry[];
-  checkInTime?: Date;
-  checkOutTime?: Date;
-  totalWorkHours: number;
-  totalBreakHours: number;
-  status: "checked_in" | "checked_out" | "on_break" | "auto_checkout";
-  isCompleted: boolean;
-  crossDayLogout?: {
-    originalLogoutTime: Date;
-    adjustedCheckoutTime: Date;
-    nextDayCheckInTime: Date;
-  };
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface TimeSummary {
   totalWorkHours: number;
   totalBreakHours: number;
@@ -98,7 +107,7 @@ export interface TimeSummary {
   }>;
 }
 
-// Get current time tracking status
+// Get current time tracking status (maps to getCurrentSession in backend)
 export const getCurrentTimeStatus = async (): Promise<{
   timeTracking: TimeTrackingRecord;
   currentStatus: string;
@@ -106,15 +115,37 @@ export const getCurrentTimeStatus = async (): Promise<{
   totalBreakHours: number;
 }> => {
   try {
-    const response = await api.get("/time-tracking/status");
-    return response.data.data;
+    // Try the new simplified endpoint first
+    const response = await api.get("/current");
+    const sessionData = response.data.data;
+
+    // Map session data to the format expected by the dashboard
+    return {
+      timeTracking: {
+        ...sessionData.currentSession,
+        status:
+          sessionData.sessionState === "on_break" ? "on_break" : "checked_in",
+        totalWorkHours: sessionData.currentSession?.workDuration || 0,
+        totalBreakHours: sessionData.currentSession?.breakDuration || 0,
+      },
+      currentStatus:
+        sessionData.sessionState === "on_break" ? "on_break" : "checked_in",
+      totalWorkHours: sessionData.currentSession?.workDuration || 0,
+      totalBreakHours: sessionData.currentSession?.breakDuration || 0,
+    };
   } catch (error: any) {
-    console.error("Error getting current time status:", error);
-    throw error;
+    // If the simplified endpoint fails, try the original endpoint
+    try {
+      const fallbackResponse = await api.get("/time-tracking/status");
+      return fallbackResponse.data.data;
+    } catch (fallbackError) {
+      console.error("Error getting current time status:", error);
+      throw error;
+    }
   }
 };
 
-// Get time tracking history
+// Get time tracking history (maps to getHistory in backend)
 export const getTimeTrackingHistory = async (params?: {
   startDate?: string;
   endDate?: string;
@@ -129,15 +160,38 @@ export const getTimeTrackingHistory = async (params?: {
   };
 }> => {
   try {
-    const response = await api.get("/time-tracking/history", { params });
-    return response.data.data;
+    // Convert pagination to date range if needed
+    const queryParams: any = { ...params };
+    if (!queryParams.startDate && queryParams.page && queryParams.limit) {
+      // Default to last 30 days if using pagination without dates
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+      queryParams.startDate = startDate.toISOString().split("T")[0];
+      queryParams.endDate = endDate.toISOString().split("T")[0];
+    }
+
+    const response = await api.get("/history", {
+      params: queryParams,
+    });
+
+    // Add pagination info if not provided by API
+    const records = response.data.data.records || [];
+    return {
+      records,
+      pagination: response.data.data.pagination || {
+        currentPage: params?.page || 1,
+        totalPages: Math.ceil(records.length / (params?.limit || 10)),
+        totalRecords: records.length,
+      },
+    };
   } catch (error: any) {
     console.error("Error getting time tracking history:", error);
     throw error;
   }
 };
 
-// Create manual time entry
+// Create manual time entry (maps to backend manual entry if available)
 export const createManualTimeEntry = async (entryData: {
   type: "check_in" | "check_out" | "break_start" | "break_end";
   timestamp?: string;
@@ -145,7 +199,8 @@ export const createManualTimeEntry = async (entryData: {
   date?: string;
 }): Promise<{ timeTracking: TimeTrackingRecord }> => {
   try {
-    const response = await api.post("/time-tracking/entry", entryData);
+    // Try to use entry endpoint if available
+    const response = await api.post("/entry", entryData);
     return response.data.data;
   } catch (error: any) {
     console.error("Error creating manual time entry:", error);
@@ -153,19 +208,29 @@ export const createManualTimeEntry = async (entryData: {
   }
 };
 
-// Get time summary (weekly/monthly)
-export const getTimeSummary = async (
-  period: "week" | "month" = "week"
-): Promise<{
-  summary: TimeSummary;
-}> => {
+// Get current session (simplified API)
+export const getCurrentSession = async (): Promise<SessionState> => {
   try {
-    const response = await api.get("/time-tracking/summary", {
-      params: { period },
-    });
+    const response = await api.get("/session/current");
     return response.data.data;
   } catch (error: any) {
-    console.error("Error getting time summary:", error);
+    console.error("Error getting current session:", error);
+    throw error;
+  }
+};
+
+// Get session history (simplified API)
+export const getHistory = async (params?: {
+  startDate?: string;
+  endDate?: string;
+}): Promise<{
+  records: TimeTrackingRecord[];
+}> => {
+  try {
+    const response = await api.get("/history", { params });
+    return response.data.data;
+  } catch (error: any) {
+    console.error("Error getting session history:", error);
     throw error;
   }
 };
@@ -204,6 +269,8 @@ export const getStatusDisplayText = (status: string): string => {
       return "On Break";
     case "auto_checkout":
       return "Auto Checked Out";
+    case "session_complete":
+      return "Session Complete";
     default:
       return "Unknown";
   }
@@ -218,6 +285,7 @@ export const getStatusColor = (status: string): string => {
       return "#f59e0b"; // yellow
     case "checked_out":
     case "auto_checkout":
+    case "session_complete":
       return "#ef4444"; // red
     default:
       return "#6b7280"; // gray

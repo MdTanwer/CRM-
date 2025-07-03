@@ -5,10 +5,8 @@ import { toast } from "react-toastify";
 import {
   getCurrentTimeStatus,
   getTimeTrackingHistory,
-  createManualTimeEntry,
   formatHours,
   getStatusDisplayText,
-  isUserCheckedIn,
   type TimeTrackingRecord,
 } from "../services/timeTracking.service";
 import "../styles/user-dashboard.css";
@@ -47,7 +45,6 @@ export const UserDashboardPage: React.FC = () => {
   );
   const [timingHistory, setTimingHistory] = useState<TimeTrackingRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [activitiesLoading, setActivitiesLoading] = useState(false);
 
@@ -69,6 +66,7 @@ export const UserDashboardPage: React.FC = () => {
 
         // Load current status
         const statusData = await getCurrentTimeStatus();
+        console.log("statusData", statusData);
         setCurrentStatus(statusData.currentStatus);
         setTimeTracking(statusData.timeTracking);
 
@@ -87,37 +85,6 @@ export const UserDashboardPage: React.FC = () => {
 
     loadTimeTrackingData();
   }, [user]);
-
-  const handleManualEntry = async (
-    type: "check_in" | "check_out" | "break_start" | "break_end"
-  ) => {
-    try {
-      setActionLoading(true);
-
-      await createManualTimeEntry({
-        type,
-        notes: `Manual ${type.replace("_", " ")}`,
-      });
-
-      // Reload current status
-      const statusData = await getCurrentTimeStatus();
-      setCurrentStatus(statusData.currentStatus);
-      setTimeTracking(statusData.timeTracking);
-
-      // Reload history
-      const historyData = await getTimeTrackingHistory({
-        limit: 5,
-        page: 1,
-      });
-      setTimingHistory(historyData.records);
-
-      toast.success(`${type.replace("_", " ")} recorded successfully`);
-    } catch (error: any) {
-      console.error("Error creating manual entry:", error);
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const formatTime = (date: Date | string | undefined): string => {
     if (!date) return "--:--";
@@ -290,25 +257,7 @@ export const UserDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="toggle-switch-container">
-          <div
-            className={`toggle-switch-pill ${
-              isUserCheckedIn(currentStatus) ? "active" : ""
-            }`}
-            onClick={() => {
-              if (actionLoading) return;
-
-              if (currentStatus === "checked_out") {
-                handleManualEntry("check_in");
-              } else {
-                handleManualEntry("check_out");
-              }
-            }}
-            style={{ cursor: actionLoading ? "not-allowed" : "pointer" }}
-          >
-            <div className="toggle-switch-button"></div>
-          </div>
-        </div>
+        <div className="toggle-switch-container"></div>
       </div>
 
       <div className="timings-section">
@@ -322,31 +271,7 @@ export const UserDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="toggle-switch-container">
-              <div
-                className={`toggle-switch-pill ${
-                  currentStatus === "on_break" ? "active" : ""
-                }`}
-                onClick={() => {
-                  if (actionLoading || currentStatus === "checked_out") return;
-
-                  if (currentStatus === "on_break") {
-                    handleManualEntry("break_end");
-                  } else if (currentStatus === "checked_in") {
-                    handleManualEntry("break_start");
-                  }
-                }}
-                style={{
-                  cursor:
-                    actionLoading || currentStatus === "checked_out"
-                      ? "not-allowed"
-                      : "pointer",
-                  opacity: currentStatus === "checked_out" ? 0.5 : 1,
-                }}
-              >
-                <div className="toggle-switch-button"></div>
-              </div>
-            </div>
+            <div className="toggle-switch-container"></div>
           </div>
 
           {/* Break History Table */}
