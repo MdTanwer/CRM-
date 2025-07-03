@@ -13,6 +13,7 @@ export type AdminActivityType =
   | "user_logout"
   | "system_config_changed"
   | "bulk_lead_upload"
+  | "leads_uploaded"
   | "employee_status_changed"
   | "admin_login"
   | "data_export"
@@ -92,6 +93,7 @@ const adminActivitySchema = new Schema<IAdminActivity>(
         "user_logout",
         "system_config_changed",
         "bulk_lead_upload",
+        "leads_uploaded",
         "employee_status_changed",
         "admin_login",
         "data_export",

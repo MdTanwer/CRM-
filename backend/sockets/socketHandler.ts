@@ -361,3 +361,70 @@ export const emitLeadAssigned = async (
     );
   }
 };
+
+// Emit admin lead upload notification and save to AdminActivity collection
+export const emitAdminLeadsUploaded = async (
+  uploadData: any,
+  adminInfo?: any
+) => {
+  const leadsCount = uploadData.totalLeads || 0;
+  const socketMessage = `You added ${leadsCount} lead${
+    leadsCount > 1 ? "s" : ""
+  }`;
+
+  // Emit Socket.IO notification
+  if (io) {
+    const notification = {
+      type: "leads_uploaded",
+      message: socketMessage,
+      admin: adminInfo || { adminId: "admin", adminName: "Admin User" },
+      leads: {
+        count: leadsCount,
+        assigned: uploadData.assignedLeads || 0,
+        unassigned: uploadData.unassignedLeads || 0,
+        distributionStrategy: uploadData.distributionStrategy || "none",
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    io.emit("admin_leads_uploaded", notification);
+    console.log(
+      `📡 Admin leads upload notification sent:`,
+      notification.message
+    );
+  } else {
+    console.warn("Socket.IO not initialized, skipping emission");
+  }
+
+  // Save to MongoDB adminactivity collection
+  try {
+    await AdminActivity.create({
+      type: "leads_uploaded",
+      message: socketMessage,
+      userId: adminInfo?.adminId || "admin",
+      userName: adminInfo?.adminName || "Admin User",
+      entityType: "lead",
+      entityId: "bulk_upload",
+      priority: "medium",
+      metadata: {
+        totalLeads: leadsCount,
+        assignedLeads: uploadData.assignedLeads || 0,
+        unassignedLeads: uploadData.unassignedLeads || 0,
+        distributionStrategy: uploadData.distributionStrategy || "none",
+        employeeNotifications: uploadData.employeeNotifications || 0,
+        socketMessage,
+        uploadTimestamp: new Date().toISOString(),
+      },
+      userType: "admin",
+      timestamp: new Date(),
+    });
+    console.log(
+      `💾 Admin leads upload activity saved to MongoDB: ${socketMessage}`
+    );
+  } catch (dbError) {
+    console.error(
+      "Failed to save admin leads upload activity to MongoDB:",
+      dbError
+    );
+  }
+};

@@ -6,7 +6,11 @@ import csv from "csv-parser";
 import { Readable } from "stream";
 import { IUser } from "../models/User";
 import { Schedule } from "../models/Schedule";
-import { emitDealClosed, emitLeadAssigned } from "../sockets/socketHandler";
+import {
+  emitDealClosed,
+  emitLeadAssigned,
+  emitAdminLeadsUploaded,
+} from "../sockets/socketHandler";
 
 // Get all leads with pagination, filtering and sorting
 export const getAllLeads = catchAsync(
@@ -469,6 +473,31 @@ export const uploadCSV = catchAsync(
               notificationError
             );
           }
+        }
+
+        // Send admin notification about leads uploaded
+        try {
+          await emitAdminLeadsUploaded(
+            {
+              totalLeads: successCount,
+              assignedLeads: assignedCount,
+              unassignedLeads: unassignedCount,
+              distributionStrategy,
+              employeeNotifications: employeeAssignments.size,
+            },
+            {
+              adminId: "admin", // You might want to get this from req.user if available
+              adminName: "Admin User",
+            }
+          );
+          console.log(
+            `🔔 Admin notification sent for ${successCount} leads uploaded`
+          );
+        } catch (adminNotificationError) {
+          console.error(
+            "Failed to send admin notification:",
+            adminNotificationError
+          );
         }
 
         // Send response with detailed breakdown
